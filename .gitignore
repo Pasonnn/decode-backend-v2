@@ -4,6 +4,19 @@
 /build
 /tmp
 
+# Packaging 
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDEs
+.vscode
+.idea
+.cursorrules
+
+# OS
+.DS_Store
+
 # Logs
 logs
 *.log
