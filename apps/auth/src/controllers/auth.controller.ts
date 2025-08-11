@@ -26,15 +26,31 @@
  * - auth/password/forgot/send-email-verify: Send email verification code to email (email)
  * - auth/password/forgot/email-code-verify: Verify email by code (email, code)
  * - auth/password/forgot/change-password: Change password (user_id, new_password)
- */
+ * - auth/info/by-access-token: Get user info by access token (access_token)
+*/
 
 // Import the necessary modules
+import { Controller, MessagePattern } from '@nestjs/common';
+import { RegisterInfoDto, VerifyEmailDto, CreateUserDto } from '../dto/register.dto';
+import { Response } from '../interfaces/response.interface';
 
+// Import the Services
+import { RegisterService } from '../services/register.service';
+import { LoginService } from '../services/login.service';
+import { SessionService } from '../services/session.service';
+import { PasswordService } from '../services/password.service';
+import { InfoService } from '../services/info.service';
 
 // Auth Controller Class
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+    constructor(
+        private readonly registerController: RegisterController,
+        private readonly loginController: LoginController,
+        private readonly sessionController: SessionController,
+        private readonly passwordController: PasswordController,
+        private readonly infoController: InfoController
+    ) {}
 
     // Health Check Endpoint
     @MessagePattern('healthz')
@@ -42,54 +58,124 @@ export class AuthController {
         return {status: 'ok'};
     }
 
+    // Register Controller
+    @MessagePattern('email-verification-register')
+    async emailVerificationRegister(dto: RegisterInfoDto): Promise<Response> {
+        const register_info_response = await this.registerController.registerInfo({username: dto.username, email: dto.email, password: dto.password});
+        if (!register_info_response.success) {
+            return register_info_response;
+        }
+        const send_email_verification_response = await this.registerController.sendEmailVerification(dto.email);
+        return send_email_verification_response;
+    }
+
+    @MessagePattern('verify-email-register')
+    async verifyEmailRegister(dto: VerifyEmailDto): Promise<Response> {
+        const verify_email_response = await this.registerController.verifyEmail(dto);
+        if (!verify_email_response.success) {
+            return verify_email_response;
+        }
+        const create_user_response = await this.registerController.createUser(dto.email);
+        return create_user_response;
+    }
+
+    // Login Controller
+    @MessagePattern('fingerprint-login')
+    async fingerprintLogin(dto: FingerprintLoginDto): Promise<FingerprintLoginResponse> {
+        const login_info_response = await this.loginController.loginInfo({username_or_email: dto.username_or_email, password: dto.password});
+        if (!login_info_response.success) {
+            return login_info_response;
+        }
+        const fingerprint_check_response = await this.loginController.fingerprintCheck(dto.fingerprint_hash);
+        if (!fingerprint_check_response.success) {
+            const fingerprint_send_email_verify_response = await this.loginController.fingerprintSendEmailVerify(dto.email);
+            if (!fingerprint_send_email_verify_response.success) {
+                return {
+                    success: false,
+                    code: 400,
+                    message: 'Failed to send email verification code'
+                };
+            }
+            return {
+                success: false,
+                code: 400,
+                message: 'Please verify your device fingerprint'
+            };
+        } else { // The fingerprint is valid
+            const session_create_response = await this.sessionController.sessionCreate({user_id: login_info_response.user_id, fingerprint_id: fingerprint_check_response.fingerprint_id});
+            if (!session_create_response.success) {
+                return session_create_response;
+            }
+            const session_refresh_response = await this.sessionController.sessionRefresh({session_token: session_create_response.session.token});
+            if (!session_refresh_response.success) {
+                return session_refresh_response;
+            }
+            return {success: true,
+                code: 200,
+                message: 'Login successful',
+                data: {
+                    session_token: session_create_response.data.session.token,
+                    access_token: session_refresh_response.data.access_token
+                }};
+        }
+    }
+
+    // Session Controller
+}
+
+export class RegisterController {
+    constructor(private readonly registerService: RegisterService) {}
     /*
     * User Register
     * Work flow:
+    * STEP 1:
     * 1. register/info: 
     * input: username, email, password
-    * process: store user data to Redis with key: `register:${email}`
+    * process: store user data to Redis with key: `register:${email} - value: ${username} - ${hashed_password}`
     * output: success or error
     * 2. register/send-email-verification:
     * input: email
     * process: send email verification code to email, store to Redis with key: `email-verification:${email}`
     * output: success or error
+    * STEP 2:
     * 3. register/verify-email:
     * input: email, code
     * process: check if code is valid
     * output: success or error
     * 4. register/create-user:
-    * input: username, email, password
-    * process: create user in database
+    * input: email
+    * process: get user data from Redis with key: `register:${email}`
+    * and create user in database
     * output: success or error
     */
     // User Register Endpoint
-    @MessagePattern('register/info')
-    registerInfo(dto: RegisterInfoDto): Promise<registerInfoResponseDto> {
-        return this.authService.registerInfo(dto);
+    registerInfo(dto: RegisterInfoDto): Promise<Response> {
+        return this.registerService.registerInfo(dto);
     }
 
     // User Register Send Email Verification Endpoint
-    @MessagePattern('register/send-email-verification')
-    sendEmailVerification(email: string): Promise<sendEmailVerificationResponseDto> {
-        return this.authService.sendEmailVerification(email);
+    sendEmailVerification(email: string): Promise<Response> {
+        return this.registerService.sendEmailVerification(email);
     }
 
     // User Register Verify Email Endpoint
-    @MessagePattern('register/verify-email')
-    verifyEmail(dto: VerifyEmailDto): Promise<verifyEmailResponseDto> {
-        return this.authService.verifyEmail(dto);
+    verifyEmail(dto: VerifyEmailDto): Promise<Response> {
+        return this.registerService.verifyEmail(dto);
     }
 
     // User Register Create User Endpoint
-    @MessagePattern('register/create-user')
-    createUser(dto: CreateUserDto): Promise<createUserResponseDto> {
-        return this.authService.createUser(dto);
+    createUser(email: string): Promise<Response> {
+        return this.registerService.createUser(email);
     }
+}
 
+export class LoginController {
+    constructor(private readonly loginService: LoginService) {}
     /*
     * User Login
     * Work flow:
     * A. Fingerprint Trusted
+    * STEP 1:
     * 1. login/info:
     * input: username_or_email, password
     * process: check if user exist and password is correct
@@ -101,13 +187,14 @@ export class AuthController {
     * 3. session/create:
     * input: user_id, fingerprint_id
     * process: create session
-    * output: success (return session_id) or error
+    * output: success (return session_data - including session.token) or error
     * 4. session/refresh:
-    * input: session_id
+    * input: session_token
     * process: refresh session
     * output: success (return access_token) or error
 
     * B. Fingerprint Not Trusted
+    * STEP 1:
     * 1. login/info:
     * input: username_or_email, password
     * process: check if user exist and password is correct
@@ -122,6 +209,7 @@ export class AuthController {
     * process: create code and store it to Redis with key: `fingerprint-email-verification:${code} - value: ${user_id}`
     * send email verification code to email
     * output: success or error
+    * STEP 2:
     * 4. login/fingerprint-email-code-verify:
     * input: email, code
     * process: check if code is valid
@@ -130,7 +218,7 @@ export class AuthController {
     * output: success (return fingerprint hash) or error
     * 5. login/fingerprint-create:
     * input: user_id, fingerprint_hash
-    * process: create trusted fingerprint in database
+    * process: create trusted fingerprint in database with trusted: true
     * output: success (return session token) or error
     * 6. session/create:
     * input: user_id, fingerprint_id
@@ -142,33 +230,34 @@ export class AuthController {
     * output: success (return access_token) or error
     */
     // User Login Endpoint
-    @MessagePattern('login/info')
-    loginInfo(dto: LoginInfoDto): Promise<loginInfoResponseDto> {
+    loginInfo(dto: LoginInfoDto): Promise<LoginInfoResponse> {
         return this.authService.loginInfo(dto);
     }
 
     // User Login Fingerprint Check Endpoint
-    @MessagePattern('login/fingerprint-check')
-    fingerprintCheck(fingerprint_hash: string): Promise<fingerprintCheckResponseDto> {
+    fingerprintCheck(fingerprint_hash: string): Promise<FingerprintCheckResponse> {
         return this.authService.fingerprintCheck(fingerprint_hash);
     }
 
-    @MessagePattern('login/fingerprint-send-email-verify')
-    fingerprintSendEmailVerify(email: string): Promise<fingerprintSendEmailVerifyResponseDto> {
+    // User Login Fingerprint Send Email Verify Endpoint
+    fingerprintSendEmailVerify(email: string): Promise<FingerprintSendEmailVerifyResponse> {
         return this.authService.fingerprintSendEmailVerify(email);
     }
 
-    @MessagePattern('login/fingerprint-email-code-verify')
-    fingerprintEmailCodeVerify(dto: FingerprintEmailCodeVerifyDto): Promise<fingerprintEmailCodeVerifyResponseDto> {
+    // User Login Fingerprint Email Code Verify Endpoint
+    fingerprintEmailCodeVerify(dto: FingerprintEmailCodeVerifyDto): Promise<FingerprintEmailCodeVerifyResponse> {
         return this.authService.fingerprintEmailCodeVerify(dto);
     }
 
     // User Login Fingerprint Create Endpoint
-    @MessagePattern('login/fingerprint-create')
-    fingerprintCreate(dto: FingerprintCreateDto): Promise<fingerprintCreateResponseDto> {
+    fingerprintCreate(dto: FingerprintCreateDto): Promise<FingerprintCreateResponse> {
         return this.authService.fingerprintCreate(dto);
     }
-    
+}
+
+export class SessionController {
+    constructor(private readonly sessionService: SessionService) {}
+
     /*
     * User Session
     * List of endpoints:
@@ -190,29 +279,28 @@ export class AuthController {
     * output: success or error
     */
     // User Session Create Endpoint
-    @MessagePattern('session/create')
-    sessionCreate(dto: SessionCreateDto): Promise<sessionCreateResponseDto> {
-        return this.authService.sessionCreate(dto);
+    sessionCreate(dto: SessionCreateDto): Promise<SessionCreateResponse> {
+        return this.sessionService.sessionCreate(dto);
     }
 
     // User Session Refresh Endpoint
-    @MessagePattern('session/refresh')
-    sessionRefresh(dto: SessionRefreshDto): Promise<sessionRefreshResponseDto> {
-        return this.authService.sessionRefresh(dto);
+    sessionRefresh(dto: SessionRefreshDto): Promise<SessionRefreshResponse> {
+        return this.sessionService.sessionRefresh(dto);
     }
 
     // User Session By SSO Endpoint
-    @MessagePattern('session/by-sso')
-    sessionBySso(dto: SessionBySsoDto): Promise<sessionBySsoResponseDto> {
-        return this.authService.sessionBySso(dto);
+    sessionBySso(dto: SessionBySsoDto): Promise<SessionBySsoResponse> {
+        return this.sessionService.sessionBySso(dto);
     }
 
     // User Session Logout Endpoint
-    @MessagePattern('session/logout')
-    sessionLogout(dto: SessionLogoutDto): Promise<sessionLogoutResponseDto> {
-        return this.authService.sessionLogout(dto);
+    sessionLogout(dto: SessionLogoutDto): Promise<SessionLogoutResponse> {
+        return this.sessionService.sessionLogout(dto);
     }
+}
 
+export class PasswordController {
+    constructor(private readonly passwordService: PasswordService) {}
     /*
     * User Password
     * A. Password Change
@@ -247,40 +335,38 @@ export class AuthController {
     * output: success or error
     */
     // User Password Change Info Endpoint
-    @MessagePattern('password/change/info')
-    passwordChangeInfo(dto: PasswordChangeInfoDto): Promise<passwordChangeInfoResponseDto> {
-        return this.authService.passwordChangeInfo(dto);
+    passwordChangeInfo(dto: PasswordChangeInfoDto): Promise<PasswordChangeInfoResponse> {
+        return this.passwordService.passwordChangeInfo(dto);
     }
 
     // User Password Change Change Password Endpoint
-    @MessagePattern('password/change/change-password')
-    passwordChangeChangePassword(dto: PasswordChangeChangePasswordDto): Promise<passwordChangeChangePasswordResponseDto> {
-        return this.authService.passwordChangeChangePassword(dto);
+    passwordChangeChangePassword(dto: PasswordChangeChangePasswordDto): Promise<PasswordChangeChangePasswordResponse> {
+        return this.passwordService.passwordChangeChangePassword(dto);
     }
 
     // User Password Forgot Info Endpoint
-    @MessagePattern('password/forgot/info')
-    passwordForgotInfo(dto: PasswordForgotInfoDto): Promise<passwordForgotInfoResponseDto> {
-        return this.authService.passwordForgotInfo(dto);
+    passwordForgotInfo(dto: PasswordForgotInfoDto): Promise<PasswordForgotInfoResponse> {
+        return this.passwordService.passwordForgotInfo(dto);
     }
 
     // User Password Forgot Send Email Verify Endpoint
-    @MessagePattern('password/forgot/send-email-verify')
-    passwordForgotSendEmailVerify(email: string): Promise<passwordForgotSendEmailVerifyResponseDto> {
-        return this.authService.passwordForgotSendEmailVerify(email);
+    passwordForgotSendEmailVerify(email: string): Promise<PasswordForgotSendEmailVerifyResponse> {
+        return this.passwordService.passwordForgotSendEmailVerify(email);
     }
 
     // User Password Forgot Email Code Verify Endpoint
-    @MessagePattern('password/forgot/email-code-verify')
-    passwordForgotEmailCodeVerify(dto: PasswordForgotEmailCodeVerifyDto): Promise<passwordForgotEmailCodeVerifyResponseDto> {
-        return this.authService.passwordForgotEmailCodeVerify(dto);
+    passwordForgotEmailCodeVerify(dto: PasswordForgotEmailCodeVerifyDto): Promise<PasswordForgotEmailCodeVerifyResponse> {
+        return this.passwordService.passwordForgotEmailCodeVerify(dto);
     }
 
     // User Password Forgot Change Password Endpoint
-    @MessagePattern('password/forgot/change-password')
-    passwordForgotChangePassword(dto: PasswordForgotChangePasswordDto): Promise<passwordForgotChangePasswordResponseDto> {
-        return this.authService.passwordForgotChangePassword(dto);
+    passwordForgotChangePassword(dto: PasswordForgotChangePasswordDto): Promise<PasswordForgotChangePasswordResponse> {
+        return this.passwordService.passwordForgotChangePassword(dto);
     }
+}
+
+export class InfoController {
+    constructor(private readonly infoService: InfoService) {}
 
     /* 
     * User Info by Access Token
@@ -290,8 +376,7 @@ export class AuthController {
     * output: success (return user_data) or error
     */
     // User Info by Access Token Endpoint
-    @MessagePattern('info/by-access-token')
-    infoByAccessToken(access_token: string): Promise<infoByAccessTokenResponseDto> {
-        return this.authService.infoByAccessToken(access_token);
+    infoByAccessToken(access_token: string): Promise<InfoByAccessTokenResponse> {
+        return this.infoService.infoByAccessToken(access_token);
     }
 }
