@@ -1,14 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ClientModule } from '@nestjs/microservices';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 // Controllers Import
 import { AuthController } from './controllers/auth.controller';
-import { RegisterController } from './controllers/auth.controller';
-import { LoginController } from './controllers/auth.controller';
-import { SessionController } from './controllers/auth.controller';
-import { PasswordController } from './controllers/auth.controller';
-import { InfoController } from './controllers/auth.controller';
 
 // Services Import
 import { RegisterService } from './services/register.service';
@@ -71,8 +66,21 @@ import jwtConfig from './config/jwt.config';
       }),
       inject: [ConfigService],
     }),
+    ClientsModule.register([
+      {
+        name: 'EMAIL_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'email_queue',
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
+    ]),
   ],
-  controllers: [AuthController, RegisterController, LoginController, SessionController, PasswordController, InfoController],
-  providers: [RegisterService, LoginService, SessionService, PasswordService, InfoService],
+  controllers: [AuthController],
+  providers: [RegisterService, LoginService, SessionService, PasswordService, InfoService, EmailService],
 })
 export class AuthModule {}
