@@ -28,6 +28,15 @@
         "tsConfigPath": "apps/decode-backend-v2/tsconfig.app.json"
       }
     },
+    "email-worker": {
+      "type": "application",
+      "root": "apps/email-worker",
+      "entryFile": "main",
+      "sourceRoot": "apps/email-worker/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/email-worker/tsconfig.app.json"
+      }
+    },
     "user": {
       "type": "application",
       "root": "apps/user",

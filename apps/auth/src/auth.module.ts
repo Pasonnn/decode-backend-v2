@@ -67,7 +67,7 @@ import jwtConfig from './config/jwt.config';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         type: 'single',
-        url: config.get<string>('REDIS_URI'),
+        url: config.get<string>('REDIS_URL'),
       }),
       inject: [ConfigService],
     }),

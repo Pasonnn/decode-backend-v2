@@ -61,12 +61,8 @@ export class AuthController {
     // Register Controller
     @MessagePattern('email-verification-register')
     async emailVerificationRegister(dto: RegisterInfoDto): Promise<Response> {
-        const register_info_response = await this.registerController.registerInfo({username: dto.username, email: dto.email, password: dto.password});
-        if (!register_info_response.success) {
-            return register_info_response;
-        }
-        const send_email_verification_response = await this.registerController.sendEmailVerification(dto.email);
-        return send_email_verification_response;
+        const email_verification_register_response = await this.registerController.emailVerificationRegister(dto);
+        return email_verification_register_response;
     }
 
     @MessagePattern('verify-email-register')
@@ -119,8 +115,6 @@ export class AuthController {
                 }};
         }
     }
-
-    // Session Controller
 }
 
 export class RegisterController {
