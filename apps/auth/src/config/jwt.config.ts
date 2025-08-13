@@ -10,14 +10,14 @@ export default registerAs('jwt', () => ({
 
   // Token Configuration
   accessToken: {
-    expiresIn: '15m', // 15 minutes
+    expiresIn: '1d', // 1 day
     algorithm: 'HS256',
     issuer: 'decode-auth-service',
     audience: 'decode-frontend',
   },
 
   refreshToken: {
-    expiresIn: '7d', // 7 days
+    expiresIn: '30d', // 30 days
     algorithm: 'HS256',
     issuer: 'decode-auth-service',
     audience: 'decode-frontend',
@@ -25,14 +25,18 @@ export default registerAs('jwt', () => ({
 
   // Email Verification Token
   emailVerification: {
-    expiresIn: '1h', // 1 hour
+    expiresIn: '10m', // 10 minutes
     algorithm: 'HS256',
+    issuer: 'decode-auth-service',
+    audience: 'decode-frontend',
   },
 
   // Password Reset Token
   passwordReset: {
     expiresIn: '1h', // 1 hour
     algorithm: 'HS256',
+    issuer: 'decode-auth-service',
+    audience: 'decode-frontend',
   },
 
   // Token Refresh Configuration

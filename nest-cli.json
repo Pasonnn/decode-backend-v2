@@ -5,10 +5,10 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/decode-backend-v2/tsconfig.app.json"
+    "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
   },
   "monorepo": true,
-  "root": "apps/decode-backend-v2",
+  "root": "apps/api-gateway",
   "projects": {
     "api-gateway": {
       "type": "application",
@@ -19,13 +19,13 @@
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
-    "decode-backend-v2": {
+    "auth": {
       "type": "application",
-      "root": "apps/decode-backend-v2",
+      "root": "apps/auth",
       "entryFile": "main",
-      "sourceRoot": "apps/decode-backend-v2/src",
+      "sourceRoot": "apps/auth/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/decode-backend-v2/tsconfig.app.json"
+        "tsConfigPath": "apps/auth/tsconfig.app.json"
       }
     },
     "email-worker": {
@@ -35,15 +35,6 @@
       "sourceRoot": "apps/email-worker/src",
       "compilerOptions": {
         "tsConfigPath": "apps/email-worker/tsconfig.app.json"
-      }
-    },
-    "user": {
-      "type": "application",
-      "root": "apps/user",
-      "entryFile": "main",
-      "sourceRoot": "apps/user/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/user/tsconfig.app.json"
       }
     }
   }

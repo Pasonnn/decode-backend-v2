@@ -1,21 +1,26 @@
+// Module Import
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { MongooseModule } from '@nestjs/mongoose';
 
 // Controllers Import
-import { AuthController } from './controllers/auth.controller';
+import { AuthController } from './auth.controller';
 
 // Services Import
 import { RegisterService } from './services/register.service';
-import { LoginService } from './services/login.service';
-import { SessionService } from './services/session.service';
-import { PasswordService } from './services/password.service';
-import { InfoService } from './services/info.service';
+// import { LoginService } from './services/login.service';
+// import { SessionService } from './services/session.service';
+// import { PasswordService } from './services/password.service';
+// import { InfoService } from './services/info.service';  
 
-// Module Import
-import { RedisModule } from '@nestjs-modules/ioredis';
-import { JwtModule } from '@nestjs/jwt';
-import { MongooseModule } from '@nestjs/mongoose';
+// Strategies and Infrastructure Import
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { SessionStrategy } from './strategies/session.strategy';
+import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
 
 // Schemas Import
 import { User, UserSchema } from './schemas/user.schema';
@@ -34,6 +39,7 @@ import jwtConfig from './config/jwt.config';
     }),
     ConfigModule.forFeature(authConfig),
     ConfigModule.forFeature(jwtConfig),
+    PassportModule, // Add PassportModule for strategies
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -62,7 +68,7 @@ import jwtConfig from './config/jwt.config';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         type: 'single',
-        url: config.get<string>('REDIS_URL'),
+        url: config.get<string>('REDIS_URI'), // Use consistent naming
       }),
       inject: [ConfigService],
     }),
@@ -81,6 +87,25 @@ import jwtConfig from './config/jwt.config';
     ]),
   ],
   controllers: [AuthController],
-  providers: [RegisterService, LoginService, SessionService, PasswordService, InfoService, EmailService],
+  providers: [
+    // Services
+    RegisterService, 
+    // LoginService, 
+    // SessionService, 
+    // PasswordService, 
+    // InfoService,
+    // JwtService,
+    
+    // Strategies
+    JwtStrategy, 
+    SessionStrategy,
+    
+    // Infrastructure
+    RedisInfrastructure,
+  ],
+  exports: [
+    // Export services that might be used by other modules
+    RedisInfrastructure,
+  ],
 })
 export class AuthModule {}

@@ -1,5 +1,7 @@
-export interface Response {
+export interface Response<T = unknown> {
     success: boolean;
-    code: string;
+    statusCode: number;
     message: string;
+    data?: T;
+    error?: string | Record<string, unknown>;
 }

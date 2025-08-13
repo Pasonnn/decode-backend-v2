@@ -56,7 +56,7 @@ export class RabbitMQService implements OnModuleInit {
 
   async processEmailRequest(request: EmailRequestDto): Promise<void> {
     const startTime = Date.now();
-    
+    console.log('Processing email request ', request);
     try {
       await this.emailService.sendEmail(request);
       

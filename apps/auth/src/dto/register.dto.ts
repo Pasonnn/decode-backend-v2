@@ -17,10 +17,6 @@ export class RegisterInfoDto {
 
 export class VerifyEmailDto {
     @IsNotEmpty()
-    @IsEmail()
-    email: string;
-
-    @IsNotEmpty()
     @IsString()
     code: string;
 }

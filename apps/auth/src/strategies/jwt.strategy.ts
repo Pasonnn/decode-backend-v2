@@ -2,42 +2,61 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { jwt } from '../config/jwt.config';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor(
         private readonly configService: ConfigService,
+        private readonly jwtService: JwtService,
     ) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: jwt.secret.accessToken,
-            issuer: jwt.accessToken.issuer,
-            audience: jwt.accessToken.audience,
+            secretOrKey: configService.get('jwt.secret.accessToken'),
+            issuer: configService.get('jwt.accessToken.issuer'),
+            audience: configService.get('jwt.accessToken.audience'),
         });
+    }
+
+    async validate(payload: any) {
+        // This method is called by Passport after JWT verification
+        // Return the user object that will be attached to the request
+        return {
+            userId: payload.user_id,
+            username: payload.username,
+            email: payload.email,
+        };
     }
 
     async createAccessToken(user: {id: string, username: string, email: string}) {
         const payload = { user_id: user.id, username: user.username, email: user.email };
-        const accessToken = jwt.sign(payload, jwt.secret.accessToken, {
-            expiresIn: jwt.accessToken.expiresIn,
-            algorithm: jwt.accessToken.algorithm,
-            issuer: jwt.accessToken.issuer,
-            audience: jwt.accessToken.audience,
+        
+        return this.jwtService.sign(payload, {
+            secret: this.configService.get('jwt.secret.accessToken'),
+            expiresIn: this.configService.get('jwt.accessToken.expiresIn'),
+            issuer: this.configService.get('jwt.accessToken.issuer'),
+            audience: this.configService.get('jwt.accessToken.audience'),
         });
-        return accessToken;
     }
 
-    async validateAccessToken(req: any) {
+    async createRefreshToken(user: {id: string, username: string, email: string}) {
+        const payload = { user_id: user.id, username: user.username, email: user.email };
+        
+        return this.jwtService.sign(payload, {
+            secret: this.configService.get('jwt.secret.refreshToken'),
+            expiresIn: this.configService.get('jwt.refreshToken.expiresIn'),
+            issuer: this.configService.get('jwt.refreshToken.issuer'),
+            audience: this.configService.get('jwt.refreshToken.audience'),
+        });
+    }
+
+    async validateAccessToken(token: string) {
         try {
-            const accessToken = this.extractAccessToken(req);
-            if (!accessToken) {
-                throw new UnauthorizedException('No access token provided');
-            }
-            const payload = jwt.verify(accessToken, jwt.secret.accessToken, {
-                issuer: jwt.accessToken.issuer,
-                audience: jwt.accessToken.audience,
+            const payload = this.jwtService.verify(token, {
+                secret: this.configService.get('jwt.secret.accessToken'),
+                issuer: this.configService.get('jwt.accessToken.issuer'),
+                audience: this.configService.get('jwt.accessToken.audience'),
             });
             return payload;
         } catch (error) {
@@ -45,17 +64,52 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         }
     }
 
-    async extractAccessToken(req: any) {
+    async validateRefreshToken(token: string) {
+        try {
+            const payload = this.jwtService.verify(token, {
+                secret: this.configService.get('jwt.secret.refreshToken'),
+                issuer: this.configService.get('jwt.refreshToken.issuer'),
+                audience: this.configService.get('jwt.refreshToken.audience'),
+            });
+            return payload;
+        } catch (error) {
+            throw new UnauthorizedException('Invalid refresh token');
+        }
+    }
+
+    extractAccessToken(req: any): string | null {
+        // From Authorization header
         if (req.headers?.['authorization']?.startsWith('Bearer ')) {
             return req.headers['authorization'].split(' ')[1];
         }
 
+        // From cookies (if using cookie-parser)
         if (req.cookies?.['accessToken']) {
             return req.cookies['accessToken'];
         }
 
+        // From query parameters
         if (req.query?.['accessToken']) {
             return req.query['accessToken'];
+        }
+
+        return null;
+    }
+
+    extractRefreshToken(req: any): string | null {
+        // From Authorization header
+        if (req.headers?.['authorization']?.startsWith('Refresh ')) {
+            return req.headers['authorization'].split(' ')[1];
+        }
+
+        // From cookies (if using cookie-parser)
+        if (req.cookies?.['refreshToken']) {
+            return req.cookies['refreshToken'];
+        }
+
+        // From query parameters
+        if (req.query?.['refreshToken']) {
+            return req.query['refreshToken'];
         }
 
         return null;

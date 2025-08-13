@@ -8,6 +8,7 @@ export default registerAs('auth', () => ({
     requireLowercase: true,
     requireNumbers: true,
     requireSpecialChars: false,
+    saltRounds: 12,
   },
 
   // Session Configuration

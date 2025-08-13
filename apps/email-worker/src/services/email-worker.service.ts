@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import nodemailer from 'nodemailer';
 import { EmailTemplates } from '../templates/email.templates';
 import { EmailRequestDto } from '../dto/email.dto';
 
@@ -14,7 +14,7 @@ export class EmailService {
   }
 
   private initializeTransporter() {
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: this.configService.get('SMTP_HOST', 'smtp.gmail.com'),
       port: this.configService.get('SMTP_PORT', 587),
       secure: false, // true for 465, false for other ports
@@ -27,12 +27,13 @@ export class EmailService {
 
   async sendEmail(request: EmailRequestDto): Promise<boolean> {
     try {
-      this.logger.log(`Processing email request: ${request.type} to ${this.getEmailFromRequest(request)}`);
+      const recipientEmail = this.getEmailFromRequest(request);
+      this.logger.log(`Processing email request: ${request.type} to ${recipientEmail}`);
 
       const template = this.getEmailTemplate(request);
-      const emailResult = await this.sendEmailWithTemplate(template);
+      const emailResult = await this.sendEmailWithTemplate(request, template);
 
-      this.logger.log(`Email sent successfully: ${request.type} to ${this.getEmailFromRequest(request)}`);
+      this.logger.log(`Email sent successfully: ${request.type} to ${recipientEmail}`);
       return true;
     } catch (error) {
       this.logger.error(`Failed to send email: ${request.type} to ${this.getEmailFromRequest(request)}`, error.stack);
@@ -59,19 +60,26 @@ export class EmailService {
     }
   }
 
-  private async sendEmailWithTemplate(template: any) {
+  private async sendEmailWithTemplate(request: EmailRequestDto, template: any) {
+    const recipientEmail = this.getEmailFromRequest(request);
+    const senderEmail = this.configService.get('SMTP_USER');
+
     const mailOptions = {
-      from: this.configService.get('SMTP_FROM', 'noreply@decode.com'),
-      to: template.to || this.configService.get('SMTP_TO'),
+      from: senderEmail,
+      to: recipientEmail,
       subject: template.subject,
       html: template.html,
       text: template.text,
     };
 
+    this.logger.log(`Sending email from: ${mailOptions.from}`);
+    this.logger.log(`Sending email to: ${mailOptions.to}`);
+    this.logger.log(`Email subject: ${mailOptions.subject}`);
+
     return await this.transporter.sendMail(mailOptions);
   }
 
-  private getEmailFromRequest(request: EmailRequestDto): string {
+  private getEmailFromRequest(request: EmailRequestDto): string {    
     switch (request.type) {
       case 'create-account':
         return request.data.email;
