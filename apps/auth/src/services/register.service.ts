@@ -37,7 +37,7 @@ export class RegisterService {
         }
         const password_hashed = password_verification_and_hashing_response.data?.password_hashed;
         if (!password_hashed) {
-            return { success: false, code: 400, message: 'Invalid password' };
+            return { success: false, statusCode: 400, message: 'Invalid password' };
         }
         // Check if register info is valid and store in Redis
         const register_info_response = await this.registerInfo({username: username, email: email, password_hashed: password_hashed});
@@ -56,12 +56,12 @@ export class RegisterService {
         // Check if user email already exists
         const existing_email = await this.userModel.findOne({email: email});
         if (existing_email) {
-            return { success: false, code: 400, message: 'Email already exists' };
+            return { success: false, statusCode: 400, message: 'Email already exists' };
         }
         // Check if user username already exists
         const existing_username = await this.userModel.findOne({username: username});
         if (existing_username) {
-            return { success: false, code: 400, message: 'Username already exists' };
+            return { success: false, statusCode: 400, message: 'Username already exists' };
         }
         // Store register info in Redis
         const register_info_key = `register_info:${email}`;
@@ -73,7 +73,7 @@ export class RegisterService {
         // Store register info in Redis
         await this.redisInfrastructure.set(register_info_key, JSON.stringify(register_info_value), 60 * 60); // 1 hour
         // Return success response
-        return { success: true, code: 200, message: 'Register info is valid' };
+        return { success: true, statusCode: 200, message: 'Register info is valid' };
     }
 
     private async sendEmailVerification(email: string) {
@@ -94,7 +94,7 @@ export class RegisterService {
             }
         })
         // Return success response
-        return { success: true, code: 200, message: 'Email verification code is sent' };
+        return { success: true, statusCode: 200, message: 'Email verification code is sent' };
     }
 
     private async passwordVerificationAndHashing(password: string) {
@@ -102,7 +102,7 @@ export class RegisterService {
         const password_utils = new PasswordUtils(this.configService);
         const password_strength = password_utils.validatePasswordStrength(password);
         if (!password_strength.isValid) {
-            return { success: false, code: 400, message: password_strength.feedback.join(', ') };
+            return { success: false, statusCode: 400, message: password_strength.feedback.join(', ') };
         }
         // Generate salt
         const salt = password_utils.generateSalt();
@@ -111,7 +111,7 @@ export class RegisterService {
         // Return success response
         return { 
             success: true,
-            code: 200, message: 'Password is strong enough', 
+            statusCode: 200, message: 'Password is strong enough', 
             data: {
                 password_hashed: password_hashed, 
             }
@@ -136,7 +136,7 @@ export class RegisterService {
             this.logger.error(welcome_email_response.message);
         }
         // Return success response
-        return { success: true, code: 200, message: 'User is created' };
+        return { success: true, statusCode: 200, message: 'User is created' };
     }
 
     private async checkEmailVerificationCode(email_verification_code: string) {
@@ -144,12 +144,12 @@ export class RegisterService {
         const email_verification_code_key = `email_verification_code:${email_verification_code}`;
         const email_verification_code_value = await this.redisInfrastructure.get(email_verification_code_key);
         if (!email_verification_code_value) {
-            return { success: false, code: 400, message: 'Invalid email verification code' };
+            return { success: false, statusCode: 400, message: 'Invalid email verification code' };
         }
         // Delete email verification code from Redis
         await this.redisInfrastructure.del(email_verification_code_key);
         // Return success response
-        return { success: true, code: 200, message: 'Email verification code is valid', data: email_verification_code_value };
+        return { success: true, statusCode: 200, message: 'Email verification code is valid', data: email_verification_code_value };
     }
 
     private async createUser(email: string) {
@@ -157,12 +157,12 @@ export class RegisterService {
         const register_info_key = `register_info:${email}`;
         const register_info_value = await this.redisInfrastructure.get(register_info_key);
         if (!register_info_value) {
-            return { success: false, code: 400, message: 'Invalid register info' };
+            return { success: false, statusCode: 400, message: 'Invalid register info' };
         }
         // Check if user already exists (by email or username)
         const existing_user = await this.userModel.findOne({$or: [{email: email}, {username: register_info_value.username}]});
         if (existing_user) {
-            return { success: false, code: 400, message: 'User already exists' };
+            return { success: false, statusCode: 400, message: 'User already exists' };
         }
         // Delete register info from Redis
         await this.redisInfrastructure.del(register_info_key);
@@ -173,7 +173,7 @@ export class RegisterService {
             password_hashed: register_info_value.password_hashed,
         });
         // Return success response
-        return { success: true, code: 200, message: 'User is created', data: user };
+        return { success: true, statusCode: 200, message: 'User is created', data: user };
     }
 
     private async welcomeEmail(email: string) {
@@ -185,6 +185,6 @@ export class RegisterService {
             }
         })
         // Return success response
-        return { success: true, code: 200, message: 'Welcome email is sent' };
+        return { success: true, statusCode: 200, message: 'Welcome email is sent' };
     }
 }

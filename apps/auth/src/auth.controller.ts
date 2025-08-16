@@ -126,7 +126,7 @@ export class AuthController {
 //     * STEP 1:
 //     * 1. register/info: 
 //     * input: username, email, password
-//     * process: store user data to Redis with key: `register:${email} - value: ${username} - ${hashed_password}`
+//     * process: store user data to Redis with key: `register:${email} - value: ${username} - ${password_hashed}`
 //     * output: success or error
 //     * 2. register/send-email-verification:
 //     * input: email
