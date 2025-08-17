@@ -24,13 +24,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         // Return the user object that will be attached to the request
         return {
             userId: payload.user_id,
-            username: payload.username,
-            email: payload.email,
         };
     }
 
-    async createAccessToken(user: {id: string, username: string, email: string}) {
-        const payload = { user_id: user.id, username: user.username, email: user.email };
+    async createAccessToken(user_id: string) {
+        const payload = { user_id: user_id };
         
         return this.jwtService.sign(payload, {
             secret: this.configService.get('jwt.secret.accessToken'),
@@ -40,8 +38,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    async createRefreshToken(user: {id: string, username: string, email: string}) {
-        const payload = { user_id: user.id, username: user.username, email: user.email };
+    async createRefreshToken(user_id: string) {
+        const payload = { user_id: user_id };
         
         return this.jwtService.sign(payload, {
             secret: this.configService.get('jwt.secret.refreshToken'),

@@ -5,3 +5,10 @@ export interface Response<T = unknown> {
     data?: T;
     error?: string | Record<string, unknown>;
 }
+
+export interface LoginResponse {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data?: any;
+}

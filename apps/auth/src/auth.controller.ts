@@ -12,10 +12,10 @@
  * - auth/register/create-user: Create user in database
  * - auth/login/info: User login info (username_or_email, password)
  * - auth/login/fingerprint-check: Fingerprint check (if not valid, create untrusted fingerprint
- * in Redis with key: `fingerprint:${user_id}:${fingerprint_hash}`)
+ * in Redis with key: `fingerprint:${user_id}:${fingerprint_hashed}`)
  * - auth/login/fingerprint-send-email-verify: Send email verification code to email (email)
  * - auth/login/fingerprint-email-code-verify: Verify email by code (email, code)
- * - auth/login/fingerprint-create: Create trusted fingerprint (user_id, fingerprint_hash)
+ * - auth/login/fingerprint-create: Create trusted fingerprint (user_id, fingerprint_hashed)
  * - auth/session/create: Create session (user_id, fingerprint_id)
  * - auth/session/refresh: Refresh session (session id)
  * - auth/session/by-sso: Get session token by sso code (sso code)
@@ -33,11 +33,12 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, Res, Req } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
-import { Response } from './interfaces/response.interface';
+import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
+import { LoginResponse, Response } from './interfaces/response.interface';
 
 // Import the Services
 import { RegisterService } from './services/register.service';
-// import { LoginService } from '../services/login.service';
+import { LoginService } from './services/login.service';
 // import { SessionService } from '../services/session.service';
 // import { PasswordService } from '../services/password.service';
 // import { InfoService } from '../services/info.service';
@@ -47,6 +48,7 @@ import { RegisterService } from './services/register.service';
 export class AuthController {
     constructor(
         private readonly registerService: RegisterService,
+        private readonly loginService: LoginService,
     ) {}
 
     // Health Check Endpoint
@@ -59,63 +61,26 @@ export class AuthController {
     @Post('register/email-verification')
     async emailVerificationRegister(@Body() dto: RegisterInfoDto): Promise<Response> {
         const email_verification_register_response = await this.registerService.emailVerificationRegister(dto);
-        return {
-            success: email_verification_register_response.success,
-            statusCode: email_verification_register_response.code, 
-            message: email_verification_register_response.message,
-        };    
+        return email_verification_register_response;
     }
 
     @Post('register/verify-email')
     async verifyEmailRegister(@Body() dto: VerifyEmailDto): Promise<Response> {
         const verify_email_register_response = await this.registerService.verifyEmail(dto.code);
-        return {
-            success: verify_email_register_response.success,
-            statusCode: verify_email_register_response.code, 
-            message: verify_email_register_response.message,
-        };
+        return verify_email_register_response;
     }
 
-    // // Login Controller
-    // @MessagePattern('fingerprint-login')
-    // async fingerprintLogin(dto: FingerprintLoginDto): Promise<FingerprintLoginResponse> {
-    //     const login_info_response = await this.loginController.loginInfo({username_or_email: dto.username_or_email, password: dto.password});
-    //     if (!login_info_response.success) {
-    //         return login_info_response;
-    //     }
-    //     const fingerprint_check_response = await this.loginController.fingerprintCheck(dto.fingerprint_hash);
-    //     if (!fingerprint_check_response.success) {
-    //         const fingerprint_send_email_verify_response = await this.loginController.fingerprintSendEmailVerify(dto.email);
-    //         if (!fingerprint_send_email_verify_response.success) {
-    //             return {
-    //                 success: false,
-    //                 code: 400,
-    //                 message: 'Failed to send email verification code'
-    //             };
-    //         }
-    //         return {
-    //             success: false,
-    //             code: 400,
-    //             message: 'Please verify your device fingerprint'
-    //         };
-    //     } else { // The fingerprint is valid
-    //         const session_create_response = await this.sessionController.sessionCreate({user_id: login_info_response.user_id, fingerprint_id: fingerprint_check_response.fingerprint_id});
-    //         if (!session_create_response.success) {
-    //             return session_create_response;
-    //         }
-    //         const session_refresh_response = await this.sessionController.sessionRefresh({session_token: session_create_response.session.token});
-    //         if (!session_refresh_response.success) {
-    //             return session_refresh_response;
-    //         }
-    //         return {success: true,
-    //             code: 200,
-    //             message: 'Login successful',
-    //             data: {
-    //                 session_token: session_create_response.data.session.token,
-    //                 access_token: session_refresh_response.data.access_token
-    //             }};
-    //     }
-    // }
+    @Post('login')
+    async login(@Body() dto: LoginDto): Promise<LoginResponse> {
+        const login_response = await this.loginService.login(dto.email_or_username, dto.password, dto.fingerprint_hashed);
+        return login_response;
+    }
+
+    @Post('login/fingerprint/email-verification')
+    async fingerprintEmailVerification(@Body() dto: FingerprintEmailVerificationDto): Promise<Response> {
+        const verify_device_fingerprint_email_verification_response = await this.loginService.verifyDeviceFingerprintEmailVerification(dto.email_verification_code);
+        return verify_device_fingerprint_email_verification_response;
+    }
 }
 
 // export class RegisterController {
@@ -176,7 +141,7 @@ export class AuthController {
 //     * process: check if user exist and password is correct
 //     * output: success (return user_id) or error
 //     * 2. login/fingerprint-check:
-//     * input: fingerprint_hash (device data)
+//     * input: fingerprint_hashed (device data)
 //     * process: check if fingerprint is trusted/in database (in case A, fingerprint is trusted)
 //     * output: success (return fingerprint_id)
 //     * 3. session/create:
@@ -195,9 +160,9 @@ export class AuthController {
 //     * process: check if user exist and password is correct
 //     * output: success (return user_id) or error
 //     * 2. login/fingerprint-check:
-//     * input: fingerprint_hash (device data)
+//     * input: fingerprint_hashed (device data)
 //     * process: check if fingerprint is trusted/in database (in case B, fingerprint is not trusted)
-//     * store fingerprint hash to Redis with key: `fingerprint:${user_id} - value: ${fingerprint_hash}`
+//     * store fingerprint hash to Redis with key: `fingerprint:${user_id} - value: ${fingerprint_hashed}`
 //     * output: error
 //     * 3. login/fingerprint-send-email-verify:
 //     * input: email
@@ -209,10 +174,10 @@ export class AuthController {
 //     * input: email, code
 //     * process: check if code is valid
 //     * if valid take the user_id from redis with key: `fingerprint-email-verification:${code}`
-//     * and from user_id take the fingerprint_hash from Redis with key: `fingerprint:${user_id}`
+//     * and from user_id take the fingerprint_hashed from Redis with key: `fingerprint:${user_id}`
 //     * output: success (return fingerprint hash) or error
 //     * 5. login/fingerprint-create:
-//     * input: user_id, fingerprint_hash
+//     * input: user_id, fingerprint_hashed
 //     * process: create trusted fingerprint in database with trusted: true
 //     * output: success (return session token) or error
 //     * 6. session/create:
@@ -230,8 +195,8 @@ export class AuthController {
 //     }
 
 //     // User Login Fingerprint Check Endpoint
-//     fingerprintCheck(fingerprint_hash: string): Promise<FingerprintCheckResponse> {
-//         return this.authService.fingerprintCheck(fingerprint_hash);
+//     fingerprintCheck(fingerprint_hashed: string): Promise<FingerprintCheckResponse> {
+//         return this.authService.fingerprintCheck(fingerprint_hashed);
 //     }
 
 //     // User Login Fingerprint Send Email Verify Endpoint

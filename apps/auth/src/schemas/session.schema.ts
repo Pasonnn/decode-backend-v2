@@ -11,6 +11,9 @@ export class Session extends Document {
 
   @Prop({ required: true })
   token: string;
+
+  @Prop({ required: true, default: true })
+  is_active: boolean;
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);

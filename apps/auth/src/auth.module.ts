@@ -12,8 +12,8 @@ import { AuthController } from './auth.controller';
 
 // Services Import
 import { RegisterService } from './services/register.service';
-// import { LoginService } from './services/login.service';
-// import { SessionService } from './services/session.service';
+import { LoginService } from './services/login.service';
+import { SessionService } from './services/session.service';
 // import { PasswordService } from './services/password.service';
 // import { InfoService } from './services/info.service';  
 
@@ -21,6 +21,9 @@ import { RegisterService } from './services/register.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { SessionStrategy } from './strategies/session.strategy';
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
+
+// Utils Import
+import { PasswordUtils } from './utils/password.utils';
 
 // Schemas Import
 import { User, UserSchema } from './schemas/user.schema';
@@ -90,11 +93,10 @@ import jwtConfig from './config/jwt.config';
   providers: [
     // Services
     RegisterService, 
-    // LoginService, 
-    // SessionService, 
+    LoginService, 
+    SessionService, 
     // PasswordService, 
     // InfoService,
-    // JwtService,
     
     // Strategies
     JwtStrategy, 
@@ -102,6 +104,9 @@ import jwtConfig from './config/jwt.config';
     
     // Infrastructure
     RedisInfrastructure,
+
+    // Utils
+    PasswordUtils,
   ],
   exports: [
     // Export services that might be used by other modules

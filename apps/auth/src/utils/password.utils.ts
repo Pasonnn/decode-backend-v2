@@ -25,7 +25,9 @@ export class PasswordUtils {
    * @returns True if passwords match, false otherwise
    */
   async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
-    return await bcrypt.compare(password, hashedPassword);
+    const is_password_correct = await bcrypt.compare(password, hashedPassword);
+    const hash_new_password = await this.hashPassword(password);
+    return is_password_correct;
   }
 
   /**

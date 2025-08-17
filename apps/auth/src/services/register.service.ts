@@ -20,6 +20,7 @@ export class RegisterService {
         private readonly configService: ConfigService, 
         private readonly redisInfrastructure: RedisInfrastructure,
         private readonly jwtStrategy: JwtStrategy,
+        private readonly passwordUtils: PasswordUtils,
         @InjectModel(User.name) private userModel: Model<User>,
         @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
     ) {
@@ -99,15 +100,12 @@ export class RegisterService {
 
     private async passwordVerificationAndHashing(password: string) {
         // Check if password is strong enough
-        const password_utils = new PasswordUtils(this.configService);
-        const password_strength = password_utils.validatePasswordStrength(password);
+        const password_strength = this.passwordUtils.validatePasswordStrength(password);
         if (!password_strength.isValid) {
             return { success: false, statusCode: 400, message: password_strength.feedback.join(', ') };
         }
-        // Generate salt
-        const salt = password_utils.generateSalt();
         // Hash password
-        const password_hashed = await password_utils.hashPasswordWithSalt(password, salt);
+        const password_hashed = await this.passwordUtils.hashPassword(password);
         // Return success response
         return { 
             success: true,
