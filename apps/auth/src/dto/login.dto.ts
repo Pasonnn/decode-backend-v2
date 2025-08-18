@@ -1,5 +1,7 @@
-import { ObjectId } from "mongoose";
-import { IsNotEmpty, IsString, IsEmail, IsOptional, IsBoolean, MaxLength } from "class-validator";
+import { IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+
+// Constants Import
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
 
 export class LoginDto {
     @IsNotEmpty()
@@ -8,16 +10,21 @@ export class LoginDto {
 
     @IsNotEmpty()
     @IsString()
+    @MinLength(AUTH_CONSTANTS.PASSWORD.MIN_LENGTH)
+    @MaxLength(AUTH_CONSTANTS.PASSWORD.MAX_LENGTH)
     password: string;
 
     @IsNotEmpty()
     @IsString()
+    @MinLength(AUTH_CONSTANTS.VALIDATION.FINGERPRINT_HASH.MIN_LENGTH)
+    @MaxLength(AUTH_CONSTANTS.VALIDATION.FINGERPRINT_HASH.MAX_LENGTH)
     fingerprint_hashed: string;
 }
 
 export class FingerprintEmailVerificationDto {
     @IsNotEmpty()
     @IsString()
-    @MaxLength(6)
-    email_verification_code: string;
+    @MinLength(AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH)
+    @MaxLength(AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH)
+    code: string;
 }
