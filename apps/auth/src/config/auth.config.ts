@@ -15,7 +15,7 @@ export default registerAs('auth', () => ({
   session: {
     maxSessionsPerUser: 5,
     sessionTimeout: 3600, // 1 hour in seconds
-    refreshTokenRotation: true,
+    sessionTokenRotation: true,
   },
 
   // Email Verification Configuration

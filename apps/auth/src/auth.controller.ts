@@ -39,7 +39,7 @@ import { LoginResponse, Response } from './interfaces/response.interface';
 // Import the Services
 import { RegisterService } from './services/register.service';
 import { LoginService } from './services/login.service';
-// import { SessionService } from '../services/session.service';
+import { SessionService } from './services/session.service';
 // import { PasswordService } from '../services/password.service';
 // import { InfoService } from '../services/info.service';
 
@@ -49,6 +49,7 @@ export class AuthController {
     constructor(
         private readonly registerService: RegisterService,
         private readonly loginService: LoginService,
+        private readonly sessionService: SessionService,
     ) {}
 
     // Health Check Endpoint
@@ -70,6 +71,7 @@ export class AuthController {
         return verify_email_register_response;
     }
 
+    // Login Controller
     @Post('login')
     async login(@Body() dto: LoginDto): Promise<LoginResponse> {
         const login_response = await this.loginService.login(dto.email_or_username, dto.password, dto.fingerprint_hashed);
@@ -81,183 +83,56 @@ export class AuthController {
         const verify_device_fingerprint_email_verification_response = await this.loginService.verifyDeviceFingerprintEmailVerification(dto.email_verification_code);
         return verify_device_fingerprint_email_verification_response;
     }
+
+    // Session Controller
+    @Post('session/refresh')
+    async refreshSession(@Body() dto: {session_token: string}): Promise<Response> {
+        const refresh_session_response = await this.sessionService.refreshSession(dto.session_token);
+        return refresh_session_response;
+    }
+
+    @Get('session/active')
+    async getActiveSessions(@Body() dto: {user_id: string}): Promise<Response> {
+        const get_active_sessions_response = await this.sessionService.getUserActiveSessions(dto.user_id);
+        return get_active_sessions_response;
+    }
+
+    @Post('session/logout')
+    async logout(@Body() dto: {session_token: string}): Promise<Response> {
+        const logout_response = await this.sessionService.logout(dto.session_token);
+        return logout_response;
+    }
+
+    @Post('session/revoke-all')
+    async revokeAllSessions(@Body() dto: {user_id: string}): Promise<Response> {
+        const revoke_all_sessions_response = await this.sessionService.revokeAllSessions(dto.user_id);
+        return revoke_all_sessions_response;
+    }
+
+    @Post('session/cleanup-expired')
+    async cleanupExpiredSessions(@Body() dto: {user_id: string}): Promise<Response> {
+        const cleanup_expired_sessions_response = await this.sessionService.cleanupExpiredSessions(dto.user_id);
+        return cleanup_expired_sessions_response;
+    }
+
+    @Post('session/validate-access')
+    async validateAccess(@Body() dto: {access_token: string}): Promise<Response> {
+        const validate_access_response = await this.sessionService.validateAccess(dto.access_token);
+        return validate_access_response;
+    }
+
+    @Post('session/sso')
+    async createSsoToken(@Body() dto: {user_id: string}): Promise<Response> {
+        const create_sso_token_response = await this.sessionService.createSsoToken(dto.user_id);
+        return create_sso_token_response;
+    }
+
+    @Post('session/sso/validate')
+    async validateSsoToken(@Body() dto: {sso_token: string}): Promise<Response> {
+        const validate_sso_token_response = await this.sessionService.validateSsoToken(dto.sso_token);
+        return validate_sso_token_response;
+    }
 }
-
-// export class RegisterController {
-//     constructor(private readonly registerService: RegisterService) {}
-//     /*
-//     * User Register
-//     * Work flow:
-//     * STEP 1:
-//     * 1. register/info: 
-//     * input: username, email, password
-//     * process: store user data to Redis with key: `register:${email} - value: ${username} - ${password_hashed}`
-//     * output: success or error
-//     * 2. register/send-email-verification:
-//     * input: email
-//     * process: send email verification code to email, store to Redis with key: `email-verification:${email}`
-//     * output: success or error
-//     * STEP 2:
-//     * 3. register/verify-email:
-//     * input: email, code
-//     * process: check if code is valid
-//     * output: success or error
-//     * 4. register/create-user:
-//     * input: email
-//     * process: get user data from Redis with key: `register:${email}`
-//     * and create user in database
-//     * output: success or error
-//     */
-//     // User Register Endpoint
-//     registerInfo(dto: RegisterInfoDto): Promise<Response> {
-//         return this.registerService.registerInfo(dto);
-//     }
-
-//     // User Register Send Email Verification Endpoint
-//     sendEmailVerification(email: string): Promise<Response> {
-//         return this.registerService.sendEmailVerification(email);
-//     }
-
-//     // User Register Verify Email Endpoint
-//     verifyEmail(dto: VerifyEmailDto): Promise<Response> {
-//         return this.registerService.verifyEmail(dto);
-//     }
-
-//     // User Register Create User Endpoint
-//     createUser(email: string): Promise<Response> {
-//         return this.registerService.createUser(email);
-//     }
-// }
-
-// export class LoginController {
-//     constructor(private readonly loginService: LoginService) {}
-//     /*
-//     * User Login
-//     * Work flow:
-//     * A. Fingerprint Trusted
-//     * STEP 1:
-//     * 1. login/info:
-//     * input: username_or_email, password
-//     * process: check if user exist and password is correct
-//     * output: success (return user_id) or error
-//     * 2. login/fingerprint-check:
-//     * input: fingerprint_hashed (device data)
-//     * process: check if fingerprint is trusted/in database (in case A, fingerprint is trusted)
-//     * output: success (return fingerprint_id)
-//     * 3. session/create:
-//     * input: user_id, fingerprint_id
-//     * process: create session
-//     * output: success (return session_data - including session.token) or error
-//     * 4. session/refresh:
-//     * input: session_token
-//     * process: refresh session
-//     * output: success (return access_token) or error
-
-//     * B. Fingerprint Not Trusted
-//     * STEP 1:
-//     * 1. login/info:
-//     * input: username_or_email, password
-//     * process: check if user exist and password is correct
-//     * output: success (return user_id) or error
-//     * 2. login/fingerprint-check:
-//     * input: fingerprint_hashed (device data)
-//     * process: check if fingerprint is trusted/in database (in case B, fingerprint is not trusted)
-//     * store fingerprint hash to Redis with key: `fingerprint:${user_id} - value: ${fingerprint_hashed}`
-//     * output: error
-//     * 3. login/fingerprint-send-email-verify:
-//     * input: email
-//     * process: create code and store it to Redis with key: `fingerprint-email-verification:${code} - value: ${user_id}`
-//     * send email verification code to email
-//     * output: success or error
-//     * STEP 2:
-//     * 4. login/fingerprint-email-code-verify:
-//     * input: email, code
-//     * process: check if code is valid
-//     * if valid take the user_id from redis with key: `fingerprint-email-verification:${code}`
-//     * and from user_id take the fingerprint_hashed from Redis with key: `fingerprint:${user_id}`
-//     * output: success (return fingerprint hash) or error
-//     * 5. login/fingerprint-create:
-//     * input: user_id, fingerprint_hashed
-//     * process: create trusted fingerprint in database with trusted: true
-//     * output: success (return session token) or error
-//     * 6. session/create:
-//     * input: user_id, fingerprint_id
-//     * process: create session
-//     * output: success (return session token) or error
-//     * 7. session/refresh:
-//     * input: session_id
-//     * process: refresh session
-//     * output: success (return access_token) or error
-//     */
-//     // User Login Endpoint
-//     loginInfo(dto: LoginInfoDto): Promise<LoginInfoResponse> {
-//         return this.authService.loginInfo(dto);
-//     }
-
-//     // User Login Fingerprint Check Endpoint
-//     fingerprintCheck(fingerprint_hashed: string): Promise<FingerprintCheckResponse> {
-//         return this.authService.fingerprintCheck(fingerprint_hashed);
-//     }
-
-//     // User Login Fingerprint Send Email Verify Endpoint
-//     fingerprintSendEmailVerify(email: string): Promise<FingerprintSendEmailVerifyResponse> {
-//         return this.authService.fingerprintSendEmailVerify(email);
-//     }
-
-//     // User Login Fingerprint Email Code Verify Endpoint
-//     fingerprintEmailCodeVerify(dto: FingerprintEmailCodeVerifyDto): Promise<FingerprintEmailCodeVerifyResponse> {
-//         return this.authService.fingerprintEmailCodeVerify(dto);
-//     }
-
-//     // User Login Fingerprint Create Endpoint
-//     fingerprintCreate(dto: FingerprintCreateDto): Promise<FingerprintCreateResponse> {
-//         return this.authService.fingerprintCreate(dto);
-//     }
-// }
-
-// export class SessionController {
-//     constructor(private readonly sessionService: SessionService) {}
-
-//     /*
-//     * User Session
-//     * List of endpoints:
-//     * 1. session/create:
-//     * input: user_id, fingerprint_id
-//     * process: create session
-//     * output: success (return session token) or error
-//     * 2. session/refresh:
-//     * input: session_id
-//     * process: refresh session
-//     * output: success (return access_token) or error
-//     * 3. session/by-sso:
-//     * input: sso_code
-//     * process: get session token by sso code
-//     * output: success (return session token) or error
-//     * 4. session/logout:
-//     * input: session_id
-//     * process: logout session
-//     * output: success or error
-//     */
-//     // User Session Create Endpoint
-//     sessionCreate(dto: SessionCreateDto): Promise<SessionCreateResponse> {
-//         return this.sessionService.sessionCreate(dto);
-//     }
-
-//     // User Session Refresh Endpoint
-//     sessionRefresh(dto: SessionRefreshDto): Promise<SessionRefreshResponse> {
-//         return this.sessionService.sessionRefresh(dto);
-//     }
-
-//     // User Session By SSO Endpoint
-//     sessionBySso(dto: SessionBySsoDto): Promise<SessionBySsoResponse> {
-//         return this.sessionService.sessionBySso(dto);
-//     }
-
-//     // User Session Logout Endpoint
-//     sessionLogout(dto: SessionLogoutDto): Promise<SessionLogoutResponse> {
-//         return this.sessionService.sessionLogout(dto);
-//     }
-// }
 
 // export class PasswordController {
 //     constructor(private readonly passwordService: PasswordService) {}

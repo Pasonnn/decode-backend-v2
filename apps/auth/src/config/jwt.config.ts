@@ -4,7 +4,7 @@ export default registerAs('jwt', () => ({
   // JWT Secret Keys - These should come from environment variables for security
   secret: {
     accessToken: process.env.JWT_ACCESS_TOKEN_SECRET,
-    refreshToken: process.env.JWT_REFRESH_TOKEN_SECRET,
+    sessionToken: process.env.JWT_SESSION_TOKEN_SECRET,
     emailVerification: process.env.JWT_EMAIL_VERIFICATION_SECRET,
   },
 
@@ -16,7 +16,7 @@ export default registerAs('jwt', () => ({
     audience: 'decode-frontend',
   },
 
-  refreshToken: {
+  sessionToken: {
     expiresIn: '30d', // 30 days
     algorithm: 'HS256',
     issuer: 'decode-auth-service',

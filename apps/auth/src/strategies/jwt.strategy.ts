@@ -42,10 +42,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         const payload = { user_id: user_id };
         
         return this.jwtService.sign(payload, {
-            secret: this.configService.get('jwt.secret.refreshToken'),
-            expiresIn: this.configService.get('jwt.refreshToken.expiresIn'),
-            issuer: this.configService.get('jwt.refreshToken.issuer'),
-            audience: this.configService.get('jwt.refreshToken.audience'),
+            secret: this.configService.get('jwt.secret.sessionToken'),
+            expiresIn: this.configService.get('jwt.sessionToken.expiresIn'),
+            issuer: this.configService.get('jwt.sessionToken.issuer'),
+            audience: this.configService.get('jwt.sessionToken.audience'),
         });
     }
 
@@ -56,22 +56,40 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                 issuer: this.configService.get('jwt.accessToken.issuer'),
                 audience: this.configService.get('jwt.accessToken.audience'),
             });
-            return payload;
+            return {
+                success: true,
+                statusCode: 200,
+                message: 'Access token validated',
+                data: payload,
+            };
         } catch (error) {
-            throw new UnauthorizedException('Invalid access token');
+            return {
+                success: false,
+                statusCode: 401,
+                message: 'Invalid access token',
+            };
         }
     }
 
     async validateRefreshToken(token: string) {
         try {
             const payload = this.jwtService.verify(token, {
-                secret: this.configService.get('jwt.secret.refreshToken'),
-                issuer: this.configService.get('jwt.refreshToken.issuer'),
-                audience: this.configService.get('jwt.refreshToken.audience'),
+                secret: this.configService.get('jwt.secret.sessionToken'),
+                issuer: this.configService.get('jwt.sessionToken.issuer'),
+                audience: this.configService.get('jwt.sessionToken.audience'),
             });
-            return payload;
+            return {
+                success: true,
+                statusCode: 200,
+                message: 'Refresh token validated',
+                data: payload,
+            };
         } catch (error) {
-            throw new UnauthorizedException('Invalid refresh token');
+            return {
+                success: false,
+                statusCode: 401,
+                message: 'Invalid refresh token',
+            };
         }
     }
 
@@ -101,13 +119,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         }
 
         // From cookies (if using cookie-parser)
-        if (req.cookies?.['refreshToken']) {
-            return req.cookies['refreshToken'];
+        if (req.cookies?.['sessionToken']) {
+            return req.cookies['sessionToken'];
         }
 
         // From query parameters
-        if (req.query?.['refreshToken']) {
-            return req.query['refreshToken'];
+        if (req.query?.['sessionToken']) {
+            return req.query['sessionToken'];
         }
 
         return null;

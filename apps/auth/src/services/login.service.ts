@@ -42,65 +42,82 @@ export class LoginService {
 
     // login/
     async login(email_or_username: string, password: string, fingerprint_hashed: string): Promise<Response> {
-        this.logger.log(`Login request received for ${email_or_username}`);
-        const getUserInfoResponse = await this.getUserInfo(email_or_username);
-        if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
-            return getUserInfoResponse;
-        }
-        const checkPasswordResponse = await this.checkPassword(password, getUserInfoResponse.data.password_hashed);
-        if (!checkPasswordResponse.success) {
-            return checkPasswordResponse;
-        }
-        const checkDeviceFingerprintResponse = await this.checkDeviceFingerprint(fingerprint_hashed);
-        if (!checkDeviceFingerprintResponse.success || !checkDeviceFingerprintResponse.data) { // Device fingerprint not trusted
-            this.logger.log(`Device fingerprint not trusted for ${email_or_username}`);
-            const createDeviceFingerprintResponse = await this.createDeviceFingerprint(getUserInfoResponse.data._id, fingerprint_hashed);
-            if (!createDeviceFingerprintResponse.success) {
-                this.logger.error(`Cannot create device fingerprint for ${email_or_username}`);
-                return createDeviceFingerprintResponse;
+        try {
+            this.logger.log(`Login request received for ${email_or_username}`);
+            const getUserInfoResponse = await this.getUserInfo(email_or_username);
+            if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
+                return getUserInfoResponse;
             }
-            const sendDeviceFingerprintEmailVerificationResponse = await this.sendDeviceFingerprintEmailVerification(getUserInfoResponse.data._id, fingerprint_hashed);
-            if (!sendDeviceFingerprintEmailVerificationResponse.success) {
-                this.logger.error(`Cannot send device fingerprint email verification for ${email_or_username}`);
-                return sendDeviceFingerprintEmailVerificationResponse;
+            const checkPasswordResponse = await this.checkPassword(password, getUserInfoResponse.data.password_hashed);
+            if (!checkPasswordResponse.success) {
+                return checkPasswordResponse;
             }
-            this.logger.log(`Device fingerprint email verification sent for ${email_or_username}`);
+            const checkDeviceFingerprintResponse = await this.checkDeviceFingerprint(fingerprint_hashed);
+            if (!checkDeviceFingerprintResponse.success || !checkDeviceFingerprintResponse.data) { // Device fingerprint not trusted
+                this.logger.log(`Device fingerprint not trusted for ${email_or_username}`);
+                const createDeviceFingerprintResponse = await this.createDeviceFingerprint(getUserInfoResponse.data._id, fingerprint_hashed);
+                if (!createDeviceFingerprintResponse.success) {
+                    this.logger.error(`Cannot create device fingerprint for ${email_or_username}`);
+                    return createDeviceFingerprintResponse;
+                }
+                const sendDeviceFingerprintEmailVerificationResponse = await this.sendDeviceFingerprintEmailVerification(getUserInfoResponse.data._id, fingerprint_hashed);
+                if (!sendDeviceFingerprintEmailVerificationResponse.success) {
+                    this.logger.error(`Cannot send device fingerprint email verification for ${email_or_username}`);
+                    return sendDeviceFingerprintEmailVerificationResponse;
+                }
+                this.logger.log(`Device fingerprint email verification sent for ${email_or_username}`);
+                return {
+                    success: true,
+                    statusCode: 400,
+                    message: 'Device fingerprint not trusted, send email verification',
+                };
+            } else { // Device fingerprint trusted
+                this.logger.log(`Device fingerprint trusted for ${email_or_username}`);
+                const createSessionResponse = await this.createSession(getUserInfoResponse.data._id, checkDeviceFingerprintResponse.data._id);
+                if (!createSessionResponse.success || !createSessionResponse.data) {
+                    this.logger.error(`Cannot create session for ${email_or_username}`);
+                    return createSessionResponse;
+                }
+                this.logger.log(`Session created for ${email_or_username}`);
+                return {
+                    success: true,
+                    statusCode: 200,
+                    message: 'Login successful',
+                    data: createSessionResponse.data as SessionDoc,
+                };
+            }
+        } catch (error) {
+            this.logger.error(`Error logging in for ${email_or_username}`, error);
             return {
-                success: true,
-                statusCode: 400,
-                message: 'Device fingerprint not trusted, send email verification',
-            };
-        } else { // Device fingerprint trusted
-            this.logger.log(`Device fingerprint trusted for ${email_or_username}`);
-            const createSessionResponse = await this.createSession(getUserInfoResponse.data._id, checkDeviceFingerprintResponse.data._id);
-            if (!createSessionResponse.success || !createSessionResponse.data) {
-                this.logger.error(`Cannot create session for ${email_or_username}`);
-                return createSessionResponse;
-            }
-            this.logger.log(`Session created for ${email_or_username}`);
-            return {
-                success: true,
-                statusCode: 200,
-                message: 'Login successful',
-                data: {
-                    session: createSessionResponse.data as SessionDoc,
-                },
+                success: false,
+                statusCode: 500,
+                message: 'Error logging in',
             };
         }
+        
     }
 
     async verifyDeviceFingerprintEmailVerification(email_verification_code: string): Promise<Response> {
-        this.logger.log(`Verify device fingerprint email verification request received for ${email_verification_code}`);
-        const validateDeviceFingerprintEmailVerificationResponse = await this.validateDeviceFingerprintEmailVerification(email_verification_code);
-        if (!validateDeviceFingerprintEmailVerificationResponse.success || !validateDeviceFingerprintEmailVerificationResponse.data) {
-            return validateDeviceFingerprintEmailVerificationResponse;
+        try {
+            this.logger.log(`Verify device fingerprint email verification request received for ${email_verification_code}`);
+            const validateDeviceFingerprintEmailVerificationResponse = await this.validateDeviceFingerprintEmailVerification(email_verification_code);
+            if (!validateDeviceFingerprintEmailVerificationResponse.success || !validateDeviceFingerprintEmailVerificationResponse.data) {
+                return validateDeviceFingerprintEmailVerificationResponse;
+            }
+            this.logger.log(`Device fingerprint verification successful for ${email_verification_code}`);
+            return {
+                success: true,
+                statusCode: 200,
+                message: 'Device fingerprint verification successful',
+            };   
+        } catch (error) {
+            this.logger.error(`Error verifying device fingerprint email verification for ${email_verification_code}`, error);
+            return {
+                success: false,
+                statusCode: 500,
+                message: 'Error verifying device fingerprint email verification',
+            };
         }
-        this.logger.log(`Device fingerprint verification successful for ${email_verification_code}`);
-        return {
-            success: true,
-            statusCode: 200,
-            message: 'Device fingerprint verification successful',
-        };
     }
 
     private async getUserInfo(email_or_username: string): Promise<Response<UserDoc>> {

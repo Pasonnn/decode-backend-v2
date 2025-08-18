@@ -13,39 +13,33 @@ export class SessionStrategy extends PassportStrategy(Strategy) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: configService.get('jwt.secret.refreshToken'),
-            issuer: configService.get('jwt.refreshToken.issuer'),
-            audience: configService.get('jwt.refreshToken.audience'),
+            secretOrKey: configService.get('jwt.secret.sessionToken'),
+            issuer: configService.get('jwt.sessionToken.issuer'),
+            audience: configService.get('jwt.sessionToken.audience'),
         });
     }
 
-    async validate(payload: any) {
-        // This method is called by Passport after JWT verification
-        // Return the user object that will be attached to the request
-        return {
-            userId: payload.user_id,
-            username: payload.username,
-            email: payload.email,
-        };
-    }
-
-    async createRefreshToken(user: {id: string, username: string, email: string}) {
-        const payload = { user_id: user.id, username: user.username, email: user.email };
-        
+    async createRefreshToken(user_id: string) {
+        const payload = { user_id };
         return this.jwtService.sign(payload, {
-            secret: this.configService.get('jwt.secret.refreshToken'),
-            expiresIn: this.configService.get('jwt.refreshToken.expiresIn'),
-            issuer: this.configService.get('jwt.refreshToken.issuer'),
-            audience: this.configService.get('jwt.refreshToken.audience'),
+            secret: this.configService.get('jwt.secret.sessionToken'),
+            expiresIn: this.configService.get('jwt.sessionToken.expiresIn'),
+            issuer: this.configService.get('jwt.sessionToken.issuer'),
+            audience: this.configService.get('jwt.sessionToken.audience'),
         });
     }
 
-    async validateRefreshToken(token: string) {
+    async validateRefreshToken(req: any) {
         try {
+            // extract token from header
+            const token = this.extractRefreshToken(req);
+            if (!token) {
+                throw new UnauthorizedException('No refresh token provided');
+            }
             const payload = this.jwtService.verify(token, {
-                secret: this.configService.get('jwt.secret.refreshToken'),
-                issuer: this.configService.get('jwt.refreshToken.issuer'),
-                audience: this.configService.get('jwt.refreshToken.audience'),
+                secret: this.configService.get('jwt.secret.sessionToken'),
+                issuer: this.configService.get('jwt.sessionToken.issuer'),
+                audience: this.configService.get('jwt.sessionToken.audience'),
             });
             return payload;
         } catch (error) {
@@ -60,13 +54,13 @@ export class SessionStrategy extends PassportStrategy(Strategy) {
         }
 
         // From cookies (if using cookie-parser)
-        if (req.cookies?.['refreshToken']) {
-            return req.cookies['refreshToken'];
+        if (req.cookies?.['sessionToken']) {
+            return req.cookies['sessionToken'];
         }
 
         // From query parameters
-        if (req.query?.['refreshToken']) {
-            return req.query['refreshToken'];
+        if (req.query?.['sessionToken']) {
+            return req.query['sessionToken'];
         }
 
         return null;
