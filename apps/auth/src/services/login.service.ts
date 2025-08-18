@@ -12,7 +12,7 @@ import { Session } from '../schemas/session.schema';
 
 // Interfaces Import
 import { Response, LoginResponse } from '../interfaces/response.interface';
-import { UserDoc, DeviceFingerprintDoc } from '../interfaces/login.interface';
+import { UserDoc, DeviceFingerprintDoc } from '../interfaces/response.interface';
 import { SessionDoc } from '../interfaces/session.interface';
 
 // Infrastructure and Strategies Import
@@ -22,6 +22,8 @@ import { PasswordUtils } from '../utils/password.utils';
 
 // Services Import
 import { SessionService } from './session.service';
+import { InfoService } from './info.service';
+import { PasswordService } from './password.service';
 
 @Injectable()
 export class LoginService {
@@ -35,6 +37,8 @@ export class LoginService {
         private readonly sessionService: SessionService,
         private readonly redisInfrastructure: RedisInfrastructure,
         private readonly jwtStrategy: JwtStrategy,
+        private readonly infoService: InfoService,
+        private readonly passwordService: PasswordService,
         @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
     ) {
         this.logger = new Logger(LoginService.name);
@@ -44,11 +48,11 @@ export class LoginService {
     async login(email_or_username: string, password: string, fingerprint_hashed: string): Promise<Response> {
         try {
             this.logger.log(`Login request received for ${email_or_username}`);
-            const getUserInfoResponse = await this.getUserInfo(email_or_username);
+            const getUserInfoResponse = await this.infoService.getUserInfoByEmailOrUsername(email_or_username);
             if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
                 return getUserInfoResponse;
             }
-            const checkPasswordResponse = await this.checkPassword(password, getUserInfoResponse.data.password_hashed);
+            const checkPasswordResponse = await this.passwordService.checkPassword(password, getUserInfoResponse.data.password_hashed);
             if (!checkPasswordResponse.success) {
                 return checkPasswordResponse;
             }
@@ -118,46 +122,6 @@ export class LoginService {
                 message: 'Error verifying device fingerprint email verification',
             };
         }
-    }
-
-    private async getUserInfo(email_or_username: string): Promise<Response<UserDoc>> {
-        // Check if user exists
-        const user = await this.userModel.findOne({ 
-            $or: [
-                { email: email_or_username }, 
-                { username: email_or_username }] 
-            }
-        );
-        if (!user) {
-            return {
-                success: false,
-                statusCode: 400,
-                message: 'User not found',
-            }
-        }
-        return {
-            success: true,
-            statusCode: 200,
-            message: 'User info checked',
-            data: user as UserDoc,
-        }
-    }
-
-    private async checkPassword(password: string, password_hashed: string): Promise<Response<DeviceFingerprintDoc>> {
-        // Check if password is correct
-        const is_password_correct = await this.passwordUtils.comparePassword(password, password_hashed);
-        if (!is_password_correct) {
-            return {
-                success: false,
-                statusCode: 400,
-                message: 'Invalid password',
-            };
-        }
-        return {
-            success: true,
-            statusCode: 200,
-            message: 'Password is correct',
-        };
     }
 
     private async checkDeviceFingerprint(fingerprint_hashed: string): Promise<Response<DeviceFingerprintDoc>> {

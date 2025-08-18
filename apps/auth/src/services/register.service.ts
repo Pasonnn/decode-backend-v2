@@ -13,6 +13,10 @@ import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { PasswordUtils } from '../utils/password.utils';
 
+// Services
+import { PasswordService } from './password.service';
+import { Response } from '../interfaces/response.interface';
+
 @Injectable()
 export class RegisterService {
     private readonly logger: Logger;
@@ -20,7 +24,7 @@ export class RegisterService {
         private readonly configService: ConfigService, 
         private readonly redisInfrastructure: RedisInfrastructure,
         private readonly jwtStrategy: JwtStrategy,
-        private readonly passwordUtils: PasswordUtils,
+        private readonly passwordService: PasswordService,
         @InjectModel(User.name) private userModel: Model<User>,
         @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
     ) {
@@ -28,18 +32,15 @@ export class RegisterService {
     }
 
     // register/email-verification
-    async emailVerificationRegister(register_info: {username: string, email: string, password: string}) {
+    async emailVerificationRegister(register_info: {username: string, email: string, password: string}): Promise<Response> {
         // Get register info from request
         const { username, email, password } = register_info;
         // Check if password is strong enough
-        const password_verification_and_hashing_response = await this.passwordVerificationAndHashing(password);
-        if (!password_verification_and_hashing_response.success) {
+        const password_verification_and_hashing_response = await this.passwordService.passwordVerificationAndHashing(password);
+        if (!password_verification_and_hashing_response.success || !password_verification_and_hashing_response.data) {
             return password_verification_and_hashing_response;
         }
-        const password_hashed = password_verification_and_hashing_response.data?.password_hashed;
-        if (!password_hashed) {
-            return { success: false, statusCode: 400, message: 'Invalid password' };
-        }
+        const password_hashed = password_verification_and_hashing_response.data.password_hashed;
         // Check if register info is valid and store in Redis
         const register_info_response = await this.registerInfo({username: username, email: email, password_hashed: password_hashed});
         if (!register_info_response.success) {
@@ -50,8 +51,30 @@ export class RegisterService {
         // Return success response
         return send_email_verification_response;
     }
+    
+    // register/verify-email
+    async verifyEmailRegister(email_verification_code: string): Promise<Response> {
+        const check_email_verification_code_response = await this.checkEmailVerificationCode(email_verification_code);
+        if (!check_email_verification_code_response.success || !check_email_verification_code_response.data) {
+            return check_email_verification_code_response;
+        }
+        const email = check_email_verification_code_response.data.email;
+        // Create user
+        const create_user_response = await this.createUser(email);
+        if (!create_user_response.success) {
+            return create_user_response;
+        }
+        // Send welcome email to user
+        const welcome_email_response = await this.welcomeEmail(email);
+        if (!welcome_email_response.success) {
+            this.logger.error(welcome_email_response.message);
+        }
+        // Return success response
+        return { success: true, statusCode: 200, message: 'User is created' };
+    }
 
-    private async registerInfo(register_info: {username: string, email: string, password_hashed: string}) {
+
+    private async registerInfo(register_info: {username: string, email: string, password_hashed: string}): Promise<Response> {
         // Get register info from request
         const { username, email, password_hashed } = register_info;
         // Check if user email already exists
@@ -77,7 +100,7 @@ export class RegisterService {
         return { success: true, statusCode: 200, message: 'Register info is valid' };
     }
 
-    private async sendEmailVerification(email: string) {
+    private async sendEmailVerification(email: string): Promise<Response> {
         const emailVerificationCode = uuidv4().slice(0, 6); // 6 random characters
         // Store email verification code with email in Redis
         const email_verification_code_key = `email_verification_code:${emailVerificationCode}`;
@@ -98,46 +121,7 @@ export class RegisterService {
         return { success: true, statusCode: 200, message: 'Email verification code is sent' };
     }
 
-    private async passwordVerificationAndHashing(password: string) {
-        // Check if password is strong enough
-        const password_strength = this.passwordUtils.validatePasswordStrength(password);
-        if (!password_strength.isValid) {
-            return { success: false, statusCode: 400, message: password_strength.feedback.join(', ') };
-        }
-        // Hash password
-        const password_hashed = await this.passwordUtils.hashPassword(password);
-        // Return success response
-        return { 
-            success: true,
-            statusCode: 200, message: 'Password is strong enough', 
-            data: {
-                password_hashed: password_hashed, 
-            }
-        };
-    }
-
-    // register/verify-email
-    async verifyEmail(email_verification_code: string) {
-        const check_email_verification_code_response = await this.checkEmailVerificationCode(email_verification_code);
-        if (!check_email_verification_code_response.success) {
-            return check_email_verification_code_response;
-        }
-        const email = check_email_verification_code_response.data.email;
-        // Create user
-        const create_user_response = await this.createUser(email);
-        if (!create_user_response.success) {
-            return create_user_response;
-        }
-        // Send welcome email to user
-        const welcome_email_response = await this.welcomeEmail(email);
-        if (!welcome_email_response.success) {
-            this.logger.error(welcome_email_response.message);
-        }
-        // Return success response
-        return { success: true, statusCode: 200, message: 'User is created' };
-    }
-
-    private async checkEmailVerificationCode(email_verification_code: string) {
+    private async checkEmailVerificationCode(email_verification_code: string): Promise<Response<{email: string}>> {
         // Get email verification code from Redis
         const email_verification_code_key = `email_verification_code:${email_verification_code}`;
         const email_verification_code_value = await this.redisInfrastructure.get(email_verification_code_key);
@@ -147,10 +131,16 @@ export class RegisterService {
         // Delete email verification code from Redis
         await this.redisInfrastructure.del(email_verification_code_key);
         // Return success response
-        return { success: true, statusCode: 200, message: 'Email verification code is valid', data: email_verification_code_value };
+        return { success: true, 
+            statusCode: 200, 
+            message: 'Email verification code is valid', 
+            data: {
+                email: email_verification_code_value.email,
+            }
+        };
     }
 
-    private async createUser(email: string) {
+    private async createUser(email: string): Promise<Response> {
         // Get user data from Redis
         const register_info_key = `register_info:${email}`;
         const register_info_value = await this.redisInfrastructure.get(register_info_key);
@@ -174,7 +164,7 @@ export class RegisterService {
         return { success: true, statusCode: 200, message: 'User is created', data: user };
     }
 
-    private async welcomeEmail(email: string) {
+    private async welcomeEmail(email: string): Promise<Response> {
         // Send welcome email to user
         await this.emailService.emit('email_request', {
             type: 'welcome-message',

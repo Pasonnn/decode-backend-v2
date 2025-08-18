@@ -14,8 +14,8 @@ import { AuthController } from './auth.controller';
 import { RegisterService } from './services/register.service';
 import { LoginService } from './services/login.service';
 import { SessionService } from './services/session.service';
-// import { PasswordService } from './services/password.service';
-// import { InfoService } from './services/info.service';  
+import { PasswordService } from './services/password.service';
+import { InfoService } from './services/info.service';  
 
 // Strategies and Infrastructure Import
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -95,8 +95,8 @@ import jwtConfig from './config/jwt.config';
     RegisterService, 
     LoginService, 
     SessionService, 
-    // PasswordService, 
-    // InfoService,
+    PasswordService, 
+    InfoService,
     
     // Strategies
     JwtStrategy, 

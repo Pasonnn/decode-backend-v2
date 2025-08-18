@@ -67,7 +67,7 @@ export class AuthController {
 
     @Post('register/verify-email')
     async verifyEmailRegister(@Body() dto: VerifyEmailDto): Promise<Response> {
-        const verify_email_register_response = await this.registerService.verifyEmail(dto.code);
+        const verify_email_register_response = await this.registerService.verifyEmailRegister(dto.code);
         return verify_email_register_response;
     }
 
