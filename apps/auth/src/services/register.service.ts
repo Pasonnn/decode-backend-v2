@@ -17,6 +17,10 @@ import { PasswordUtils } from '../utils/password.utils';
 import { PasswordService } from './password.service';
 import { Response } from '../interfaces/response.interface';
 
+// Constants Import
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+
 @Injectable()
 export class RegisterService {
     private readonly logger: Logger;
@@ -70,7 +74,11 @@ export class RegisterService {
             this.logger.error(welcome_email_response.message);
         }
         // Return success response
-        return { success: true, statusCode: 200, message: 'User is created' };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.USER_CREATED 
+        };
     }
 
 
@@ -80,60 +88,81 @@ export class RegisterService {
         // Check if user email already exists
         const existing_email = await this.userModel.findOne({email: email});
         if (existing_email) {
-            return { success: false, statusCode: 400, message: 'Email already exists' };
+            return { 
+                success: false, 
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST, 
+                message: ERROR_MESSAGES.REGISTRATION.EMAIL_EXISTS 
+            };
         }
         // Check if user username already exists
         const existing_username = await this.userModel.findOne({username: username});
         if (existing_username) {
-            return { success: false, statusCode: 400, message: 'Username already exists' };
+            return { 
+                success: false, 
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST, 
+                message: ERROR_MESSAGES.REGISTRATION.USERNAME_EXISTS 
+            };
         }
         // Store register info in Redis
-        const register_info_key = `register_info:${email}`;
+        const register_info_key = `${AUTH_CONSTANTS.REDIS.KEYS.REGISTER_INFO}:${email}`;
         const register_info_value = {
             username: username,
             email: email,
             password_hashed: password_hashed,
         };
         // Store register info in Redis
-        await this.redisInfrastructure.set(register_info_key, JSON.stringify(register_info_value), 60 * 60); // 1 hour
+        await this.redisInfrastructure.set(register_info_key, JSON.stringify(register_info_value), AUTH_CONSTANTS.REDIS.REGISTER_INFO_EXPIRES_IN);
         // Return success response
-        return { success: true, statusCode: 200, message: 'Register info is valid' };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.REGISTRATION_SUCCESSFUL 
+        };
     }
 
     private async sendEmailVerification(email: string): Promise<Response> {
-        const emailVerificationCode = uuidv4().slice(0, 6); // 6 random characters
+        const emailVerificationCode = uuidv4().slice(0, AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH);
         // Store email verification code with email in Redis
-        const email_verification_code_key = `email_verification_code:${emailVerificationCode}`;
+        const email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.EMAIL_VERIFICATION}:${emailVerificationCode}`;
         const email_verification_code_value = {
             email: email,
             code: emailVerificationCode,
         };
-        await this.redisInfrastructure.set(email_verification_code_key, JSON.stringify(email_verification_code_value), 60 * 5); // 5 minutes
+        await this.redisInfrastructure.set(email_verification_code_key, JSON.stringify(email_verification_code_value), AUTH_CONSTANTS.REDIS.EMAIL_VERIFICATION_EXPIRES_IN);
         // Send email verification code to user
         await this.emailService.emit('email_request', {
-            type: 'create-account',
+            type: AUTH_CONSTANTS.EMAIL.TYPES.CREATE_ACCOUNT,
             data: {
                 email: email,
                 otpCode: emailVerificationCode,
             }
         })
         // Return success response
-        return { success: true, statusCode: 200, message: 'Email verification code is sent' };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT 
+        };
     }
 
     private async checkEmailVerificationCode(email_verification_code: string): Promise<Response<{email: string}>> {
         // Get email verification code from Redis
-        const email_verification_code_key = `email_verification_code:${email_verification_code}`;
+        const email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.EMAIL_VERIFICATION}:${email_verification_code}`;
         const email_verification_code_value = await this.redisInfrastructure.get(email_verification_code_key);
         if (!email_verification_code_value) {
-            return { success: false, statusCode: 400, message: 'Invalid email verification code' };
+            return { 
+                success: false, 
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST, 
+                message: ERROR_MESSAGES.EMAIL_VERIFICATION.INVALID_CODE 
+            };
         }
         // Delete email verification code from Redis
         await this.redisInfrastructure.del(email_verification_code_key);
         // Return success response
-        return { success: true, 
-            statusCode: 200, 
-            message: 'Email verification code is valid', 
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SUCCESSFUL, 
             data: {
                 email: email_verification_code_value.email,
             }
@@ -142,15 +171,23 @@ export class RegisterService {
 
     private async createUser(email: string): Promise<Response> {
         // Get user data from Redis
-        const register_info_key = `register_info:${email}`;
+        const register_info_key = `${AUTH_CONSTANTS.REDIS.KEYS.REGISTER_INFO}:${email}`;
         const register_info_value = await this.redisInfrastructure.get(register_info_key);
         if (!register_info_value) {
-            return { success: false, statusCode: 400, message: 'Invalid register info' };
+            return { 
+                success: false, 
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST, 
+                message: ERROR_MESSAGES.REGISTRATION.REGISTER_INFO_INVALID 
+            };
         }
         // Check if user already exists (by email or username)
         const existing_user = await this.userModel.findOne({$or: [{email: email}, {username: register_info_value.username}]});
         if (existing_user) {
-            return { success: false, statusCode: 400, message: 'User already exists' };
+            return { 
+                success: false, 
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.CONFLICT, 
+                message: ERROR_MESSAGES.REGISTRATION.EMAIL_EXISTS 
+            };
         }
         // Delete register info from Redis
         await this.redisInfrastructure.del(register_info_key);
@@ -159,20 +196,33 @@ export class RegisterService {
             username: register_info_value.username,
             email: register_info_value.email,
             password_hashed: register_info_value.password_hashed,
+            role: AUTH_CONSTANTS.USER.DEFAULT_ROLE,
+            biography: AUTH_CONSTANTS.USER.DEFAULT_BIOGRAPHY,
+            avatar_ipfs_hash: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_IPFS_HASH,
+            avatar_fallback_url: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_FALLBACK_URL,
         });
         // Return success response
-        return { success: true, statusCode: 200, message: 'User is created', data: user };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.USER_CREATED, 
+            data: user 
+        };
     }
 
     private async welcomeEmail(email: string): Promise<Response> {
         // Send welcome email to user
         await this.emailService.emit('email_request', {
-            type: 'welcome-message',
+            type: AUTH_CONSTANTS.EMAIL.TYPES.WELCOME_MESSAGE,
             data: {
                 email: email,
             }
         })
         // Return success response
-        return { success: true, statusCode: 200, message: 'Welcome email is sent' };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT 
+        };
     }
 }

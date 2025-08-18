@@ -5,7 +5,8 @@ import { ClientProxy } from "@nestjs/microservices";
 // Services
 import { InfoService } from "./info.service";
 // Interfaces
-import { Response, UserDoc } from "../interfaces/response.interface";
+import { Response } from "../interfaces/response.interface";
+import { UserDoc } from "../interfaces/user-doc.interface";
 // Utils
 import { PasswordUtils } from "../utils/password.utils";
 // Models
@@ -15,7 +16,9 @@ import { InjectModel } from "@nestjs/mongoose";
 // Infrastructures
 import { RedisInfrastructure } from "../infrastructure/redis.infrastructure";
 
-
+// Constants Import
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
 export class PasswordService {
@@ -60,29 +63,37 @@ export class PasswordService {
             return getUserInfoResponse;
         }
         // Create and store verification code
-        const verification_code = uuidv4().slice(0, 6); // 6 random characters
-        const verification_code_key = `change_password_verification_code:${verification_code}`;
+        const verification_code = uuidv4().slice(0, AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH);
+        const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${verification_code}`;
         const verification_code_value = {
             email: getUserInfoResponse.data._id,
             verification_code: verification_code,
         };
-        await this.redisInfrastructure.set(verification_code_key, JSON.stringify(verification_code_value));
+        await this.redisInfrastructure.set(verification_code_key, JSON.stringify(verification_code_value), AUTH_CONSTANTS.REDIS.PASSWORD_RESET_EXPIRES_IN);
         // Send verification code to user
         await this.emailService.emit('email_request', {
-            type: 'forgot-password-verify',
+            type: AUTH_CONSTANTS.EMAIL.TYPES.FORGOT_PASSWORD_VERIFY,
             email: getUserInfoResponse.data.email,
             verification_code: verification_code,
         });
-        return { success: true, statusCode: 200, message: 'Verification code sent' };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.PASSWORD_RESET_SENT 
+        };
     }
 
     // password/forgot/verify-email
     async verifyEmailChangePassword(email_verification_code: string): Promise<Response<UserDoc>> {
         // Get verification code from Redis
-        const verification_code_key = `change_password_verification_code:${email_verification_code}`;
+        const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${email_verification_code}`;
         const verification_code_value = await this.redisInfrastructure.get(verification_code_key);
         if (!verification_code_value) {
-            return { success: false, statusCode: 400, message: 'Invalid verification code' };
+            return { 
+                success: false, 
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST, 
+                message: ERROR_MESSAGES.PASSWORD.PASSWORD_RESET_CODE_INVALID 
+            };
         }
         // Get user info
         const getUserInfoResponse = await this.infoService.getUserInfoByUserId(verification_code_value.user_id);
@@ -90,7 +101,12 @@ export class PasswordService {
             return getUserInfoResponse;
         }
         // Return success response
-        return { success: true, statusCode: 200, message: 'Verification code is valid', data: getUserInfoResponse.data };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.PASSWORD_RESET_SUCCESSFUL, 
+            data: getUserInfoResponse.data 
+        };
     }
 
     // password/forgot/change
@@ -101,7 +117,7 @@ export class PasswordService {
             return verify_email_change_password_response;
         }
         // Delete verification code from Redis
-        const verification_code_key = `change_password_verification_code:${email_verification_code}`;
+        const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${email_verification_code}`;
         await this.redisInfrastructure.del(verification_code_key);
         // Hash new password
         const password_verification_and_hashing_response = await this.passwordVerificationAndHashing(new_password);
@@ -121,14 +137,14 @@ export class PasswordService {
         if (!is_password_correct) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'Invalid password',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.PASSWORD.INVALID_PASSWORD,
             };
         }
         return {
             success: true,
-            statusCode: 200,
-            message: 'Password is correct',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.PASSWORD_CHANGED,
         };
     }
 
@@ -136,14 +152,19 @@ export class PasswordService {
         // Check if password is strong enough
         const password_strength = this.passwordUtils.validatePasswordStrength(password);
         if (!password_strength.isValid) {
-            return { success: false, statusCode: 400, message: password_strength.feedback.join(', ') };
+            return { 
+                success: false, 
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST, 
+                message: ERROR_MESSAGES.PASSWORD.WEAK_PASSWORD 
+            };
         }
         // Hash password
         const password_hashed = await this.passwordUtils.hashPassword(password);
         // Return success response
         return { 
             success: true,
-            statusCode: 200, message: 'Password is strong enough', 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.PASSWORD_CHANGED, 
             data: {
                 password_hashed: password_hashed, 
             }
@@ -154,9 +175,17 @@ export class PasswordService {
         // Change password
         const update_password_response = await this.userModel.findByIdAndUpdate(user_id, { password_hashed: new_password_hashed });
         if (!update_password_response) {
-            return { success: false, statusCode: 400, message: 'Failed to change password' };
+            return { 
+                success: false, 
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST, 
+                message: ERROR_MESSAGES.PASSWORD.PASSWORD_CHANGE_FAILED 
+            };
         }
-        return { success: true, statusCode: 200, message: 'Password changed successfully' };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.PASSWORD_CHANGED 
+        };
     }
 
 }

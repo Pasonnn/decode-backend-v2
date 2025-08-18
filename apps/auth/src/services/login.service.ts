@@ -11,9 +11,9 @@ import { DeviceFingerprint } from '../schemas/device-fingerprint.schema';
 import { Session } from '../schemas/session.schema';
 
 // Interfaces Import
-import { Response, LoginResponse } from '../interfaces/response.interface';
-import { UserDoc, DeviceFingerprintDoc } from '../interfaces/response.interface';
-import { SessionDoc } from '../interfaces/session.interface';
+import { Response } from '../interfaces/response.interface';
+import { DeviceFingerprintDoc } from '../interfaces/device-fingerprint-doc.interface';
+import { SessionDoc } from '../interfaces/session-doc.interface';
 
 // Infrastructure and Strategies Import
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
@@ -24,6 +24,10 @@ import { PasswordUtils } from '../utils/password.utils';
 import { SessionService } from './session.service';
 import { InfoService } from './info.service';
 import { PasswordService } from './password.service';
+
+// Constants Import
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
 export class LoginService {
@@ -56,7 +60,7 @@ export class LoginService {
             if (!checkPasswordResponse.success) {
                 return checkPasswordResponse;
             }
-            const checkDeviceFingerprintResponse = await this.checkDeviceFingerprint(fingerprint_hashed);
+            const checkDeviceFingerprintResponse = await this.checkDeviceFingerprint(getUserInfoResponse.data._id, fingerprint_hashed);
             if (!checkDeviceFingerprintResponse.success || !checkDeviceFingerprintResponse.data) { // Device fingerprint not trusted
                 this.logger.log(`Device fingerprint not trusted for ${email_or_username}`);
                 const createDeviceFingerprintResponse = await this.createDeviceFingerprint(getUserInfoResponse.data._id, fingerprint_hashed);
@@ -72,8 +76,8 @@ export class LoginService {
                 this.logger.log(`Device fingerprint email verification sent for ${email_or_username}`);
                 return {
                     success: true,
-                    statusCode: 400,
-                    message: 'Device fingerprint not trusted, send email verification',
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                    message: ERROR_MESSAGES.AUTH.DEVICE_FINGERPRINT_NOT_TRUSTED,
                 };
             } else { // Device fingerprint trusted
                 this.logger.log(`Device fingerprint trusted for ${email_or_username}`);
@@ -85,8 +89,8 @@ export class LoginService {
                 this.logger.log(`Session created for ${email_or_username}`);
                 return {
                     success: true,
-                    statusCode: 200,
-                    message: 'Login successful',
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                    message: ERROR_MESSAGES.SUCCESS.LOGIN_SUCCESSFUL,
                     data: createSessionResponse.data as SessionDoc,
                 };
             }
@@ -94,11 +98,10 @@ export class LoginService {
             this.logger.error(`Error logging in for ${email_or_username}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error logging in',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.AUTH.LOGIN_ERROR,
             };
         }
-        
     }
 
     async verifyDeviceFingerprintEmailVerification(email_verification_code: string): Promise<Response> {
@@ -111,33 +114,38 @@ export class LoginService {
             this.logger.log(`Device fingerprint verification successful for ${email_verification_code}`);
             return {
                 success: true,
-                statusCode: 200,
-                message: 'Device fingerprint verification successful',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
             };   
         } catch (error) {
             this.logger.error(`Error verifying device fingerprint email verification for ${email_verification_code}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error verifying device fingerprint email verification',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
             };
         }
     }
 
-    private async checkDeviceFingerprint(fingerprint_hashed: string): Promise<Response<DeviceFingerprintDoc>> {
+    private async checkDeviceFingerprint(user_id: string, fingerprint_hashed: string): Promise<Response<DeviceFingerprintDoc>> {
         // Check if device fingerprint is correct
-        const device_fingerprint = await this.deviceFingerprintModel.findOne({ fingerprint_hashed: fingerprint_hashed });
+        const device_fingerprint = await this.deviceFingerprintModel.findOne({ 
+            $and: [
+                { user_id: user_id }, 
+                { fingerprint_hashed: fingerprint_hashed }
+            ] 
+        });
         if (!device_fingerprint || device_fingerprint.is_trusted === false) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'Device fingerprint not found',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
             };
         }
         return {
             success: true,
-            statusCode: 200,
-            message: 'Device fingerprint is trusted',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
             data: device_fingerprint as DeviceFingerprintDoc,
         };
     }
@@ -155,14 +163,14 @@ export class LoginService {
                 { 
                     user_id: user_id, 
                     fingerprint_hashed: fingerprint_hashed, 
-                    is_trusted: false,
+                    is_trusted: AUTH_CONSTANTS.DEVICE_FINGERPRINT.TRUSTED_BY_DEFAULT,
                 }
             );
         }
         return {
             success: true,
-            statusCode: 200,
-            message: 'Device fingerprint created',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
             data: device_fingerprint as DeviceFingerprintDoc,
         };
     }
@@ -178,8 +186,8 @@ export class LoginService {
         if (!device_fingerprint_email_verification) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'Device fingerprint not found',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
             };
         }
         // Get user email
@@ -187,28 +195,29 @@ export class LoginService {
         if (!user) {
             return {
                 success: false,
-                statusCode: 400, 
-                message: 'User not found',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST, 
+                message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
             };
         } 
         // Send email verification code to user
-        const email_verification_code = uuidv4().slice(0, 6); // 6 random characters
+        const email_verification_code = uuidv4().slice(0, AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH);
         // Store email verification code with email in Redis
-        const fingerprint_email_verification_code_key = `fingerprint-email-verification:${email_verification_code}`;
+        const fingerprint_email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`;
         const fingerprint_email_verification_code_value = {
             user_id: user_id,
             fingerprint_hashed: fingerprint_hashed,
         }
         await this.redisInfrastructure.set(
             fingerprint_email_verification_code_key,
-            JSON.stringify(fingerprint_email_verification_code_value), 60 * 5
-        ); // 5 minutes
+            JSON.stringify(fingerprint_email_verification_code_value), 
+            AUTH_CONSTANTS.REDIS.FINGERPRINT_VERIFICATION_EXPIRES_IN
+        );
         // Send email verification code to user
         const sendEmailVerificationCodeResponse = await this.deviceFingerprintEmailVerification(user.email, email_verification_code);
         return {
             success: true,
-            statusCode: 200,
-            message: 'Device fingerprint email verification sent',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
         };
     }
 
@@ -216,24 +225,28 @@ export class LoginService {
         
         // Send welcome email to user
         await this.emailService.emit('email_request', {
-            type: 'fingerprint-verify',
+            type: AUTH_CONSTANTS.EMAIL.TYPES.FINGERPRINT_VERIFY,
             data: {
                 email: email,
                 otpCode: email_verification_code,
             }
         })
         // Return success response
-        return { success: true, statusCode: 200, message: 'Device fingerprint email verification sent' };
+        return { 
+            success: true, 
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
+            message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED 
+        };
     }
 
     private async validateDeviceFingerprintEmailVerification(email_verification_code: string): Promise<Response> {
         // Validate device fingerprint email verification
-        const device_fingerprint_data = await this.redisInfrastructure.get(`fingerprint-email-verification:${email_verification_code}`);
+        const device_fingerprint_data = await this.redisInfrastructure.get(`${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`);
         if (!device_fingerprint_data) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'Invalid email verification code',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
             };
         }
         // Find device fingerprint in database
@@ -247,19 +260,19 @@ export class LoginService {
         if (!device_fingerprint) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'Device fingerprint not found',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
             };
         }
         // Update device fingerprint to trusted
         device_fingerprint.is_trusted = true;
         await device_fingerprint.save();
         // Delete email verification code from Redis
-        await this.redisInfrastructure.del(`fingerprint-email-verification:${email_verification_code}`);
+        await this.redisInfrastructure.del(`${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`);
         return {
             success: true,
-            statusCode: 200,
-            message: 'Device fingerprint email verification verified',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
             data: device_fingerprint,
         };
     }
@@ -271,8 +284,8 @@ export class LoginService {
         }
         return {
             success: true,
-            statusCode: 200,
-            message: 'Session created',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.SESSION_CREATED,
             data: create_session_response.data as SessionDoc,
         }
     }

@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Session } from "../schemas/session.schema";
 
 // Interfaces Import
-import { SessionDoc } from "../interfaces/session.interface";
+import { SessionDoc } from "../interfaces/session-doc.interface";
 
 // Interfaces Import
 import { Response } from "../interfaces/response.interface";
@@ -18,6 +18,10 @@ import { JwtStrategy } from '../strategies/jwt.strategy';
 
 // Logger Import
 import { Logger } from "@nestjs/common";
+
+// Constants Import
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
 export class SessionService {
     private readonly logger: Logger;
@@ -35,9 +39,11 @@ export class SessionService {
             const session_token = await this.jwtStrategy.createRefreshToken(user_id);
             // Create session
             const session = await this.sessionModel.create({
-                user_id: user_id,
-                device_fingerprint_id: device_fingerprint_id,
+                user_id: new Types.ObjectId(user_id),
+                device_fingerprint_id: new Types.ObjectId(device_fingerprint_id),
                 session_token: session_token,
+                expires_at: new Date(Date.now() + AUTH_CONSTANTS.SESSION.EXPIRES_IN_HOURS * 60 * 60 * 1000),
+                is_active: true,
             });
             this.logger.log(`Session created for user ${user_id} with device fingerprint ${device_fingerprint_id}`);
             // Generate access token
@@ -45,8 +51,8 @@ export class SessionService {
             // Return session
             return {
                 success: true,
-                statusCode: 200,
-                message: 'Session created',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.SESSION_CREATED,
                 data: { 
                     ...session.toObject(),
                     access_token,
@@ -56,8 +62,8 @@ export class SessionService {
             this.logger.error(`Error creating session for user ${user_id} with device fingerprint ${device_fingerprint_id}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error creating session',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.SESSION_CREATION_ERROR,
             };
         }
         
@@ -80,8 +86,8 @@ export class SessionService {
             // Return session
             return {
                 success: true,
-                statusCode: 200,
-                message: 'Session refreshed',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.SESSION_REFRESHED,
                 data: {
                     ...validate_session_response.data,
                     session_token: new_session_token,
@@ -92,8 +98,8 @@ export class SessionService {
             this.logger.error(`Error refreshing session for user ${session_token}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error refreshing session',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.SESSION_REFRESH_ERROR,
             };
         }
     }
@@ -106,15 +112,15 @@ export class SessionService {
             // Return response
             return {
                 success: true,
-                statusCode: 200,
-                message: 'All sessions revoked',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.ALL_SESSIONS_REVOKED,
             };
         } catch (error) {
             this.logger.error(`Error revoking all sessions for user ${user_id}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error revoking all sessions',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.ALL_SESSIONS_REVOKING_ERROR,
             };
         }
         
@@ -127,16 +133,16 @@ export class SessionService {
             // Return sessions
             return {
                 success: true,
-                statusCode: 200,
-                message: 'User active sessions fetched',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.USER_ACTIVE_SESSIONS_FETCHED,
                 data: sessions.map(session => session.toObject()) as unknown as SessionDoc[],
             };
         } catch (error) {
             this.logger.error(`Error getting user active sessions for user ${user_id}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error getting user active sessions',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.USER_ACTIVE_SESSIONS_FETCHING_ERROR,
             };
         }
     }
@@ -152,15 +158,15 @@ export class SessionService {
             // Return response
             return {
                 success: true,
-                statusCode: 200,
-                message: 'Expired sessions cleaned up',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.EXPIRED_SESSIONS_CLEANED_UP,
             };
         } catch (error) {
             this.logger.error(`Error cleaning up expired sessions for user ${user_id}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error cleaning up expired sessions',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.EXPIRED_SESSIONS_CLEANING_ERROR,
             };
         }
     }
@@ -180,8 +186,8 @@ export class SessionService {
             this.logger.error(`Error logging out for ${session_token}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error logging out',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.LOGOUT_ERROR,
             };
         }
     }
@@ -196,16 +202,16 @@ export class SessionService {
             // Return response
             return {
                 success: true,
-                statusCode: 200,
-                message: 'Access token validated',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.ACCESS_TOKEN_VALIDATED,
                 data: validate_access_token_response.data,
             };
         } catch (error) {
             this.logger.error(`Error validating access token for ${access_token}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error validating access token',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.ACCESS_TOKEN_VALIDATION_ERROR,
             };
         }
     }
@@ -219,16 +225,16 @@ export class SessionService {
             // Return response
             return {
                 success: true,
-                statusCode: 200,
-                message: 'SSO token created',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.SSO_TOKEN_CREATED,
                 data: sso_token,
             };
         } catch (error) {
             this.logger.error(`Error creating SSO token for user ${user_id}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error creating SSO token',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.SSO_TOKEN_CREATION_ERROR,
             };
         }
     }
@@ -240,8 +246,8 @@ export class SessionService {
             if (!sso_token_response) {
                 return {
                     success: false,
-                    statusCode: 401,
-                    message: 'SSO token expired',
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+                    message: ERROR_MESSAGES.SESSION.SSO_TOKEN_INVALID,
                 };
             }
             const user_id = sso_token_response;
@@ -252,8 +258,8 @@ export class SessionService {
             // Return response
             return {
                 success: true,
-                statusCode: 200,
-                message: 'SSO token validated',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.SSO_TOKEN_VALIDATED,
                 data: {
                     session_token,
                     user_id,
@@ -263,8 +269,8 @@ export class SessionService {
             this.logger.error(`Error validating SSO token for ${sso_token}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error validating SSO token',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.SSO_TOKEN_VALIDATION_ERROR,
             };
         }
     }
@@ -281,32 +287,32 @@ export class SessionService {
             if (!session) {
                 return {
                     success: false,
-                    statusCode: 401,
-                    message: 'Invalid session token',
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+                    message: ERROR_MESSAGES.SESSION.INVALID_SESSION_TOKEN,
                 };
             }
             // Check if session is expired
             if (session.expires_at < new Date()) {
                 return {
                     success: false,
-                    statusCode: 401,
-                    message: 'Session expired',
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+                    message: ERROR_MESSAGES.SESSION.SESSION_EXPIRED,
                 };
             }
             // Check if session is revoked
             if (session.revoked_at || !session.is_active) {
                 return {
                     success: false,
-                    statusCode: 401,
-                    message: 'Session revoked',
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+                    message: ERROR_MESSAGES.SESSION.SESSION_REVOKED,
                 };
             }
             // Get user id from session
             const user_id = session.user_id.toString();
             return {
                 success: true,
-                statusCode: 200,
-                message: 'Session valid',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.SESSION_VALID,
                 data: {
                     ...session.toObject(),
                 } as unknown as SessionDoc,
@@ -315,8 +321,8 @@ export class SessionService {
             this.logger.error(`Error validating session for token ${session_token}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error validating session',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.SESSION_VALIDATION_ERROR,
             };
         }
     }
@@ -334,15 +340,15 @@ export class SessionService {
             // Return response
             return {
                 success: true,
-                statusCode: 200,
-                message: 'Session revoked',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+                message: ERROR_MESSAGES.SUCCESS.SESSION_REVOKED,
             };
         } catch (error) {
             this.logger.error(`Error revoking session for user ${session_token}`, error);
             return {
                 success: false,
-                statusCode: 500,
-                message: 'Error revoking session',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                message: ERROR_MESSAGES.SESSION.SESSION_REVOKING_ERROR,
             };
         }
         

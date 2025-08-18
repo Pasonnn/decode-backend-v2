@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
 // Interfaces
-import { UserDoc } from "../interfaces/login.interface";
+import { UserDoc } from "../interfaces/user-doc.interface";
 import { Response } from "../interfaces/response.interface";
 
 // Models
@@ -11,6 +11,10 @@ import { User } from "../schemas/user.schema";
 
 // Jwt Strategy
 import { JwtStrategy } from "../strategies/jwt.strategy";
+
+// Constants Import
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
 export class InfoService {
@@ -30,14 +34,14 @@ export class InfoService {
         if (!user) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'User not found',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
             }
         }
         return {
             success: true,
-            statusCode: 200,
-            message: 'User info checked',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.USER_INFO_FETCHED,
             data: user as UserDoc,
         }
     }
@@ -48,8 +52,8 @@ export class InfoService {
         if (!user_id) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'Invalid access token',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.USER_INFO.INVALID_ACCESS_TOKEN,
             }
         }
         // Get user info
@@ -57,14 +61,14 @@ export class InfoService {
         if (!user) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'User not found',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
             }
         }
         return {
             success: true,
-            statusCode: 200,
-            message: 'User info checked',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.USER_INFO_FETCHED,
             data: user as UserDoc,
         }
     }
@@ -75,14 +79,14 @@ export class InfoService {
         if (!user) {
             return {
                 success: false,
-                statusCode: 400,
-                message: 'User not found',
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
             }
         }
         return {
             success: true,
-            statusCode: 200,
-            message: 'User info checked',
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.USER_INFO_FETCHED,
             data: user as UserDoc,
         }
     }
