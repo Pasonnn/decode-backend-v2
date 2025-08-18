@@ -38,10 +38,6 @@ export class VerifyEmailChangePasswordDto {
 export class ChangeForgotPasswordDto {
     @IsNotEmpty()
     @IsString()
-    user_id: string;
-
-    @IsNotEmpty()
-    @IsString()
     @MinLength(AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH)
     @MaxLength(AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH)
     code: string;

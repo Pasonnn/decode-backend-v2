@@ -48,14 +48,15 @@ export class InfoService {
 
     async getUserInfoByAccessToken(access_token: string): Promise<Response<UserDoc>> {
         // Validate access token
-        const user_id = await this.jwtStrategy.validateAccessToken(access_token);
-        if (!user_id) {
+        const validate_access_token_response = await this.jwtStrategy.validateAccessToken(access_token);
+        if (!validate_access_token_response) {
             return {
                 success: false,
                 statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 message: ERROR_MESSAGES.USER_INFO.INVALID_ACCESS_TOKEN,
             }
         }
+        const user_id = validate_access_token_response.data.user_id;
         // Get user info
         const user = await this.userModel.findById(user_id);
         if (!user) {

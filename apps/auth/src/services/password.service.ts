@@ -66,7 +66,7 @@ export class PasswordService {
         const verification_code = uuidv4().slice(0, AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH);
         const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${verification_code}`;
         const verification_code_value = {
-            email: getUserInfoResponse.data._id,
+            user_id: getUserInfoResponse.data._id.toString(),
             verification_code: verification_code,
         };
         await this.redisInfrastructure.set(verification_code_key, JSON.stringify(verification_code_value), AUTH_CONSTANTS.REDIS.PASSWORD_RESET_EXPIRES_IN);
@@ -95,6 +95,7 @@ export class PasswordService {
                 message: ERROR_MESSAGES.PASSWORD.PASSWORD_RESET_CODE_INVALID 
             };
         }
+        console.log(verification_code_value);
         // Get user info
         const getUserInfoResponse = await this.infoService.getUserInfoByUserId(verification_code_value.user_id);
         if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
@@ -110,7 +111,7 @@ export class PasswordService {
     }
 
     // password/forgot/change
-    async changeForgotPassword(user_id: string, email_verification_code: string, new_password: string): Promise<Response> {
+    async changeForgotPassword(email_verification_code: string, new_password: string): Promise<Response> {
         // Verify email verification code
         const verify_email_change_password_response = await this.verifyEmailChangePassword(email_verification_code);
         if (!verify_email_change_password_response.success || !verify_email_change_password_response.data) {
@@ -126,7 +127,7 @@ export class PasswordService {
         }
         const new_password_hashed = password_verification_and_hashing_response.data.password_hashed;
         // Change password
-        const password_change_response = await this.passwordChange(user_id, new_password_hashed);
+        const password_change_response = await this.passwordChange(verify_email_change_password_response.data._id.toString(), new_password_hashed);
         // Return success response
         return password_change_response;
     }
