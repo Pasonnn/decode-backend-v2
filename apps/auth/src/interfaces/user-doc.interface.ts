@@ -5,4 +5,5 @@ export type UserDoc = {
     email: string;
     username: string;
     password_hashed: string;
+    role: string;
 }

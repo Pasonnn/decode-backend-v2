@@ -24,7 +24,7 @@ export class User extends Document {
   @Prop({ required: false, default: 'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png' })
   avatar_fallback_url: string;
 
-  @Prop({ required: false, default: 'user' })
+  @Prop({ required: false, default: 'user', enum: ['user', 'admin', 'moderator'] })
   role: string;
 
   @Prop({ required: false, default: new Date() })
