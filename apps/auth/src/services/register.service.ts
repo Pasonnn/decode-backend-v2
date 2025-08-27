@@ -195,6 +195,7 @@ export class RegisterService {
         const user = await this.userModel.create({
             username: register_info_value.username,
             email: register_info_value.email,
+            display_name: register_info_value.username,
             password_hashed: register_info_value.password_hashed,
             role: AUTH_CONSTANTS.USER.DEFAULT_ROLE,
             biography: AUTH_CONSTANTS.USER.DEFAULT_BIOGRAPHY,

@@ -95,7 +95,6 @@ export class PasswordService {
                 message: ERROR_MESSAGES.PASSWORD.PASSWORD_RESET_CODE_INVALID 
             };
         }
-        console.log(verification_code_value);
         // Get user info
         const getUserInfoResponse = await this.infoService.getUserInfoByUserId(verification_code_value.user_id);
         if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
@@ -105,7 +104,7 @@ export class PasswordService {
         return { 
             success: true, 
             statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS, 
-            message: ERROR_MESSAGES.SUCCESS.PASSWORD_RESET_SUCCESSFUL, 
+            message: ERROR_MESSAGES.SUCCESS.PASSWORD_CODE_VERIFIED, 
             data: getUserInfoResponse.data 
         };
     }

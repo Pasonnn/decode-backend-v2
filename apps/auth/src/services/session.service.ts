@@ -11,6 +11,7 @@ import { SessionDoc } from "../interfaces/session-doc.interface";
 
 // Interfaces Import
 import { Response } from "../interfaces/response.interface";
+import { JwtPayload } from "../interfaces/jwt-payload.interface";
 
 // Infrastructure and Strategies Import
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
@@ -45,9 +46,10 @@ export class SessionService {
                 expires_at: new Date(Date.now() + AUTH_CONSTANTS.SESSION.EXPIRES_IN_HOURS * 60 * 60 * 1000),
                 is_active: true,
             });
+            
             this.logger.log(`Session created for user ${user_id} with device fingerprint ${device_fingerprint_id}`);
             // Generate access token
-            const access_token = await this.jwtStrategy.createAccessToken(user_id);
+            const access_token = await this.jwtStrategy.createAccessToken(user_id, session.session_token);
             // Return session
             return {
                 success: true,
@@ -79,7 +81,7 @@ export class SessionService {
             // Generate new session token
             const new_session_token = await this.jwtStrategy.createRefreshToken(validate_session_response.data.user_id.toString());
             // Generate new access token
-            const access_token = await this.jwtStrategy.createAccessToken(validate_session_response.data.user_id.toString());
+            const access_token = await this.jwtStrategy.createAccessToken(validate_session_response.data.user_id.toString(), new_session_token);
             // Update session on database
             await this.sessionModel.updateOne({ _id: validate_session_response.data._id }, { $set: { session_token: new_session_token } });
             this.logger.log(`Session refreshed for user ${validate_session_response.data.user_id}`);
@@ -192,12 +194,45 @@ export class SessionService {
         }
     }
 
-    async validateAccess(access_token: string): Promise<Response> {
+    async validateAccess(access_token: string): Promise<Response<JwtPayload>> {
         try {
             // Validate access token
             const validate_access_token_response = await this.jwtStrategy.validateAccessToken(access_token);
-            if (!validate_access_token_response.success) {
+            if (!validate_access_token_response.success || !validate_access_token_response.data) {
                 return validate_access_token_response;
+            }
+            // Check if session is active
+            const session = await this.sessionModel.findOne({ $and: [{ session_token: validate_access_token_response.data.session_token }, { is_active: true }] });
+            if (!session) {
+                return {
+                    success: false,
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+                    message: ERROR_MESSAGES.SESSION.SESSION_NOT_FOUND,
+                };
+            }
+            // Check if session is expired
+            if (session.expires_at < new Date()) {
+                return {
+                    success: false,
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+                    message: ERROR_MESSAGES.SESSION.SESSION_EXPIRED,
+                };
+            }
+            // Check if session is revoked
+            if (session.revoked_at || !session.is_active) {
+                return {
+                    success: false,
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+                    message: ERROR_MESSAGES.SESSION.SESSION_REVOKED,
+                };
+            }
+            // Check if session is valid
+            if (session.expires_at < new Date()) {
+                return {
+                    success: false,
+                    statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+                    message: ERROR_MESSAGES.SESSION.SESSION_EXPIRED,
+                };
             }
             // Return response
             return {

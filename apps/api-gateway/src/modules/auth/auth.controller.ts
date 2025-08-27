@@ -105,7 +105,6 @@ export class AuthController {
      * @returns Logout confirmation
      */
     @Post('logout')
-    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async logout(@Body() body: { session_token: string }): Promise<Response> {
         return this.authService.logout(body.session_token);
@@ -149,11 +148,11 @@ export class AuthController {
     // Session Management Endpoints
 
     /**
-     * Get active sessions for current user
+     * Get active session for current user
      * @param user - Current authenticated user
-     * @returns List of active sessions
+     * @returns List of active session
      */
-    @Get('sessions/active')
+    @Get('session/active')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async getActiveSessions(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
@@ -161,11 +160,11 @@ export class AuthController {
     }
 
     /**
-     * Revoke all sessions for current user
+     * Revoke all session for current user
      * @param user - Current authenticated user
      * @returns Confirmation of session revocation
      */
-    @Post('sessions/revoke-all')
+    @Post('session/revoke-all')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async revokeAllSessions(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
@@ -173,23 +172,11 @@ export class AuthController {
     }
 
     /**
-     * Validate access token (detailed validation)
-     * @param validateAccessDto - Access token to validate
-     * @returns Detailed validation result
-     */
-    @Post('sessions/validate-access')
-    @Public()
-    @HttpCode(HttpStatus.OK)
-    async validateAccess(@Body() validateAccessDto: ValidateAccessDto): Promise<Response> {
-        return this.authService.validateAccess(validateAccessDto.access_token);
-    }
-
-    /**
      * Create SSO token for current user
      * @param user - Current authenticated user
      * @returns SSO token
      */
-    @Post('sessions/sso')
+    @Post('session/sso')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
     async createSsoToken(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
@@ -201,7 +188,7 @@ export class AuthController {
      * @param validateSsoTokenDto - SSO token to validate
      * @returns SSO token validation result
      */
-    @Post('sessions/sso/validate')
+    @Post('session/sso/validate')
     @Public()
     @HttpCode(HttpStatus.OK)
     async validateSsoToken(@Body() validateSsoTokenDto: ValidateSsoTokenDto): Promise<Response> {

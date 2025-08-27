@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -27,8 +28,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         };
     }
 
-    async createAccessToken(user_id: string) {
-        const payload = { user_id: user_id };
+    async createAccessToken(user_id: string, session_token: string) {
+        const payload = { user_id: user_id, session_token: session_token };
         
         return this.jwtService.sign(payload, {
             secret: this.configService.get('jwt.secret.accessToken'),
@@ -51,7 +52,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     async validateAccessToken(token: string) {
         try {
-            const payload = this.jwtService.verify(token, {
+            const payload = this.jwtService.verify<JwtPayload>(token, {
                 secret: this.configService.get('jwt.secret.accessToken'),
                 issuer: this.configService.get('jwt.accessToken.issuer'),
                 audience: this.configService.get('jwt.accessToken.audience'),

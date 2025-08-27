@@ -164,6 +164,7 @@ export const ERROR_MESSAGES = {
         EMAIL_VERIFICATION_SUCCESSFUL: 'Email verification successful',
         PASSWORD_CHANGED: 'Password changed successfully',
         PASSWORD_RESET_SENT: 'Password reset email sent',
+        PASSWORD_CODE_VERIFIED: 'Password code verified',
         PASSWORD_RESET_SUCCESSFUL: 'Password reset successful',
         SESSION_CREATED: 'Session created',
         SESSION_REFRESHED: 'Session refreshed',

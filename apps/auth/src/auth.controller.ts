@@ -118,7 +118,7 @@ export class AuthController {
      * @param dto - User ID to fetch active sessions for {user_id: string}
      * @returns Response containing list of active user sessions
      */
-    @Get('session/active')
+    @Post('session/active')
     async getActiveSessions(@Body() dto: GetActiveSessionsDto): Promise<Response> {
         const get_active_sessions_response = await this.sessionService.getUserActiveSessions(dto.user_id);
         return get_active_sessions_response;
@@ -228,7 +228,7 @@ export class AuthController {
      * @param dto - Access token for user identification {access_token: string}
      * @returns Response containing user profile information
      */
-    @Get('info/by-access-token')
+    @Post('info/by-access-token')
     async infoByAccessToken(@Body() dto: InfoByAccessTokenDto): Promise<Response> {
         const info_by_access_token_response = await this.infoService.getUserInfoByAccessToken(dto.access_token);
         return info_by_access_token_response;
@@ -239,7 +239,7 @@ export class AuthController {
      * @param dto - User ID for profile lookup {user_id: string}
      * @returns Response containing user profile information
      */
-    @Get('info/by-user-id')
+    @Post('info/by-user-id')
     async infoByUserId(@Body() dto: InfoByUserIdDto): Promise<Response> {
         const info_by_user_id_response = await this.infoService.getUserInfoByUserId(dto.user_id);
         return info_by_user_id_response;
@@ -250,7 +250,7 @@ export class AuthController {
      * @param dto - Email or username for user lookup {email_or_username: string}   
      * @returns Response containing user profile information
      */
-    @Get('info/by-email-or-username')
+    @Post('info/by-email-or-username')
     async infoByEmailOrUsername(@Body() dto: InfoByEmailOrUsernameDto): Promise<Response> {
         const info_by_email_or_username_response = await this.infoService.getUserInfoByEmailOrUsername(dto.email_or_username);
         return info_by_email_or_username_response;

@@ -3,24 +3,23 @@ import { Injectable } from "@nestjs/common";
 // Interfaces
 import { UserDoc } from "../interfaces/user-doc.interface";
 import { Response } from "../interfaces/response.interface";
+import { JwtPayload } from "../interfaces/jwt-payload.interface";
 
 // Models
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { User } from "../schemas/user.schema";
 
-// Jwt Strategy
-import { JwtStrategy } from "../strategies/jwt.strategy";
-
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { SessionService } from "./session.service";
 
 @Injectable()
 export class InfoService {
     constructor(
         @InjectModel(User.name) private userModel: Model<User>,
-        private readonly jwtStrategy: JwtStrategy,
+        private readonly sessionService: SessionService,
     ) {}
 
      async getUserInfoByEmailOrUsername(email_or_username: string): Promise<Response<UserDoc>> {
@@ -48,15 +47,16 @@ export class InfoService {
 
     async getUserInfoByAccessToken(access_token: string): Promise<Response<UserDoc>> {
         // Validate access token
-        const validate_access_token_response = await this.jwtStrategy.validateAccessToken(access_token);
-        if (!validate_access_token_response) {
+        const validate_access_token_response = await this.sessionService.validateAccess(access_token);
+        if (!validate_access_token_response.success || !validate_access_token_response.data) {
             return {
                 success: false,
                 statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 message: ERROR_MESSAGES.USER_INFO.INVALID_ACCESS_TOKEN,
             }
         }
-        const user_id = validate_access_token_response.data.user_id;
+        console.log('validate_access_token_response', validate_access_token_response);
+        const user_id = (validate_access_token_response.data as JwtPayload).user_id;
         // Get user info
         const user = await this.userModel.findById(user_id);
         if (!user) {
