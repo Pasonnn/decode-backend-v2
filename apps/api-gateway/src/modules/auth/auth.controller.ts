@@ -9,6 +9,16 @@ import {
     Headers,
     UnauthorizedException
 } from '@nestjs/common';
+import { 
+    ApiTags, 
+    ApiOperation, 
+    ApiResponse, 
+    ApiBearerAuth, 
+    ApiBody,
+    ApiHeader,
+    ApiParam,
+    ApiQuery
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
@@ -33,15 +43,50 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 import { AuthRateLimit, UserRateLimit } from '../../common/decorators/rate-limit.decorator';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
-    /**
-     * User login endpoint
-     * @param loginDto - Login credentials
-     * @returns Authentication tokens and user data
-     */
+    @ApiOperation({
+        summary: 'User login',
+        description: 'Authenticate user with email/username and password'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Login successful',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean', example: true },
+                statusCode: { type: 'number', example: 200 },
+                message: { type: 'string', example: 'Login successful' },
+                data: {
+                    type: 'object',
+                    properties: {
+                        access_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+                        session_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+                        user: {
+                            type: 'object',
+                            properties: {
+                                id: { type: 'string', example: '507f1f77bcf86cd799439011' },
+                                username: { type: 'string', example: 'john_doe' },
+                                email: { type: 'string', example: 'john.doe@example.com' }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Invalid credentials'
+    })
+    @ApiResponse({
+        status: 429,
+        description: 'Too many login attempts'
+    })
     @Post('login')
     @Public()
     @AuthRateLimit.login()
@@ -50,11 +95,18 @@ export class AuthController {
         return this.authService.login(loginDto);
     }
 
-    /**
-     * Verify device fingerprint through email verification
-     * @param verificationDto - Email verification code
-     * @returns Verification status
-     */
+    @ApiOperation({
+        summary: 'Verify device fingerprint',
+        description: 'Verify device fingerprint through email verification for enhanced security'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Device fingerprint verified successfully'
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Invalid verification code'
+    })
     @Post('login/fingerprint/email-verification')
     @Public()
     @HttpCode(HttpStatus.OK)
@@ -62,11 +114,26 @@ export class AuthController {
         return this.authService.verifyFingerprint(verificationDto);
     }
 
-    /**
-     * User registration endpoint
-     * @param registerDto - Registration information
-     * @returns Registration confirmation
-     */
+    @ApiOperation({
+        summary: 'User registration',
+        description: 'Register a new user account'
+    })
+    @ApiResponse({
+        status: 201,
+        description: 'Registration initiated successfully'
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Invalid registration data'
+    })
+    @ApiResponse({
+        status: 409,
+        description: 'User already exists'
+    })
+    @ApiResponse({
+        status: 429,
+        description: 'Too many registration attempts'
+    })
     @Post('register')
     @Public()
     @AuthRateLimit.register()
@@ -75,11 +142,18 @@ export class AuthController {
         return this.authService.register(registerDto);
     }
 
-    /**
-     * Verify email for registration
-     * @param verifyEmailDto - Email verification code
-     * @returns Email verification status
-     */
+    @ApiOperation({
+        summary: 'Verify email for registration',
+        description: 'Complete registration by verifying email with provided code'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Email verified successfully'
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Invalid verification code'
+    })
     @Post('register/verify-email')
     @Public()
     @HttpCode(HttpStatus.OK)
@@ -87,11 +161,18 @@ export class AuthController {
         return this.authService.verifyEmail(verifyEmailDto);
     }
 
-    /**
-     * Refresh session token
-     * @param refreshTokenDto - Session token for refresh
-     * @returns New access token
-     */
+    @ApiOperation({
+        summary: 'Refresh session token',
+        description: 'Refresh access token using session token'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Token refreshed successfully'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Invalid session token'
+    })
     @Post('refresh')
     @Public()
     @HttpCode(HttpStatus.OK)
@@ -99,22 +180,37 @@ export class AuthController {
         return this.authService.refreshToken(refreshTokenDto);
     }
 
-    /**
-     * Logout user
-     * @param sessionToken - Session token to invalidate
-     * @returns Logout confirmation
-     */
+    @ApiOperation({
+        summary: 'User logout',
+        description: 'Logout user by invalidating session token'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Logout successful'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Invalid session token'
+    })
     @Post('logout')
     @HttpCode(HttpStatus.OK)
     async logout(@Body() body: { session_token: string }): Promise<Response> {
         return this.authService.logout(body.session_token);
     }
 
-    /**
-     * Get current user information
-     * @param user - Current authenticated user (from token)
-     * @returns User information
-     */
+    @ApiOperation({
+        summary: 'Get current user information',
+        description: 'Retrieve information about the currently authenticated user'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'User information retrieved successfully'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized'
+    })
+    @ApiBearerAuth('JWT-auth')
     @Get('me')
     @UseGuards(AuthGuard)
     @UserRateLimit.standard()
@@ -128,11 +224,24 @@ export class AuthController {
         };
     }
 
-    /**
-     * Validate access token
-     * @param authorization - Bearer token from header
-     * @returns Token validation status
-     */
+    @ApiOperation({
+        summary: 'Validate access token',
+        description: 'Validate JWT access token from Authorization header'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Token is valid'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Invalid or missing token'
+    })
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'Bearer token',
+        required: true,
+        example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    })
     @Get('validate')
     @Public()
     @HttpCode(HttpStatus.OK)
@@ -147,11 +256,19 @@ export class AuthController {
 
     // Session Management Endpoints
 
-    /**
-     * Get active session for current user
-     * @param user - Current authenticated user
-     * @returns List of active session
-     */
+    @ApiOperation({
+        summary: 'Get active sessions',
+        description: 'Retrieve all active sessions for the current user'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Active sessions retrieved successfully'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized'
+    })
+    @ApiBearerAuth('JWT-auth')
     @Get('session/active')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
@@ -159,11 +276,19 @@ export class AuthController {
         return this.authService.getActiveSessions(user.userId);
     }
 
-    /**
-     * Revoke all session for current user
-     * @param user - Current authenticated user
-     * @returns Confirmation of session revocation
-     */
+    @ApiOperation({
+        summary: 'Revoke all sessions',
+        description: 'Revoke all active sessions for the current user across all devices'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'All sessions revoked successfully'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized'
+    })
+    @ApiBearerAuth('JWT-auth')
     @Post('session/revoke-all')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
@@ -171,11 +296,19 @@ export class AuthController {
         return this.authService.revokeAllSessions(user.userId);
     }
 
-    /**
-     * Create SSO token for current user
-     * @param user - Current authenticated user
-     * @returns SSO token
-     */
+    @ApiOperation({
+        summary: 'Create SSO token',
+        description: 'Create Single Sign-On token for cross-service authentication'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'SSO token created successfully'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized'
+    })
+    @ApiBearerAuth('JWT-auth')
     @Post('session/sso')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
@@ -183,11 +316,18 @@ export class AuthController {
         return this.authService.createSsoToken(user.userId);
     }
 
-    /**
-     * Validate SSO token
-     * @param validateSsoTokenDto - SSO token to validate
-     * @returns SSO token validation result
-     */
+    @ApiOperation({
+        summary: 'Validate SSO token',
+        description: 'Validate Single Sign-On token for cross-service authentication'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'SSO token is valid'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Invalid SSO token'
+    })
     @Post('session/sso/validate')
     @Public()
     @HttpCode(HttpStatus.OK)
@@ -197,12 +337,23 @@ export class AuthController {
 
     // Password Management Endpoints
 
-    /**
-     * Change user password
-     * @param changePasswordDto - Password change data
-     * @param user - Current authenticated user
-     * @returns Password change confirmation
-     */
+    @ApiOperation({
+        summary: 'Change password',
+        description: 'Change user password with current password verification'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Password changed successfully'
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Invalid password data'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized or incorrect current password'
+    })
+    @ApiBearerAuth('JWT-auth')
     @Post('password/change')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
@@ -217,11 +368,19 @@ export class AuthController {
         );
     }
 
-    /**
-     * Initiate forgot password process
-     * @param user - Current authenticated user (from access token)
-     * @returns Email verification confirmation
-     */
+    @ApiOperation({
+        summary: 'Initiate forgot password',
+        description: 'Start the forgot password process by sending email verification'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Forgot password process initiated successfully'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized'
+    })
+    @ApiBearerAuth('JWT-auth')
     @Post('password/forgot/initiate')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
@@ -231,11 +390,23 @@ export class AuthController {
         return this.authService.initiateForgotPassword(user.userId);
     }
 
-    /**
-     * Verify email for forgot password
-     * @param verifyEmailDto - Email verification code
-     * @returns Email verification status
-     */
+    @ApiOperation({
+        summary: 'Verify email for forgot password',
+        description: 'Verify email code for forgot password process'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Email verified successfully'
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Invalid verification code'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized'
+    })
+    @ApiBearerAuth('JWT-auth')
     @Post('password/forgot/verify-email')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)
@@ -243,11 +414,23 @@ export class AuthController {
         return this.authService.verifyEmailForgotPassword(verifyEmailDto.code);
     }
 
-    /**
-     * Change password using forgot password flow
-     * @param changeForgotPasswordDto - Password change data with verification code
-     * @returns Password change confirmation
-     */
+    @ApiOperation({
+        summary: 'Change forgot password',
+        description: 'Complete forgot password process by setting new password'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Password changed successfully'
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Invalid password data or verification code'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized'
+    })
+    @ApiBearerAuth('JWT-auth')
     @Post('password/forgot/change')
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.OK)

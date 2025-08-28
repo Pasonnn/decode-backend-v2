@@ -55,7 +55,7 @@ export class AuthService {
         try {
             this.logger.log('Device fingerprint verification attempt');
             
-            const response = await this.authServiceClient.post('/auth/login/fingerprint/email-verification', verificationDto);
+            const response = await this.authServiceClient.fingerprintEmailVerification(verificationDto);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Fingerprint verification failed');
@@ -76,7 +76,7 @@ export class AuthService {
         try {
             this.logger.log(`Registration attempt for user: ${registerDto.username} (${registerDto.email})`);
             
-            const response = await this.authServiceClient.register(registerDto);
+            const response = await this.authServiceClient.emailVerificationRegister(registerDto);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Registration failed');
@@ -97,7 +97,7 @@ export class AuthService {
         try {
             this.logger.log('Email verification attempt');
             
-            const response = await this.authServiceClient.post('/auth/register/verify-email', verifyEmailDto);
+            const response = await this.authServiceClient.verifyEmailRegister(verifyEmailDto);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Email verification failed');
@@ -118,7 +118,7 @@ export class AuthService {
         try {
             this.logger.log('Token refresh attempt');
             
-            const response = await this.authServiceClient.post('/auth/session/refresh', refreshTokenDto);
+            const response = await this.authServiceClient.refreshSession(refreshTokenDto);
             
             if (!response.success) {
                 throw new UnauthorizedException(response.message || 'Token refresh failed');
@@ -139,7 +139,7 @@ export class AuthService {
         try {
             this.logger.log('Logout attempt');
             
-            const response = await this.authServiceClient.post('/auth/session/logout', { session_token: sessionToken });
+            const response = await this.authServiceClient.logout({ session_token: sessionToken });
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Logout failed');
@@ -171,7 +171,7 @@ export class AuthService {
      */
     async getUserInfo(accessToken: string): Promise<Response> {
         try {
-            const response = await this.authServiceClient.post('/auth/info/by-access-token', { access_token: accessToken });
+            const response = await this.authServiceClient.infoByAccessToken({ access_token: accessToken });
             return response;
         } catch (error) {
             this.logger.error(`Get user info failed: ${error.message}`);
@@ -188,7 +188,7 @@ export class AuthService {
         try {
             this.logger.log(`Getting active sessions for user: ${userId}`);
             
-            const response = await this.authServiceClient.post('/auth/session/active', { user_id: userId });
+            const response = await this.authServiceClient.getActiveSessions({ user_id: userId });
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Failed to get active sessions');
@@ -209,7 +209,7 @@ export class AuthService {
         try {
             this.logger.log(`Revoking all sessions for user: ${userId}`);
             
-            const response = await this.authServiceClient.post('/auth/session/revoke-all', { user_id: userId });
+            const response = await this.authServiceClient.revokeAllSessions({ user_id: userId });
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Failed to revoke all sessions');
@@ -230,7 +230,7 @@ export class AuthService {
         try {
             this.logger.log('Validating access token');
             
-            const response = await this.authServiceClient.post('/auth/session/validate-access', { access_token: accessToken });
+            const response = await this.authServiceClient.validateAccess({ access_token: accessToken });
             
             if (!response.success) {
                 throw new UnauthorizedException(response.message || 'Access token validation failed');
@@ -251,7 +251,7 @@ export class AuthService {
         try {
             this.logger.log(`Creating SSO token for user: ${userId}`);
             
-            const response = await this.authServiceClient.post('/auth/session/sso', { user_id: userId });
+            const response = await this.authServiceClient.createSsoToken({ user_id: userId });
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Failed to create SSO token');
@@ -272,7 +272,7 @@ export class AuthService {
         try {
             this.logger.log('Validating SSO token');
             
-            const response = await this.authServiceClient.post('/auth/session/sso/validate', { sso_token: ssoToken });
+            const response = await this.authServiceClient.validateSsoToken({ sso_token: ssoToken });
             
             if (!response.success) {
                 throw new UnauthorizedException(response.message || 'SSO token validation failed');
@@ -295,7 +295,7 @@ export class AuthService {
         try {
             this.logger.log(`Changing password for user: ${userId}`);
             
-            const response = await this.authServiceClient.post('/auth/password/change', {
+            const response = await this.authServiceClient.changePassword({
                 user_id: userId,
                 old_password: oldPassword,
                 new_password: newPassword
@@ -320,7 +320,7 @@ export class AuthService {
         try {
             this.logger.log(`Initiating forgot password for user: ${userId}`);
             
-            const response = await this.authServiceClient.post('/auth/password/forgot/email-verification', { user_id: userId });
+            const response = await this.authServiceClient.emailVerificationChangePassword({ user_id: userId });
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Failed to initiate forgot password');
@@ -341,7 +341,7 @@ export class AuthService {
         try {
             this.logger.log('Verifying email for forgot password');
             
-            const response = await this.authServiceClient.post('/auth/password/forgot/verify-email', { code });
+            const response = await this.authServiceClient.verifyEmailChangePassword({ code });
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Email verification failed');
@@ -362,7 +362,7 @@ export class AuthService {
         try {
             this.logger.log('Changing password using forgot password flow');
             
-            const response = await this.authServiceClient.post('/auth/password/forgot/change', {
+            const response = await this.authServiceClient.changeForgotPassword({
                 code,
                 new_password: newPassword
             });
