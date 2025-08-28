@@ -5,89 +5,90 @@ import { Redis } from 'ioredis';
 
 @Injectable()
 export class RedisInfrastructure {
-    constructor(
-        private readonly configService: ConfigService,
-        @InjectRedis() private readonly redis: Redis,
-    ) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRedis() private readonly redis: Redis,
+  ) {}
 
-    async set(key: string, value: any, ttl?: number): Promise<void> {
-        const serializedValue = typeof value === 'string' ? value : JSON.stringify(value);
-        
-        if (ttl) {
-            await this.redis.setex(key, ttl, serializedValue);
-        } else {
-            await this.redis.set(key, serializedValue);
-        }
-    }
+  async set(key: string, value: any, ttl?: number): Promise<void> {
+    const serializedValue =
+      typeof value === 'string' ? value : JSON.stringify(value);
 
-    async get(key: string): Promise<any> {
-        const value = await this.redis.get(key);
-        if (!value) return null;
-        
-        try {
-            return JSON.parse(value);
-        } catch {
-            return value;
-        }
+    if (ttl) {
+      await this.redis.setex(key, ttl, serializedValue);
+    } else {
+      await this.redis.set(key, serializedValue);
     }
+  }
 
-    async del(key: string): Promise<void> {
-        await this.redis.del(key);
-    }
+  async get(key: string): Promise<any> {
+    const value = await this.redis.get(key);
+    if (!value) return null;
 
-    async exists(key: string): Promise<boolean> {
-        const result = await this.redis.exists(key);
-        return result === 1;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
     }
+  }
 
-    async ttl(key: string): Promise<number> {
-        return await this.redis.ttl(key);
-    }
+  async del(key: string): Promise<void> {
+    await this.redis.del(key);
+  }
 
-    async incr(key: string): Promise<number> {
-        return await this.redis.incr(key);
-    }
+  async exists(key: string): Promise<boolean> {
+    const result = await this.redis.exists(key);
+    return result === 1;
+  }
 
-    async expire(key: string, ttl: number): Promise<void> {
-        await this.redis.expire(key, ttl);
-    }
+  async ttl(key: string): Promise<number> {
+    return await this.redis.ttl(key);
+  }
 
-    async mget(keys: string[]): Promise<any[]> {
-        const values = await this.redis.mget(...keys);
-        return values.map(value => {
-            if (!value) return null;
-            try {
-                return JSON.parse(value);
-            } catch {
-                return value;
-            }
-        });
-    }
+  async incr(key: string): Promise<number> {
+    return await this.redis.incr(key);
+  }
 
-    async mdel(keys: string[]): Promise<void> {
-        if (keys.length > 0) {
-            await this.redis.del(...keys);
-        }
-    }
+  async expire(key: string, ttl: number): Promise<void> {
+    await this.redis.expire(key, ttl);
+  }
 
-    // Health check
-    async ping(): Promise<string> {
-        return await this.redis.ping();
-    }
+  async mget(keys: string[]): Promise<any[]> {
+    const values = await this.redis.mget(...keys);
+    return values.map((value) => {
+      if (!value) return null;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    });
+  }
 
-    // Connection info
-    async getConnectionInfo(): Promise<any> {
-        const info = await this.redis.info();
-        return info;
+  async mdel(keys: string[]): Promise<void> {
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
     }
+  }
 
-    // Clear all data (use with caution)
-    async flushAll(): Promise<void> {
-        await this.redis.flushall();
-    }
+  // Health check
+  async ping(): Promise<string> {
+    return await this.redis.ping();
+  }
 
-    // Clear specific database
-    async flushDb(): Promise<void> {
-        await this.redis.flushdb();
-    }
+  // Connection info
+  async getConnectionInfo(): Promise<any> {
+    const info = await this.redis.info();
+    return info;
+  }
+
+  // Clear all data (use with caution)
+  async flushAll(): Promise<void> {
+    await this.redis.flushall();
+  }
+
+  // Clear specific database
+  async flushDb(): Promise<void> {
+    await this.redis.flushdb();
+  }
 }

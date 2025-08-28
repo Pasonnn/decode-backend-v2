@@ -1,14 +1,14 @@
 export interface EmailTemplate {
-    subject: string;
-    html: string;
-    text: string;
-  }
-  
-  export class EmailTemplates {
-    static createAccount(email: string, otpCode: string): EmailTemplate {
-      return {
-        subject: 'Verify Your Email - Create Your Decode Account',
-        html: `
+  subject: string;
+  html: string;
+  text: string;
+}
+
+export class EmailTemplates {
+  static createAccount(email: string, otpCode: string): EmailTemplate {
+    return {
+      subject: 'Verify Your Email - Create Your Decode Account',
+      html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -37,7 +37,7 @@ export interface EmailTemplate {
           </body>
           </html>
         `,
-        text: `
+      text: `
   Welcome to Decode!
   
   Hi there,
@@ -52,14 +52,14 @@ export interface EmailTemplate {
   
   ---
   This email was sent to ${email}. If you have any questions, please contact our support team.
-        `
-      };
-    }
-  
-    static welcomeMessage(email: string): EmailTemplate {
-      return {
-        subject: 'Welcome to Decode! Your Account is Ready',
-        html: `
+        `,
+    };
+  }
+
+  static welcomeMessage(email: string): EmailTemplate {
+    return {
+      subject: 'Welcome to Decode! Your Account is Ready',
+      html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -96,7 +96,7 @@ export interface EmailTemplate {
           </body>
           </html>
         `,
-        text: `
+      text: `
   🎉 Welcome to Decode!
   
   Hi there,
@@ -117,14 +117,14 @@ export interface EmailTemplate {
   
   ---
   This email was sent to ${email}. If you have any questions, please contact our support team.
-        `
-      };
-    }
-  
-    static fingerprintVerify(email: string, otpCode: string): EmailTemplate {
-      return {
-        subject: 'New Device Login - Verify Your Identity',
-        html: `
+        `,
+    };
+  }
+
+  static fingerprintVerify(email: string, otpCode: string): EmailTemplate {
+    return {
+      subject: 'New Device Login - Verify Your Identity',
+      html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -161,7 +161,7 @@ export interface EmailTemplate {
           </body>
           </html>
         `,
-        text: `
+      text: `
   🔒 New Device Login Detected
   
   Hi there,
@@ -179,14 +179,14 @@ export interface EmailTemplate {
   
   ---
   This email was sent to ${email}. If you have any questions, please contact our support team.
-        `
-      };
-    }
-  
-    static forgotPasswordVerify(email: string, otpCode: string): EmailTemplate {
-      return {
-        subject: 'Password Reset Request - Verify Your Identity',
-        html: `
+        `,
+    };
+  }
+
+  static forgotPasswordVerify(email: string, otpCode: string): EmailTemplate {
+    return {
+      subject: 'Password Reset Request - Verify Your Identity',
+      html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -223,7 +223,7 @@ export interface EmailTemplate {
           </body>
           </html>
         `,
-        text: `
+      text: `
   🔑 Password Reset Request
   
   Hi there,
@@ -242,7 +242,7 @@ export interface EmailTemplate {
   
   ---
   This email was sent to ${email}. If you have any questions, please contact our support team.
-        `
-      };
-    }
+        `,
+    };
   }
+}

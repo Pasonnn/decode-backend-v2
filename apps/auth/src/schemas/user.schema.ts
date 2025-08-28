@@ -18,13 +18,24 @@ export class User extends Document {
   @Prop({ required: false, default: 'Hi, i am a new Decode User' })
   biography: string;
 
-  @Prop({ required: false, default: 'bafkreibmridohwxgfwdrju5ixnw26awr22keihoegdn76yymilgsqyx4le' })
+  @Prop({
+    required: false,
+    default: 'bafkreibmridohwxgfwdrju5ixnw26awr22keihoegdn76yymilgsqyx4le',
+  })
   avatar_ipfs_hash: string;
 
-  @Prop({ required: false, default: 'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png' })
+  @Prop({
+    required: false,
+    default:
+      'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png',
+  })
   avatar_fallback_url: string;
 
-  @Prop({ required: false, default: 'user', enum: ['user', 'admin', 'moderator'] })
+  @Prop({
+    required: false,
+    default: 'user',
+    enum: ['user', 'admin', 'moderator'],
+  })
   role: string;
 
   @Prop({ required: false, default: new Date() })

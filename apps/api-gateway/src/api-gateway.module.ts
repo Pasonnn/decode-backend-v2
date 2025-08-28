@@ -11,17 +11,17 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 
 @Module({
-    imports: [
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: '.env',
-        }),
-        ConfigModule.forFeature(configuration),
-        ConfigModule.forFeature(environmentConfig),
-        HttpModule,
-        CacheModule,
-        HealthModule,
-        AuthModule,
-    ],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    ConfigModule.forFeature(configuration),
+    ConfigModule.forFeature(environmentConfig),
+    HttpModule,
+    CacheModule,
+    HealthModule,
+    AuthModule,
+  ],
 })
 export class ApiGatewayModule {}

@@ -9,7 +9,10 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
-import { RATE_LIMIT_KEY, RateLimitOptions } from '../decorators/rate-limit.decorator';
+import {
+  RATE_LIMIT_KEY,
+  RateLimitOptions,
+} from '../decorators/rate-limit.decorator';
 import { RateLimitService } from '../../infrastructure/cache/rate-limit.service';
 
 @Injectable()
@@ -37,10 +40,16 @@ export class RateLimitGuard implements CanActivate {
 
     try {
       const key = this.generateKey(request, rateLimitOptions);
-      const isAllowed = await this.checkRateLimit(key, rateLimitOptions, response);
+      const isAllowed = await this.checkRateLimit(
+        key,
+        rateLimitOptions,
+        response,
+      );
 
       if (!isAllowed) {
-        const message = rateLimitOptions.message || 'Too many requests, please try again later.';
+        const message =
+          rateLimitOptions.message ||
+          'Too many requests, please try again later.';
         throw new HttpException(
           {
             success: false,
@@ -72,11 +81,11 @@ export class RateLimitGuard implements CanActivate {
     // Default key generation based on IP and user ID
     const ip = this.getClientIP(request);
     const userId = (request as any).user?.userId;
-    
+
     if (userId) {
       return `rate_limit:user:${userId}`;
     }
-    
+
     return `rate_limit:ip:${ip}`;
   }
 
@@ -92,7 +101,12 @@ export class RateLimitGuard implements CanActivate {
     );
 
     // Set rate limit headers
-    this.setRateLimitHeaders(response, info.limit, info.remaining, options.windowMs);
+    this.setRateLimitHeaders(
+      response,
+      info.limit,
+      info.remaining,
+      options.windowMs,
+    );
 
     return allowed;
   }
@@ -107,28 +121,37 @@ export class RateLimitGuard implements CanActivate {
 
     // Standard headers (RFC 6585)
     response.setHeader('RateLimit-Limit', limit.toString());
-    response.setHeader('RateLimit-Remaining', Math.max(0, limit - remaining).toString());
+    response.setHeader(
+      'RateLimit-Remaining',
+      Math.max(0, limit - remaining).toString(),
+    );
     response.setHeader('RateLimit-Reset', resetTime);
 
     // Legacy headers (X-RateLimit-*)
     response.setHeader('X-RateLimit-Limit', limit.toString());
-    response.setHeader('X-RateLimit-Remaining', Math.max(0, limit - remaining).toString());
-    response.setHeader('X-RateLimit-Reset', Math.floor(Date.now() / 1000 + windowMs / 1000).toString());
+    response.setHeader(
+      'X-RateLimit-Remaining',
+      Math.max(0, limit - remaining).toString(),
+    );
+    response.setHeader(
+      'X-RateLimit-Reset',
+      Math.floor(Date.now() / 1000 + windowMs / 1000).toString(),
+    );
   }
 
   private getClientIP(request: Request): string {
     // Get the real IP address, considering proxies
     const xForwardedFor = request.headers['x-forwarded-for'] as string;
     const xRealIP = request.headers['x-real-ip'] as string;
-    
+
     if (xForwardedFor) {
       return xForwardedFor.split(',')[0].trim();
     }
-    
+
     if (xRealIP) {
       return xRealIP;
     }
-    
+
     return request.ip || request.connection.remoteAddress || 'unknown';
   }
 }

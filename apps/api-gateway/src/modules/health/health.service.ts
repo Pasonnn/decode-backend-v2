@@ -5,17 +5,17 @@ import { ResponseUtil } from '../../common/utils/response.util';
 
 @Injectable()
 export class HealthService {
-    constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) {}
 
-    async checkHealth(): Promise<Response> {
-        const healthData = {
-            status: 'ok',
-            timestamp: new Date().toISOString(),
-            service: 'api-gateway',
-            version: '1.0.0',
-            environment: this.configService.get('environment'),
-        };
+  async checkHealth(): Promise<Response> {
+    const healthData = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      service: 'api-gateway',
+      version: '1.0.0',
+      environment: this.configService.get('environment'),
+    };
 
-        return ResponseUtil.success(healthData, 'API Gateway is healthy', 200);
-    }
+    return ResponseUtil.success(healthData, 'API Gateway is healthy', 200);
+  }
 }

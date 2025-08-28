@@ -17,7 +17,7 @@ export class RateLimitService {
 
   constructor(private readonly configService: ConfigService) {
     const redisConfig = this.configService.get('environment.redis');
-    
+
     this.redis = new Redis({
       host: redisConfig.host,
       port: redisConfig.port,
@@ -27,7 +27,7 @@ export class RateLimitService {
     });
 
     this.keyPrefix = redisConfig.keyPrefix;
-    
+
     this.redis.on('error', (error) => {
       this.logger.error(`Redis connection error: ${error.message}`);
     });
@@ -66,7 +66,7 @@ export class RateLimitService {
       pipeline.expire(fullKey, Math.ceil(windowMs / 1000));
 
       const results = await pipeline.exec();
-      
+
       if (!results) {
         throw new Error('Redis pipeline failed');
       }
@@ -103,7 +103,11 @@ export class RateLimitService {
   /**
    * Get current rate limit info without incrementing
    */
-  async getInfo(key: string, windowMs: number, maxRequests: number): Promise<RateLimitInfo> {
+  async getInfo(
+    key: string,
+    windowMs: number,
+    maxRequests: number,
+  ): Promise<RateLimitInfo> {
     const fullKey = `${this.keyPrefix}${key}`;
     const currentTime = Date.now();
     const windowStart = currentTime - windowMs;
@@ -111,10 +115,10 @@ export class RateLimitService {
     try {
       // Remove expired entries
       await this.redis.zremrangebyscore(fullKey, 0, windowStart);
-      
+
       // Count current requests
       const currentCount = await this.redis.zcard(fullKey);
-      
+
       const resetTime = new Date(currentTime + windowMs);
       const remaining = Math.max(0, maxRequests - currentCount);
 
@@ -125,7 +129,9 @@ export class RateLimitService {
         resetTime,
       };
     } catch (error) {
-      this.logger.error(`Get rate limit info error for key ${key}: ${error.message}`);
+      this.logger.error(
+        `Get rate limit info error for key ${key}: ${error.message}`,
+      );
       return {
         limit: maxRequests,
         remaining: maxRequests,
@@ -140,12 +146,14 @@ export class RateLimitService {
    */
   async reset(key: string): Promise<void> {
     const fullKey = `${this.keyPrefix}${key}`;
-    
+
     try {
       await this.redis.del(fullKey);
       this.logger.log(`Rate limit reset for key: ${key}`);
     } catch (error) {
-      this.logger.error(`Reset rate limit error for key ${key}: ${error.message}`);
+      this.logger.error(
+        `Reset rate limit error for key ${key}: ${error.message}`,
+      );
     }
   }
 
@@ -155,7 +163,7 @@ export class RateLimitService {
   async getAllKeys(): Promise<string[]> {
     try {
       const keys = await this.redis.keys(`${this.keyPrefix}*`);
-      return keys.map(key => key.replace(this.keyPrefix, ''));
+      return keys.map((key) => key.replace(this.keyPrefix, ''));
     } catch (error) {
       this.logger.error(`Get all keys error: ${error.message}`);
       return [];

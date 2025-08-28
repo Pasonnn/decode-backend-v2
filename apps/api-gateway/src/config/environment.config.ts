@@ -6,34 +6,57 @@ export default registerAs('environment', () => ({
     // Global rate limiting
     global: {
       enabled: process.env.RATE_LIMIT_GLOBAL_ENABLED === 'true' || true,
-      windowMs: parseInt(process.env.RATE_LIMIT_GLOBAL_WINDOW_MS || '900000', 10), // 15 minutes
+      windowMs: parseInt(
+        process.env.RATE_LIMIT_GLOBAL_WINDOW_MS || '900000',
+        10,
+      ), // 15 minutes
       max: parseInt(process.env.RATE_LIMIT_GLOBAL_MAX || '100', 10), // 100 requests per window
-      message: process.env.RATE_LIMIT_GLOBAL_MESSAGE || 'Too many requests from this IP, please try again later.',
-      standardHeaders: process.env.RATE_LIMIT_GLOBAL_STANDARD_HEADERS === 'true' || true,
-      legacyHeaders: process.env.RATE_LIMIT_GLOBAL_LEGACY_HEADERS === 'true' || false,
+      message:
+        process.env.RATE_LIMIT_GLOBAL_MESSAGE ||
+        'Too many requests from this IP, please try again later.',
+      standardHeaders:
+        process.env.RATE_LIMIT_GLOBAL_STANDARD_HEADERS === 'true' || true,
+      legacyHeaders:
+        process.env.RATE_LIMIT_GLOBAL_LEGACY_HEADERS === 'true' || false,
     },
 
     // Authentication endpoints rate limiting
     auth: {
       login: {
-        windowMs: parseInt(process.env.RATE_LIMIT_AUTH_LOGIN_WINDOW_MS || '900000', 10), // 15 minutes
+        windowMs: parseInt(
+          process.env.RATE_LIMIT_AUTH_LOGIN_WINDOW_MS || '900000',
+          10,
+        ), // 15 minutes
         max: parseInt(process.env.RATE_LIMIT_AUTH_LOGIN_MAX || '5', 10), // 5 attempts per window
         message: 'Too many login attempts, please try again later.',
       },
       register: {
-        windowMs: parseInt(process.env.RATE_LIMIT_AUTH_REGISTER_WINDOW_MS || '3600000', 10), // 1 hour
+        windowMs: parseInt(
+          process.env.RATE_LIMIT_AUTH_REGISTER_WINDOW_MS || '3600000',
+          10,
+        ), // 1 hour
         max: parseInt(process.env.RATE_LIMIT_AUTH_REGISTER_MAX || '3', 10), // 3 attempts per window
         message: 'Too many registration attempts, please try again later.',
       },
       forgotPassword: {
-        windowMs: parseInt(process.env.RATE_LIMIT_AUTH_FORGOT_PASSWORD_WINDOW_MS || '3600000', 10), // 1 hour
-        max: parseInt(process.env.RATE_LIMIT_AUTH_FORGOT_PASSWORD_MAX || '3', 10), // 3 attempts per window
+        windowMs: parseInt(
+          process.env.RATE_LIMIT_AUTH_FORGOT_PASSWORD_WINDOW_MS || '3600000',
+          10,
+        ), // 1 hour
+        max: parseInt(
+          process.env.RATE_LIMIT_AUTH_FORGOT_PASSWORD_MAX || '3',
+          10,
+        ), // 3 attempts per window
         message: 'Too many password reset attempts, please try again later.',
       },
       verifyEmail: {
-        windowMs: parseInt(process.env.RATE_LIMIT_AUTH_VERIFY_EMAIL_WINDOW_MS || '300000', 10), // 5 minutes
+        windowMs: parseInt(
+          process.env.RATE_LIMIT_AUTH_VERIFY_EMAIL_WINDOW_MS || '300000',
+          10,
+        ), // 5 minutes
         max: parseInt(process.env.RATE_LIMIT_AUTH_VERIFY_EMAIL_MAX || '5', 10), // 5 attempts per window
-        message: 'Too many email verification attempts, please try again later.',
+        message:
+          'Too many email verification attempts, please try again later.',
       },
     },
 

@@ -24,7 +24,10 @@ export class PasswordUtils {
    * @param hashedPassword - Hashed password to compare against
    * @returns True if passwords match, false otherwise
    */
-  async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+  async comparePassword(
+    password: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
     const is_password_correct = await bcrypt.compare(password, hashedPassword);
     const hash_new_password = await this.hashPassword(password);
     return is_password_correct;
@@ -60,7 +63,9 @@ export class PasswordUtils {
 
     // Check minimum length
     if (!requirements.minLength) {
-      feedback.push(`Password must be at least ${authConfig().password.minLength} characters long`);
+      feedback.push(
+        `Password must be at least ${authConfig().password.minLength} characters long`,
+      );
     } else {
       score += 1;
     }
@@ -103,17 +108,26 @@ export class PasswordUtils {
 
     // Check for common patterns
     const commonPatterns = [
-      '123456', 'password', 'qwerty', 'admin', 'letmein',
-      'welcome', 'monkey', 'dragon', 'master', 'football'
+      '123456',
+      'password',
+      'qwerty',
+      'admin',
+      'letmein',
+      'welcome',
+      'monkey',
+      'dragon',
+      'master',
+      'football',
     ];
-    
+
     const lowerPassword = password.toLowerCase();
-    if (commonPatterns.some(pattern => lowerPassword.includes(pattern))) {
+    if (commonPatterns.some((pattern) => lowerPassword.includes(pattern))) {
       feedback.push('Password should not contain common words or patterns');
       score = Math.max(0, score - 2);
     }
 
-    const isValid = Object.values(requirements).every(req => req) && score >= 3;
+    const isValid =
+      Object.values(requirements).every((req) => req) && score >= 3;
 
     return {
       isValid,
@@ -137,7 +151,7 @@ export class PasswordUtils {
       includeNumbers?: boolean;
       includeSpecialChars?: boolean;
       excludeSimilar?: boolean;
-    } = {}
+    } = {},
   ): string {
     const {
       includeUppercase = true,
@@ -187,14 +201,32 @@ export class PasswordUtils {
    */
   isPasswordCompromised(password: string): boolean {
     const compromisedPatterns = [
-      'password', '123456', 'qwerty', 'admin', 'letmein',
-      'welcome', 'monkey', 'dragon', 'master', 'football',
-      'abc123', 'password123', 'admin123', 'root', 'guest',
-      'user', 'test', 'demo', 'sample', 'example'
+      'password',
+      '123456',
+      'qwerty',
+      'admin',
+      'letmein',
+      'welcome',
+      'monkey',
+      'dragon',
+      'master',
+      'football',
+      'abc123',
+      'password123',
+      'admin123',
+      'root',
+      'guest',
+      'user',
+      'test',
+      'demo',
+      'sample',
+      'example',
     ];
 
     const lowerPassword = password.toLowerCase();
-    return compromisedPatterns.some(pattern => lowerPassword.includes(pattern));
+    return compromisedPatterns.some((pattern) =>
+      lowerPassword.includes(pattern),
+    );
   }
 
   /**
@@ -225,7 +257,10 @@ export class PasswordUtils {
    * @param newPassword - New password
    * @returns Validation result
    */
-  validatePasswordChange(oldPassword: string, newPassword: string): {
+  validatePasswordChange(
+    oldPassword: string,
+    newPassword: string,
+  ): {
     isValid: boolean;
     feedback: string[];
   } {
@@ -237,7 +272,10 @@ export class PasswordUtils {
     }
 
     // Check if new password is too similar to old password
-    const similarity = this.calculatePasswordSimilarity(oldPassword, newPassword);
+    const similarity = this.calculatePasswordSimilarity(
+      oldPassword,
+      newPassword,
+    );
     if (similarity > 0.7) {
       feedback.push('New password is too similar to the current password');
     }
@@ -260,7 +298,10 @@ export class PasswordUtils {
    * @param password2 - Second password
    * @returns Similarity score (0-1, where 1 is identical)
    */
-  private calculatePasswordSimilarity(password1: string, password2: string): number {
+  private calculatePasswordSimilarity(
+    password1: string,
+    password2: string,
+  ): number {
     const longer = password1.length > password2.length ? password1 : password2;
     const shorter = password1.length > password2.length ? password2 : password1;
 
@@ -277,7 +318,9 @@ export class PasswordUtils {
    * @returns Edit distance
    */
   private levenshteinDistance(str1: string, str2: string): number {
-    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    const matrix = Array(str2.length + 1)
+      .fill(null)
+      .map(() => Array(str1.length + 1).fill(null));
 
     for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
     for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
@@ -288,7 +331,7 @@ export class PasswordUtils {
         matrix[j][i] = Math.min(
           matrix[j][i - 1] + 1, // deletion
           matrix[j - 1][i] + 1, // insertion
-          matrix[j - 1][i - 1] + indicator // substitution
+          matrix[j - 1][i - 1] + indicator, // substitution
         );
       }
     }

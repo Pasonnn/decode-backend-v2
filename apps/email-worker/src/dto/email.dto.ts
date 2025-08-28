@@ -32,7 +32,7 @@ export class ForgotPasswordVerifyEmailDto {
   otpCode: string;
 }
 
-export type EmailRequestDto = 
+export type EmailRequestDto =
   | { type: 'create-account'; data: CreateAccountEmailDto }
   | { type: 'welcome-message'; data: WelcomeMessageEmailDto }
   | { type: 'fingerprint-verify'; data: FingerprintVerifyEmailDto }

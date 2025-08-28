@@ -9,14 +9,16 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // Global pipes - following your auth service pattern
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   // Swagger Configuration
   const config = new DocumentBuilder()
@@ -58,10 +60,12 @@ async function bootstrap() {
 
   const port = configService.get('apiGateway.port') || 4000;
   const host = configService.get('apiGateway.host') || '0.0.0.0';
-  
+
   await app.listen(port, host);
   console.info(`[ApiGateway] API Gateway is running on ${host}:${port}`);
-  console.info(`[ApiGateway] Swagger documentation available at http://${host}:${port}/docs`);
+  console.info(
+    `[ApiGateway] Swagger documentation available at http://${host}:${port}/docs`,
+  );
 }
 
 bootstrap();

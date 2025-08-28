@@ -3,7 +3,6 @@ import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true, collection: 'device_fingerprints' })
 export class DeviceFingerprint extends Document {
-
   @Prop({ required: true, index: true })
   user_id: Types.ObjectId;
 
@@ -14,4 +13,5 @@ export class DeviceFingerprint extends Document {
   is_trusted: boolean;
 }
 
-export const DeviceFingerprintSchema = SchemaFactory.createForClass(DeviceFingerprint);
+export const DeviceFingerprintSchema =
+  SchemaFactory.createForClass(DeviceFingerprint);

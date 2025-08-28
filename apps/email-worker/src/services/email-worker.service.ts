@@ -28,15 +28,22 @@ export class EmailService {
   async sendEmail(request: EmailRequestDto): Promise<boolean> {
     try {
       const recipientEmail = this.getEmailFromRequest(request);
-      this.logger.log(`Processing email request: ${request.type} to ${recipientEmail}`);
+      this.logger.log(
+        `Processing email request: ${request.type} to ${recipientEmail}`,
+      );
 
       const template = this.getEmailTemplate(request);
       const emailResult = await this.sendEmailWithTemplate(request, template);
 
-      this.logger.log(`Email sent successfully: ${request.type} to ${recipientEmail}`);
+      this.logger.log(
+        `Email sent successfully: ${request.type} to ${recipientEmail}`,
+      );
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send email: ${request.type} to ${this.getEmailFromRequest(request)}`, error.stack);
+      this.logger.error(
+        `Failed to send email: ${request.type} to ${this.getEmailFromRequest(request)}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -44,17 +51,26 @@ export class EmailService {
   private getEmailTemplate(request: EmailRequestDto) {
     switch (request.type) {
       case 'create-account':
-        return EmailTemplates.createAccount(request.data.email, request.data.otpCode);
-      
+        return EmailTemplates.createAccount(
+          request.data.email,
+          request.data.otpCode,
+        );
+
       case 'welcome-message':
         return EmailTemplates.welcomeMessage(request.data.email);
-      
+
       case 'fingerprint-verify':
-        return EmailTemplates.fingerprintVerify(request.data.email, request.data.otpCode);
-      
+        return EmailTemplates.fingerprintVerify(
+          request.data.email,
+          request.data.otpCode,
+        );
+
       case 'forgot-password-verify':
-        return EmailTemplates.forgotPasswordVerify(request.data.email, request.data.otpCode);
-      
+        return EmailTemplates.forgotPasswordVerify(
+          request.data.email,
+          request.data.otpCode,
+        );
+
       default:
         throw new Error(`Unknown email type: ${(request as any).type}`);
     }
@@ -79,7 +95,7 @@ export class EmailService {
     return await this.transporter.sendMail(mailOptions);
   }
 
-  private getEmailFromRequest(request: EmailRequestDto): string {    
+  private getEmailFromRequest(request: EmailRequestDto): string {
     switch (request.type) {
       case 'create-account':
         return request.data.email;

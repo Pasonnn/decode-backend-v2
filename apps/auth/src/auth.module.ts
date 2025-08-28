@@ -15,7 +15,7 @@ import { RegisterService } from './services/register.service';
 import { LoginService } from './services/login.service';
 import { SessionService } from './services/session.service';
 import { PasswordService } from './services/password.service';
-import { InfoService } from './services/info.service';  
+import { InfoService } from './services/info.service';
 
 // Strategies and Infrastructure Import
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -31,7 +31,10 @@ import { PasswordUtils } from './utils/password.utils';
 // Schemas Import
 import { User, UserSchema } from './schemas/user.schema';
 import { Session, SessionSchema } from './schemas/session.schema';
-import { DeviceFingerprint, DeviceFingerprintSchema } from './schemas/device-fingerprint.schema';
+import {
+  DeviceFingerprint,
+  DeviceFingerprintSchema,
+} from './schemas/device-fingerprint.schema';
 
 // Config Import
 import authConfig from './config/auth.config';
@@ -62,7 +65,7 @@ import jwtConfig from './config/jwt.config';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('jwt.secret.accessToken'),
-        signOptions: { 
+        signOptions: {
           expiresIn: config.get<string>('jwt.accessToken.expiresIn'),
           issuer: config.get<string>('jwt.accessToken.issuer'),
           audience: config.get<string>('jwt.accessToken.audience'),
@@ -95,19 +98,19 @@ import jwtConfig from './config/jwt.config';
   controllers: [AuthController],
   providers: [
     // Services
-    RegisterService, 
-    LoginService, 
-    SessionService, 
-    PasswordService, 
+    RegisterService,
+    LoginService,
+    SessionService,
+    PasswordService,
     InfoService,
-    
+
     // Strategies
-    JwtStrategy, 
+    JwtStrategy,
     SessionStrategy,
-    
+
     // Guards
     AuthGuard,
-    
+
     // Infrastructure
     RedisInfrastructure,
 
