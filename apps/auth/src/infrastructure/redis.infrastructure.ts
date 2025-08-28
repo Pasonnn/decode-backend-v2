@@ -53,17 +53,17 @@ export class RedisInfrastructure {
     await this.redis.expire(key, ttl);
   }
 
-  async mget(keys: string[]): Promise<any[]> {
-    const values = await this.redis.mget(...keys);
-    return values.map((value) => {
-      if (!value) return null;
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value;
-      }
-    });
-  }
+  // async mget(keys: string[]): Promise<any[]> {
+  //   const values = await this.redis.mget(...keys);
+  //   return values.map((value) => {
+  //     if (!value) return null;
+  //     try {
+  //       return JSON.parse(value);
+  //     } catch {
+  //       return value;
+  //     }
+  //   });
+  // }
 
   async mdel(keys: string[]): Promise<void> {
     if (keys.length > 0) {
