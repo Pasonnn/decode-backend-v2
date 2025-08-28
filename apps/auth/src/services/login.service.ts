@@ -87,6 +87,12 @@ export class LoginService {
                     return createSessionResponse;
                 }
                 this.logger.log(`Session created for ${email_or_username}`);
+                const updateUserLastLoginResponse = await this.updateUserLastLogin(getUserInfoResponse.data._id);
+                if (!updateUserLastLoginResponse.success) {
+                    this.logger.error(`Cannot update user last login for ${email_or_username}`);
+                    return updateUserLastLoginResponse;
+                }
+                this.logger.log(`User last login updated for ${email_or_username}`);
                 return {
                     success: true,
                     statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
@@ -288,5 +294,23 @@ export class LoginService {
             message: ERROR_MESSAGES.SUCCESS.SESSION_CREATED,
             data: create_session_response.data as SessionDoc,
         }
+    }
+
+    private async updateUserLastLogin(user_id: string): Promise<Response> {
+        const user = await this.userModel.findById(user_id);
+        if (!user) {
+            return {
+                success: false,
+                statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+            };
+        }
+        user.last_login = new Date();
+        await user.save();
+        return {
+            success: true,
+            statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+            message: ERROR_MESSAGES.SUCCESS.USER_UPDATED,
+        };
     }
 }

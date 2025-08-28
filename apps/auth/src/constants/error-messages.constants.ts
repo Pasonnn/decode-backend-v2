@@ -180,5 +180,6 @@ export const ERROR_MESSAGES = {
         DEVICE_FINGERPRINT_VERIFIED: 'Device fingerprint verified',
         USER_CREATED: 'User created successfully',
         USER_INFO_FETCHED: 'User information fetched successfully',
+        USER_UPDATED: 'User updated successfully',
     },
 };
