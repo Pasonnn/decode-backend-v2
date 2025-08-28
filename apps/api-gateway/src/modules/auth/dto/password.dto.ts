@@ -1,12 +1,24 @@
 import { IsNotEmpty, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ChangePasswordDto {
     // user_id will be extracted from the authenticated user's token
 
+    @ApiProperty({
+        description: 'Current password for verification',
+        example: 'CurrentPass123!'
+    })
     @IsNotEmpty()
     @IsString()
     old_password: string;
 
+    @ApiProperty({
+        description: 'New password (8-128 characters, must contain uppercase, lowercase, number, and special character)',
+        example: 'NewSecurePass123!',
+        minLength: 8,
+        maxLength: 128,
+        pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]'
+    })
     @IsNotEmpty()
     @IsString()
     @MinLength(8)
@@ -18,6 +30,12 @@ export class ChangePasswordDto {
 }
 
 export class VerifyEmailChangePasswordDto {
+    @ApiProperty({
+        description: '6-digit email verification code',
+        example: '123456',
+        minLength: 6,
+        maxLength: 6
+    })
     @IsNotEmpty()
     @IsString()
     @MinLength(6)
@@ -26,12 +44,25 @@ export class VerifyEmailChangePasswordDto {
 }
 
 export class ChangeForgotPasswordDto {
+    @ApiProperty({
+        description: '6-digit email verification code',
+        example: '123456',
+        minLength: 6,
+        maxLength: 6
+    })
     @IsNotEmpty()
     @IsString()
     @MinLength(6)
     @MaxLength(6)
     code: string;
 
+    @ApiProperty({
+        description: 'New password (8-128 characters, must contain uppercase, lowercase, number, and special character)',
+        example: 'NewSecurePass123!',
+        minLength: 8,
+        maxLength: 128,
+        pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]'
+    })
     @IsNotEmpty()
     @IsString()
     @MinLength(8)
