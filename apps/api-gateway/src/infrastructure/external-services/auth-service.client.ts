@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { BaseHttpClient } from './base-http.client';
 import { Response } from '../../interfaces/response.interface';
+import { AxiosRequestConfig } from 'axios';
 
 // Auth Service Interfaces
 export interface RegisterInfoRequest {
@@ -273,9 +274,6 @@ export class AuthServiceClient extends BaseHttpClient {
     accessToken: string,
     authorization: string,
   ): Promise<Response> {
-    const headers = {
-      Authorization: authorization,
-    };
     return this.infoByAccessToken({
       access_token: accessToken,
       authorization: authorization,
@@ -283,19 +281,30 @@ export class AuthServiceClient extends BaseHttpClient {
   }
 
   // Generic HTTP methods for flexibility
-  async post<T>(url: string, data?: any, config?: any): Promise<Response<T>> {
+  async post<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<Response<T>> {
     return super.post<T>(url, data, config);
   }
 
-  async get<T>(url: string, config?: any): Promise<Response<T>> {
+  async get<T>(url: string, config?: AxiosRequestConfig): Promise<Response<T>> {
     return super.get<T>(url, config);
   }
 
-  async put<T>(url: string, data?: any, config?: any): Promise<Response<T>> {
+  async put<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<Response<T>> {
     return super.put<T>(url, data, config);
   }
 
-  async delete<T>(url: string, config?: any): Promise<Response<T>> {
+  async delete<T>(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<Response<T>> {
     return super.delete<T>(url, config);
   }
 }

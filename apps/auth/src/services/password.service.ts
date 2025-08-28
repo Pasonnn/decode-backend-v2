@@ -95,7 +95,7 @@ export class PasswordService {
       AUTH_CONSTANTS.REDIS.PASSWORD_RESET_EXPIRES_IN,
     );
     // Send verification code to user
-    await this.emailService.emit('email_request', {
+    this.emailService.emit('email_request', {
       type: AUTH_CONSTANTS.EMAIL.TYPES.FORGOT_PASSWORD_VERIFY,
       email: getUserInfoResponse.data.email,
       verification_code: verification_code,
@@ -113,16 +113,23 @@ export class PasswordService {
   ): Promise<Response<UserDoc>> {
     // Get verification code from Redis
     const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${email_verification_code}`;
-    const verification_code_value = await this.redisInfrastructure.get(
+    const verification_code_value_string = await this.redisInfrastructure.get(
       verification_code_key,
     );
-    if (!verification_code_value) {
+    if (!verification_code_value_string) {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
         message: ERROR_MESSAGES.PASSWORD.PASSWORD_RESET_CODE_INVALID,
       };
     }
+    // Parse the verification code value from JSON
+    const verification_code_value = JSON.parse(
+      verification_code_value_string,
+    ) as {
+      user_id: string;
+      verification_code: string;
+    };
     // Get user info
     const getUserInfoResponse = await this.infoService.getUserInfoByUserId(
       verification_code_value.user_id,

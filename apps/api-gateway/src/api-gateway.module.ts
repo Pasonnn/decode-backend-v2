@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import configuration from './config/configuration';
-import { validationSchema } from './config/validation.schema';
 import environmentConfig from './config/environment.config';
 
 // Import your modules here

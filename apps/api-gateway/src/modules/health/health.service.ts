@@ -7,7 +7,7 @@ import { ResponseUtil } from '../../common/utils/response.util';
 export class HealthService {
   constructor(private readonly configService: ConfigService) {}
 
-  async checkHealth(): Promise<Response> {
+  checkHealth(): Promise<Response> {
     const healthData = {
       status: 'ok',
       timestamp: new Date().toISOString(),

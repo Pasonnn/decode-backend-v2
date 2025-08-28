@@ -1,4 +1,5 @@
 // Modules Import
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,6 +25,7 @@ import { Logger } from '@nestjs/common';
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
+@Injectable()
 export class SessionService {
   private readonly logger: Logger;
   constructor(
@@ -40,7 +42,7 @@ export class SessionService {
   ): Promise<Response<SessionDoc>> {
     try {
       // Generate session token
-      const session_token = await this.jwtStrategy.createRefreshToken(user_id);
+      const session_token = this.jwtStrategy.createRefreshToken(user_id);
       // Create session
       const session = await this.sessionModel.create({
         user_id: new Types.ObjectId(user_id),
@@ -56,7 +58,7 @@ export class SessionService {
         `Session created for user ${user_id} with device fingerprint ${device_fingerprint_id}`,
       );
       // Generate access token
-      const access_token = await this.jwtStrategy.createAccessToken(
+      const access_token = this.jwtStrategy.createAccessToken(
         user_id,
         session.session_token,
       );
@@ -95,11 +97,11 @@ export class SessionService {
         return validate_session_response;
       }
       // Generate new session token
-      const new_session_token = await this.jwtStrategy.createRefreshToken(
+      const new_session_token = this.jwtStrategy.createRefreshToken(
         validate_session_response.data.user_id.toString(),
       );
       // Generate new access token
-      const access_token = await this.jwtStrategy.createAccessToken(
+      const access_token = this.jwtStrategy.createAccessToken(
         validate_session_response.data.user_id.toString(),
         new_session_token,
       );
@@ -109,7 +111,7 @@ export class SessionService {
         { $set: { session_token: new_session_token } },
       );
       this.logger.log(
-        `Session refreshed for user ${validate_session_response.data.user_id}`,
+        `Session refreshed for user ${validate_session_response.data.user_id.toString()}`,
       );
       // Return session
       return {
@@ -123,10 +125,7 @@ export class SessionService {
         } as unknown as SessionDoc,
       };
     } catch (error) {
-      this.logger.error(
-        `Error refreshing session for user ${session_token}`,
-        error,
-      );
+      this.logger.error(`Error refreshing session for token`, error);
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -240,7 +239,7 @@ export class SessionService {
         message: revoke_session_response.message,
       };
     } catch (error) {
-      this.logger.error(`Error logging out for ${session_token}`, error);
+      this.logger.error(`Error logging out session`, error);
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -253,7 +252,7 @@ export class SessionService {
     try {
       // Validate access token
       const validate_access_token_response =
-        await this.jwtStrategy.validateAccessToken(access_token);
+        this.jwtStrategy.validateAccessToken(access_token);
       if (
         !validate_access_token_response.success ||
         !validate_access_token_response.data
@@ -306,10 +305,7 @@ export class SessionService {
         data: validate_access_token_response.data,
       };
     } catch (error) {
-      this.logger.error(
-        `Error validating access token for ${access_token}`,
-        error,
-      );
+      this.logger.error(`Error validating access token`, error);
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -344,9 +340,9 @@ export class SessionService {
   async validateSsoToken(sso_token: string): Promise<Response> {
     try {
       // Validate sso token
-      const sso_token_response = await this.redisInfrastructure.get(
+      const sso_token_response = (await this.redisInfrastructure.get(
         `sso:${sso_token}`,
-      );
+      )) as string;
       if (!sso_token_response) {
         return {
           success: false,
@@ -356,7 +352,7 @@ export class SessionService {
       }
       const user_id = sso_token_response;
       // Generate session token
-      const session_token = await this.jwtStrategy.createRefreshToken(user_id);
+      const session_token = this.jwtStrategy.createRefreshToken(user_id);
       // Delete sso token from redis
       await this.redisInfrastructure.del(`sso:${sso_token}`);
       // Return response
@@ -385,7 +381,7 @@ export class SessionService {
     try {
       // Validate session token
       const validate_session_token_response =
-        await this.jwtStrategy.validateRefreshToken(session_token);
+        this.jwtStrategy.validateRefreshToken(session_token);
       if (!validate_session_token_response.success) {
         return validate_session_token_response;
       }
@@ -416,8 +412,6 @@ export class SessionService {
           message: ERROR_MESSAGES.SESSION.SESSION_REVOKED,
         };
       }
-      // Get user id from session
-      const user_id = session.user_id.toString();
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
@@ -427,10 +421,7 @@ export class SessionService {
         } as unknown as SessionDoc,
       };
     } catch (error) {
-      this.logger.error(
-        `Error validating session for token ${session_token}`,
-        error,
-      );
+      this.logger.error(`Error validating session for token`, error);
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -456,19 +447,17 @@ export class SessionService {
         { $set: { revoked_at: new Date(), is_active: false } },
       );
       this.logger.log(
-        `Session revoked for user ${validate_session_response.data.user_id}`,
+        `Session revoked for user ${validate_session_response.data.user_id.toString()}`,
       );
       // Return response
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
         message: ERROR_MESSAGES.SUCCESS.SESSION_REVOKED,
+        data: validate_session_response.data,
       };
     } catch (error) {
-      this.logger.error(
-        `Error revoking session for user ${session_token}`,
-        error,
-      );
+      this.logger.error(`Error revoking session`, error);
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,

@@ -1,37 +1,17 @@
 // Import the necessary modules
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-  Res,
-  Req,
-} from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 
 // DTOs Import
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
 import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
 import {
   RefreshSessionDto,
-  GetActiveSessionsDto,
   LogoutDto,
-  RevokeAllSessionsDto,
-  CleanupExpiredSessionsDto,
   ValidateAccessDto,
-  CreateSsoTokenDto,
   ValidateSsoTokenDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
-  EmailVerificationChangePasswordDto,
   VerifyEmailChangePasswordDto,
   ChangeForgotPasswordDto,
 } from './dto/password.dto';
@@ -43,7 +23,6 @@ import {
 
 // Interfaces Import
 import { Response } from './interfaces/response.interface';
-import { SessionDoc } from './interfaces/session-doc.interface';
 
 // Import the Services
 import { RegisterService } from './services/register.service';

@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 // Interfaces
 import { UserDoc } from '../interfaces/user-doc.interface';
 import { Response } from '../interfaces/response.interface';
-import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 // Models
 import { Model } from 'mongoose';

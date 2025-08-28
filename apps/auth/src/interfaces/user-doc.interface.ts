@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export type UserDoc = {
   _id: string;
   user_id?: string;

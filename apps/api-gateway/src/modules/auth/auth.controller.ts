@@ -22,22 +22,17 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import {
   LogoutDto,
   ValidateAccessDto,
-  CreateSsoTokenDto,
   ValidateSsoTokenDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
   VerifyEmailChangePasswordDto,
-  ChangeForgotPasswordDto,
 } from './dto/password.dto';
 import { Response } from '../../interfaces/response.interface';
 import { AuthGuard, Public } from '../../common/guards/auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
-import {
-  AuthRateLimit,
-  UserRateLimit,
-} from '../../common/decorators/rate-limit.decorator';
+import { AuthRateLimit } from '../../common/decorators/rate-limit.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -121,21 +116,14 @@ export class AuthController {
     return this.authService.logout(logoutDto.session_token, authorization);
   }
 
-  @ApiOperation({ summary: 'Get current user information' })
-  @ApiResponse({
-    status: 200,
-    description: 'User information retrieved successfully',
-  })
+  @ApiOperation({ summary: 'Get current user info' })
+  @ApiResponse({ status: 200, description: 'User info retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
-  @Get('me')
+  @Get('user/current')
   @UseGuards(AuthGuard)
-  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
-  async getCurrentUser(
-    @CurrentUser() user: AuthenticatedUser,
-    @Headers('authorization') authorization: string,
-  ): Promise<Response> {
+  getCurrentUser(@CurrentUser() user: AuthenticatedUser): Response {
     return {
       success: true,
       statusCode: 200,
@@ -294,28 +282,6 @@ export class AuthController {
   ): Promise<Response> {
     return this.authService.verifyEmailForgotPassword(
       verifyEmailDto.code,
-      authorization,
-    );
-  }
-
-  @ApiOperation({ summary: 'Change forgot password' })
-  @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid password data or verification code',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiBearerAuth('JWT-auth')
-  @Post('password/forgot/change')
-  @UseGuards(AuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async changeForgotPassword(
-    @Body() changeForgotPasswordDto: ChangeForgotPasswordDto,
-    @Headers('authorization') authorization: string,
-  ): Promise<Response> {
-    return this.authService.changeForgotPassword(
-      changeForgotPasswordDto.code,
-      changeForgotPasswordDto.new_password,
       authorization,
     );
   }

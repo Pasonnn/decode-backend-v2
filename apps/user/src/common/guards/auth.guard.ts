@@ -10,6 +10,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { Request } from 'express';
 
@@ -90,7 +91,7 @@ export class AuthGuard implements CanActivate {
       const user = await this.validateToken(token);
 
       // Check role-based access
-      await this.checkRoleAccess(context, user);
+      this.checkRoleAccess(context, user);
 
       // Attach user to request for use in controllers
       request['user'] = user;
@@ -102,7 +103,10 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      this.logger.error(`Authentication failed: ${error.message}`, error.stack);
+      this.logger.error(
+        `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw error;
     }
   }
@@ -155,10 +159,13 @@ export class AuthGuard implements CanActivate {
 
       return user;
     } catch (error) {
-      if (error.response?.status === 401) {
+      if (error instanceof AxiosError && error.response?.status === 401) {
         throw new UnauthorizedException('Invalid or expired access token');
       }
-      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      if (
+        error instanceof AxiosError &&
+        (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND')
+      ) {
         this.logger.error('Auth service is unavailable');
         throw new UnauthorizedException('Authentication service unavailable');
       }
@@ -166,17 +173,17 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private async checkRoleAccess(
+  private checkRoleAccess(
     context: ExecutionContext,
     user: AuthenticatedUser,
-  ): Promise<void> {
+  ): void {
     const requiredRoles = this.reflector.get<string[]>(
       ROLES_KEY,
       context.getHandler(),
     );
 
     if (!requiredRoles || requiredRoles.length === 0) {
-      return; // No role requirements
+      return;
     }
 
     if (!requiredRoles.includes(user.role)) {

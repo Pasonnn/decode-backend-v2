@@ -11,7 +11,6 @@ import { User } from '../schemas/user.schema';
 // Infrastructure and Strategies Import
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 import { JwtStrategy } from '../strategies/jwt.strategy';
-import { PasswordUtils } from '../utils/password.utils';
 
 // Services
 import { PasswordService } from './password.service';
@@ -20,6 +19,19 @@ import { Response } from '../interfaces/response.interface';
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+
+// Define interface for register info stored in Redis
+interface RegisterInfoValue {
+  username: string;
+  email: string;
+  password_hashed: string;
+}
+
+// Define interface for email verification code stored in Redis
+interface EmailVerificationValue {
+  email: string;
+  code: string;
+}
 
 @Injectable()
 export class RegisterService {
@@ -89,7 +101,7 @@ export class RegisterService {
       return create_user_response;
     }
     // Send welcome email to user
-    const welcome_email_response = await this.welcomeEmail(email);
+    const welcome_email_response = this.welcomeEmail(email);
     if (!welcome_email_response.success) {
       this.logger.error(welcome_email_response.message);
     }
@@ -130,7 +142,7 @@ export class RegisterService {
     }
     // Store register info in Redis
     const register_info_key = `${AUTH_CONSTANTS.REDIS.KEYS.REGISTER_INFO}:${email}`;
-    const register_info_value = {
+    const register_info_value: RegisterInfoValue = {
       username: username,
       email: email,
       password_hashed: password_hashed,
@@ -156,7 +168,7 @@ export class RegisterService {
     );
     // Store email verification code with email in Redis
     const email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.EMAIL_VERIFICATION}:${emailVerificationCode}`;
-    const email_verification_code_value = {
+    const email_verification_code_value: EmailVerificationValue = {
       email: email,
       code: emailVerificationCode,
     };
@@ -166,7 +178,7 @@ export class RegisterService {
       AUTH_CONSTANTS.REDIS.EMAIL_VERIFICATION_EXPIRES_IN,
     );
     // Send email verification code to user
-    await this.emailService.emit('email_request', {
+    this.emailService.emit('email_request', {
       type: AUTH_CONSTANTS.EMAIL.TYPES.CREATE_ACCOUNT,
       data: {
         email: email,
@@ -186,16 +198,23 @@ export class RegisterService {
   ): Promise<Response<{ email: string }>> {
     // Get email verification code from Redis
     const email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.EMAIL_VERIFICATION}:${email_verification_code}`;
-    const email_verification_code_value = await this.redisInfrastructure.get(
-      email_verification_code_key,
-    );
-    if (!email_verification_code_value) {
+    const email_verification_code_value_string =
+      (await this.redisInfrastructure.get(
+        email_verification_code_key,
+      )) as string;
+    if (!email_verification_code_value_string) {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
         message: ERROR_MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
       };
     }
+
+    // Parse the email verification data from JSON
+    const email_verification_code_value: EmailVerificationValue = JSON.parse(
+      email_verification_code_value_string,
+    ) as EmailVerificationValue;
+
     // Delete email verification code from Redis
     await this.redisInfrastructure.del(email_verification_code_key);
     // Return success response
@@ -212,15 +231,24 @@ export class RegisterService {
   private async createUser(email: string): Promise<Response> {
     // Get user data from Redis
     const register_info_key = `${AUTH_CONSTANTS.REDIS.KEYS.REGISTER_INFO}:${email}`;
-    const register_info_value =
-      await this.redisInfrastructure.get(register_info_key);
-    if (!register_info_value) {
+    const register_info_value_string = (await this.redisInfrastructure.get(
+      register_info_key,
+    )) as string;
+    if (!register_info_value_string) {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
         message: ERROR_MESSAGES.REGISTRATION.REGISTER_INFO_INVALID,
       };
     }
+
+    // Parse the register info data from JSON
+    const register_info_value = JSON.parse(register_info_value_string) as {
+      username: string;
+      email: string;
+      password_hashed: string;
+    };
+
     // Check if user already exists (by email or username)
     const existing_user = await this.userModel.findOne({
       $or: [{ email: email }, { username: register_info_value.username }],
@@ -254,9 +282,9 @@ export class RegisterService {
     };
   }
 
-  private async welcomeEmail(email: string): Promise<Response> {
+  private welcomeEmail(email: string): Response {
     // Send welcome email to user
-    await this.emailService.emit('email_request', {
+    this.emailService.emit('email_request', {
       type: AUTH_CONSTANTS.EMAIL.TYPES.WELCOME_MESSAGE,
       data: {
         email: email,

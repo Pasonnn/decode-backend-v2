@@ -6,27 +6,9 @@ import {
 } from '@nestjs/common';
 import { AuthServiceClient } from '../../infrastructure/external-services/auth-service.client';
 import { Response } from '../../interfaces/response.interface';
-import {
-  AuthResponse,
-  LoginResponse,
-  RegisterResponse,
-} from './interfaces/auth.interface';
 import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import {
-  RefreshSessionDto,
-  GetActiveSessionsDto,
-  LogoutDto,
-  RevokeAllSessionsDto,
-  ValidateAccessDto,
-  CreateSsoTokenDto,
-  ValidateSsoTokenDto,
-} from './dto/session.dto';
-import {
-  VerifyEmailChangePasswordDto,
-  ChangeForgotPasswordDto,
-} from './dto/password.dto';
 
 @Injectable()
 export class AuthService {
@@ -53,7 +35,7 @@ export class AuthService {
       return response;
     } catch (error) {
       this.logger.error(
-        `Login failed for user ${loginDto.email_or_username}: ${error.message}`,
+        `Login failed for user ${loginDto.email_or_username}: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -82,7 +64,9 @@ export class AuthService {
       this.logger.log('Device fingerprint verification successful');
       return response;
     } catch (error) {
-      this.logger.error(`Fingerprint verification failed: ${error.message}`);
+      this.logger.error(
+        `Fingerprint verification failed: ${error instanceof Error ? error instanceof Error ? error.message : String(error) : String(error)}`,
+      );
       throw error;
     }
   }
@@ -111,7 +95,7 @@ export class AuthService {
       return response;
     } catch (error) {
       this.logger.error(
-        `Registration failed for user ${registerDto.username}: ${error.message}`,
+        `Registration failed for user ${registerDto.username}: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -136,7 +120,7 @@ export class AuthService {
       this.logger.log('Email verification successful');
       return response;
     } catch (error) {
-      this.logger.error(`Email verification failed: ${error.message}`);
+      this.logger.error(`Email verification failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -160,7 +144,7 @@ export class AuthService {
       this.logger.log('Token refresh successful');
       return response;
     } catch (error) {
-      this.logger.error(`Token refresh failed: ${error.message}`);
+      this.logger.error(`Token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -190,7 +174,7 @@ export class AuthService {
       this.logger.log('Logout successful');
       return response;
     } catch (error) {
-      this.logger.error(`Logout failed: ${error.message}`);
+      this.logger.error(`Logout failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -209,7 +193,7 @@ export class AuthService {
       );
       return response;
     } catch (error) {
-      this.logger.error(`Token validation failed: ${error.message}`);
+      this.logger.error(`Token validation failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -228,7 +212,7 @@ export class AuthService {
       });
       return response;
     } catch (error) {
-      this.logger.error(`Get user info failed: ${error.message}`);
+      this.logger.error(`Get user info failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -262,7 +246,7 @@ export class AuthService {
       this.logger.log('Successfully retrieved active sessions');
       return response;
     } catch (error) {
-      this.logger.error(`Failed to get active sessions: ${error.message}`);
+      this.logger.error(`Failed to get active sessions: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -294,7 +278,7 @@ export class AuthService {
       this.logger.log('Successfully revoked all sessions');
       return response;
     } catch (error) {
-      this.logger.error(`Failed to revoke all sessions: ${error.message}`);
+      this.logger.error(`Failed to revoke all sessions: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -323,7 +307,7 @@ export class AuthService {
       this.logger.log('Access token validation successful');
       return response;
     } catch (error) {
-      this.logger.error(`Access token validation failed: ${error.message}`);
+      this.logger.error(`Access token validation failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -353,7 +337,7 @@ export class AuthService {
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to create SSO token for user ${userId}: ${error.message}`,
+        `Failed to create SSO token for user ${userId}: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -383,7 +367,7 @@ export class AuthService {
       this.logger.log('SSO token validation successful');
       return response;
     } catch (error) {
-      this.logger.error(`SSO token validation failed: ${error.message}`);
+      this.logger.error(`SSO token validation failed: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -424,7 +408,7 @@ export class AuthService {
       this.logger.log('Successfully changed password');
       return response;
     } catch (error) {
-      this.logger.error(`Failed to change password: ${error.message}`);
+      this.logger.error(`Failed to change password: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -456,7 +440,7 @@ export class AuthService {
       this.logger.log('Successfully initiated forgot password');
       return response;
     } catch (error) {
-      this.logger.error(`Failed to initiate forgot password: ${error.message}`);
+      this.logger.error(`Failed to initiate forgot password: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -492,50 +476,7 @@ export class AuthService {
       return response;
     } catch (error) {
       this.logger.error(
-        `Email verification for forgot password failed: ${error.message}`,
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Change password using forgot password flow
-   */
-  async changeForgotPassword(
-    code: string,
-    newPassword: string,
-    authorization: string,
-  ): Promise<Response> {
-    try {
-      this.logger.log('Changing password using forgot password flow');
-
-      const config = {
-        headers: {
-          Authorization: authorization,
-        },
-      };
-      const response = await this.authServiceClient.post(
-        '/auth/password/forgot/change',
-        {
-          code,
-          new_password: newPassword,
-        },
-        config,
-      );
-
-      if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Password change failed',
-        );
-      }
-
-      this.logger.log(
-        'Successfully changed password using forgot password flow',
-      );
-      return response;
-    } catch (error) {
-      this.logger.error(
-        `Failed to change password using forgot password flow: ${error.message}`,
+        `Failed to verify email for forgot password: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }

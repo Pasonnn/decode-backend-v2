@@ -1,10 +1,4 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class RefreshSessionDto {
   @IsNotEmpty()

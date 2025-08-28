@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  validate(payload: JwtPayload) {
     // This method is called by Passport after JWT verification
     // Return the user object that will be attached to the request
     return {
@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     };
   }
 
-  async createAccessToken(user_id: string, session_token: string) {
+  createAccessToken(user_id: string, session_token: string) {
     const payload = { user_id: user_id, session_token: session_token };
 
     return this.jwtService.sign(payload, {
@@ -39,7 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async createRefreshToken(user_id: string) {
+  createRefreshToken(user_id: string) {
     const payload = { user_id: user_id };
 
     return this.jwtService.sign(payload, {
@@ -50,7 +50,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validateAccessToken(token: string) {
+  validateAccessToken(token: string) {
     try {
       const payload = this.jwtService.verify<JwtPayload>(token, {
         secret: this.configService.get('jwt.secret.accessToken'),
@@ -63,7 +63,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         message: 'Access token validated',
         data: payload,
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         statusCode: 401,
@@ -72,7 +72,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
   }
 
-  async validateRefreshToken(token: string) {
+  validateRefreshToken(token: string) {
     try {
       const payload = this.jwtService.verify(token, {
         secret: this.configService.get('jwt.secret.sessionToken'),
@@ -85,7 +85,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         message: 'Refresh token validated',
         data: payload,
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         statusCode: 401,
@@ -99,36 +99,30 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (req.headers?.['authorization']?.startsWith('Bearer ')) {
       return req.headers['authorization'].split(' ')[1];
     }
-
-    // From cookies (if using cookie-parser)
-    if (req.cookies?.['accessToken']) {
-      return req.cookies['accessToken'];
+    // From cookies
+    if (req.cookies?.['access_token']) {
+      return req.cookies['access_token'];
     }
-
     // From query parameters
-    if (req.query?.['accessToken']) {
-      return req.query['accessToken'];
+    if (req.query?.['access_token']) {
+      return req.query['access_token'];
     }
-
     return null;
   }
 
   extractRefreshToken(req: any): string | null {
     // From Authorization header
-    if (req.headers?.['authorization']?.startsWith('Refresh ')) {
+    if (req.headers?.['authorization']?.startsWith('Bearer ')) {
       return req.headers['authorization'].split(' ')[1];
     }
-
-    // From cookies (if using cookie-parser)
-    if (req.cookies?.['sessionToken']) {
-      return req.cookies['sessionToken'];
+    // From cookies
+    if (req.cookies?.['refresh_token']) {
+      return req.cookies['refresh_token'];
     }
-
     // From query parameters
-    if (req.query?.['sessionToken']) {
-      return req.query['sessionToken'];
+    if (req.query?.['refresh_token']) {
+      return req.query['refresh_token'];
     }
-
     return null;
   }
 }

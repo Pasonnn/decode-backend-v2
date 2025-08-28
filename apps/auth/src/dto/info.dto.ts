@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEmail, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class InfoByAccessTokenDto {
   @IsNotEmpty()

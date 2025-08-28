@@ -10,6 +10,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
 
 export const ROLES_KEY = 'roles';
 export const PERMISSIONS_KEY = 'permissions';
@@ -28,6 +29,18 @@ export interface AuthenticatedUser {
   role: string;
   permissions: string[];
   sessionToken?: string;
+}
+
+interface JwtPayload {
+  user_id: string;
+  email: string;
+  username: string;
+  role?: string;
+  session_token?: string;
+}
+
+interface RequestWithUser extends Request {
+  user?: AuthenticatedUser;
 }
 
 @Injectable()
@@ -49,7 +62,7 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
@@ -57,33 +70,39 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const user = await this.validateToken(token);
+      const user = this.validateToken(token);
       request.user = user;
 
       // Check roles if required
-      await this.checkRoles(context, user);
+      this.checkRoles(context, user);
 
       // Check permissions if required
-      await this.checkPermissions(context, user);
+      this.checkPermissions(context, user);
 
       return true;
     } catch (error) {
-      this.logger.error(`Authentication failed: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Authentication failed: ${errorMessage}`);
       throw new UnauthorizedException('Invalid access token');
     }
   }
 
-  private extractTokenFromHeader(request: any): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+  private extractTokenFromHeader(request: RequestWithUser): string | undefined {
+    const authHeader = request.headers.authorization;
+    if (!authHeader || typeof authHeader !== 'string') {
+      return undefined;
+    }
+    const [type, token] = authHeader.split(' ');
     return type === 'Bearer' ? token : undefined;
   }
 
-  private async validateToken(token: string): Promise<AuthenticatedUser> {
+  private validateToken(token: string): AuthenticatedUser {
     try {
-      const payload = this.jwtService.verify(token, {
-        secret: this.configService.get('jwt.secret.accessToken'),
-        issuer: this.configService.get('jwt.accessToken.issuer'),
-        audience: this.configService.get('jwt.accessToken.audience'),
+      const payload = this.jwtService.verify<JwtPayload>(token, {
+        secret: this.configService.get<string>('jwt.secret.accessToken'),
+        issuer: this.configService.get<string>('jwt.accessToken.issuer'),
+        audience: this.configService.get<string>('jwt.accessToken.audience'),
       });
 
       return {
@@ -95,15 +114,14 @@ export class AuthGuard implements CanActivate {
         sessionToken: payload.session_token,
       };
     } catch (error) {
-      this.logger.error(`Token validation failed: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Token validation failed: ${errorMessage}`);
       throw new UnauthorizedException('Invalid access token');
     }
   }
 
-  private async checkRoles(
-    context: ExecutionContext,
-    user: AuthenticatedUser,
-  ): Promise<void> {
+  private checkRoles(context: ExecutionContext, user: AuthenticatedUser): void {
     const requiredRoles = this.reflector.get<string[]>(
       ROLES_KEY,
       context.getHandler(),
@@ -120,10 +138,10 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private async checkPermissions(
+  private checkPermissions(
     context: ExecutionContext,
     user: AuthenticatedUser,
-  ): Promise<void> {
+  ): void {
     const requiredPermissions = this.reflector.get<string[]>(
       PERMISSIONS_KEY,
       context.getHandler(),
@@ -133,24 +151,27 @@ export class AuthGuard implements CanActivate {
       return; // No permission requirements
     }
 
-    const userPermissions = this.getUserPermissions(user.role);
-    const missingPermissions = requiredPermissions.filter(
-      (permission) => !userPermissions.includes(permission),
+    const hasPermission = requiredPermissions.some((permission) =>
+      user.permissions.includes(permission),
     );
 
-    if (missingPermissions.length > 0) {
+    if (!hasPermission) {
       throw new ForbiddenException(
-        `Access denied. Missing permissions: ${missingPermissions.join(', ')}`,
+        `Access denied. Required permissions: ${requiredPermissions.join(', ')}`,
       );
     }
   }
 
   private getUserPermissions(role: string): string[] {
-    const rolePermissions: Record<string, string[]> = {
-      admin: ['read', 'write', 'delete', 'manage_users', 'manage_system'],
-      moderator: ['read', 'write', 'moderate_content'],
-      user: ['read', 'write_own'],
-    };
-    return rolePermissions[role] || [];
+    switch (role) {
+      case 'admin':
+        return ['read', 'write', 'delete', 'manage_users', 'manage_system'];
+      case 'moderator':
+        return ['read', 'write', 'moderate_content'];
+      case 'user':
+        return ['read', 'write'];
+      default:
+        return ['read'];
+    }
   }
 }

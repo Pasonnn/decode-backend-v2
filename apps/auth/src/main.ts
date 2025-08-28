@@ -23,4 +23,7 @@ async function bootstrap() {
   await app.listen(port, host);
   console.info(`[AuthService] Auth service is running on ${host}:${port}`);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Failed to start Auth service:', error);
+  process.exit(1);
+});

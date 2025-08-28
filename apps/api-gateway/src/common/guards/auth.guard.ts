@@ -90,7 +90,7 @@ export class AuthGuard implements CanActivate {
       const user = await this.validateToken(token);
 
       // Check role-based access
-      await this.checkRoleAccess(context, user);
+      this.checkRoleAccess(context, user);
 
       // Attach user to request for use in controllers
       request['user'] = user;
@@ -166,10 +166,10 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private async checkRoleAccess(
+  private checkRoleAccess(
     context: ExecutionContext,
     user: AuthenticatedUser,
-  ): Promise<void> {
+  ): void {
     const requiredRoles = this.reflector.get<string[]>(
       ROLES_KEY,
       context.getHandler(),

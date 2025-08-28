@@ -281,52 +281,54 @@ export class LoginService {
       AUTH_CONSTANTS.REDIS.FINGERPRINT_VERIFICATION_EXPIRES_IN,
     );
     // Send email verification code to user
-    const sendEmailVerificationCodeResponse =
-      await this.deviceFingerprintEmailVerification(
-        user.email,
-        email_verification_code,
-      );
+    this.deviceFingerprintEmailVerification(
+      user.email,
+      email_verification_code,
+    );
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
+      message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }
 
-  private async deviceFingerprintEmailVerification(
+  private deviceFingerprintEmailVerification(
     email: string,
     email_verification_code: string,
-  ) {
+  ): void {
     // Send welcome email to user
-    await this.emailService.emit('email_request', {
+    this.emailService.emit('email_request', {
       type: AUTH_CONSTANTS.EMAIL.TYPES.FINGERPRINT_VERIFY,
       data: {
         email: email,
         otpCode: email_verification_code,
       },
     });
-    // Return success response
-    return {
-      success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
-    };
   }
 
   private async validateDeviceFingerprintEmailVerification(
     email_verification_code: string,
   ): Promise<Response> {
     // Validate device fingerprint email verification
-    const device_fingerprint_data = await this.redisInfrastructure.get(
+    const device_fingerprint_data_string = (await this.redisInfrastructure.get(
       `${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`,
-    );
-    if (!device_fingerprint_data) {
+    )) as string;
+    if (!device_fingerprint_data_string) {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
         message: ERROR_MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
       };
     }
+
+    // Parse the device fingerprint data from JSON
+    const device_fingerprint_data = JSON.parse(
+      device_fingerprint_data_string,
+    ) as {
+      user_id: string;
+      fingerprint_hashed: string;
+    };
+
     // Find device fingerprint in database
     const user_id = new Types.ObjectId(device_fingerprint_data.user_id);
     const device_fingerprint = await this.deviceFingerprintModel.findOne({
