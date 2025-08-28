@@ -196,24 +196,19 @@ export class RegisterService {
   private async checkEmailVerificationCode(
     email_verification_code: string,
   ): Promise<Response<{ email: string }>> {
+    console.log('checkEmailVerificationCode');
     // Get email verification code from Redis
     const email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.EMAIL_VERIFICATION}:${email_verification_code}`;
-    const email_verification_code_value_string =
-      (await this.redisInfrastructure.get(
-        email_verification_code_key,
-      )) as string;
-    if (!email_verification_code_value_string) {
+    const email_verification_code_value = (await this.redisInfrastructure.get(
+      email_verification_code_key,
+    )) as EmailVerificationValue;
+    if (!email_verification_code_value) {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
         message: ERROR_MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
       };
     }
-
-    // Parse the email verification data from JSON
-    const email_verification_code_value: EmailVerificationValue = JSON.parse(
-      email_verification_code_value_string,
-    ) as EmailVerificationValue;
 
     // Delete email verification code from Redis
     await this.redisInfrastructure.del(email_verification_code_key);
@@ -231,23 +226,16 @@ export class RegisterService {
   private async createUser(email: string): Promise<Response> {
     // Get user data from Redis
     const register_info_key = `${AUTH_CONSTANTS.REDIS.KEYS.REGISTER_INFO}:${email}`;
-    const register_info_value_string = (await this.redisInfrastructure.get(
+    const register_info_value = (await this.redisInfrastructure.get(
       register_info_key,
-    )) as string;
-    if (!register_info_value_string) {
+    )) as RegisterInfoValue;
+    if (!register_info_value) {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
         message: ERROR_MESSAGES.REGISTRATION.REGISTER_INFO_INVALID,
       };
     }
-
-    // Parse the register info data from JSON
-    const register_info_value = JSON.parse(register_info_value_string) as {
-      username: string;
-      email: string;
-      password_hashed: string;
-    };
 
     // Check if user already exists (by email or username)
     const existing_user = await this.userModel.findOne({

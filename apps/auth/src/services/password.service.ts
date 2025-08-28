@@ -19,6 +19,8 @@ import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+// Interfaces
+import { PasswordVerificationValue } from '../interfaces/password-verification-value.interface';
 
 @Injectable()
 export class PasswordService {
@@ -113,23 +115,17 @@ export class PasswordService {
   ): Promise<Response<UserDoc>> {
     // Get verification code from Redis
     const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${email_verification_code}`;
-    const verification_code_value_string = await this.redisInfrastructure.get(
+    const verification_code_value = (await this.redisInfrastructure.get(
       verification_code_key,
-    );
-    if (!verification_code_value_string) {
+    )) as PasswordVerificationValue;
+    if (!verification_code_value) {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
         message: ERROR_MESSAGES.PASSWORD.PASSWORD_RESET_CODE_INVALID,
       };
     }
-    // Parse the verification code value from JSON
-    const verification_code_value = JSON.parse(
-      verification_code_value_string,
-    ) as {
-      user_id: string;
-      verification_code: string;
-    };
+
     // Get user info
     const getUserInfoResponse = await this.infoService.getUserInfoByUserId(
       verification_code_value.user_id,

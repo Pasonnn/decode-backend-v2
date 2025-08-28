@@ -33,6 +33,7 @@ import { AuthGuard, Public } from '../../common/guards/auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 import { AuthRateLimit } from '../../common/decorators/rate-limit.decorator';
+import { AUTH_CONSTANTS } from 'apps/auth/src/constants/auth.constants';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -115,7 +116,6 @@ export class AuthController {
   ): Promise<Response> {
     return this.authService.logout(logoutDto.session_token, authorization);
   }
-
   @ApiOperation({ summary: 'Get current user info' })
   @ApiResponse({ status: 200, description: 'User info retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -123,13 +123,13 @@ export class AuthController {
   @Get('user/current')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  getCurrentUser(@CurrentUser() user: AuthenticatedUser): Response {
-    return {
+  getCurrentUser(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+    return Promise.resolve({
       success: true,
-      statusCode: 200,
+      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
       message: 'User information retrieved successfully',
       data: user,
-    };
+    });
   }
 
   @ApiOperation({ summary: 'Validate access token' })

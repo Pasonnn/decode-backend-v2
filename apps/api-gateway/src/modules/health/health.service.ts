@@ -7,15 +7,15 @@ import { ResponseUtil } from '../../common/utils/response.util';
 export class HealthService {
   constructor(private readonly configService: ConfigService) {}
 
-  checkHealth(): Promise<Response> {
+  checkHealth(): Response {
     const healthData = {
       status: 'ok',
       timestamp: new Date().toISOString(),
       service: 'api-gateway',
       version: '1.0.0',
-      environment: this.configService.get('environment'),
+      environment: this.configService.get<string>('environment'),
     };
 
-    return ResponseUtil.success(healthData, 'API Gateway is healthy', 200);
+    return ResponseUtil.success(healthData, 'API Gateway is healthy');
   }
 }

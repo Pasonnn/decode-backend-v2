@@ -16,7 +16,7 @@ interface RequestWithAuth extends Request {
   headers: Request['headers'] & {
     authorization?: string;
   };
-  cookies?: Record<string, string>;
+  cookies: Request['cookies'];
   query: Request['query'] & {
     sessionToken?: string;
   };

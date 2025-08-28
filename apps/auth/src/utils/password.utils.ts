@@ -15,7 +15,7 @@ export class PasswordUtils {
    */
   async hashPassword(password: string): Promise<string> {
     const saltRounds = authConfig().password.saltRounds;
-    const hashedPassword = await (bcrypt as any).hash(password, saltRounds) as string;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
     return hashedPassword;
   }
 
@@ -29,7 +29,7 @@ export class PasswordUtils {
     password: string,
     hashedPassword: string,
   ): Promise<boolean> {
-    return await (bcrypt as any).compare(password, hashedPassword) as boolean;
+    return await bcrypt.compare(password, hashedPassword);
   }
 
   /**
@@ -359,6 +359,6 @@ export class PasswordUtils {
    */
   async hashPasswordWithSalt(password: string, salt: string): Promise<string> {
     const saltRounds = authConfig().password.saltRounds;
-    return await (bcrypt as any).hash(password + salt, saltRounds) as string;
+    return await bcrypt.hash(password + salt, saltRounds);
   }
 }

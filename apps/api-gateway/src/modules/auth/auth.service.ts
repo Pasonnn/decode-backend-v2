@@ -35,7 +35,7 @@ export class AuthService {
       return response;
     } catch (error) {
       this.logger.error(
-        `Login failed for user ${loginDto.email_or_username}: ${error instanceof Error ? error.message : String(error)}`,
+        `Login failed for user ${loginDto.email_or_username}: ${error}`,
       );
       throw error;
     }
@@ -65,7 +65,7 @@ export class AuthService {
       return response;
     } catch (error) {
       this.logger.error(
-        `Fingerprint verification failed: ${error instanceof Error ? error instanceof Error ? error.message : String(error) : String(error)}`,
+        `Fingerprint verification failed: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -107,7 +107,6 @@ export class AuthService {
   async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<Response> {
     try {
       this.logger.log('Email verification attempt');
-
       const response =
         await this.authServiceClient.verifyEmailRegister(verifyEmailDto);
 
@@ -120,7 +119,9 @@ export class AuthService {
       this.logger.log('Email verification successful');
       return response;
     } catch (error) {
-      this.logger.error(`Email verification failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Email verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -144,7 +145,9 @@ export class AuthService {
       this.logger.log('Token refresh successful');
       return response;
     } catch (error) {
-      this.logger.error(`Token refresh failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -174,7 +177,9 @@ export class AuthService {
       this.logger.log('Logout successful');
       return response;
     } catch (error) {
-      this.logger.error(`Logout failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Logout failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -193,7 +198,9 @@ export class AuthService {
       );
       return response;
     } catch (error) {
-      this.logger.error(`Token validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Token validation failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -212,7 +219,9 @@ export class AuthService {
       });
       return response;
     } catch (error) {
-      this.logger.error(`Get user info failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Get user info failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -246,7 +255,9 @@ export class AuthService {
       this.logger.log('Successfully retrieved active sessions');
       return response;
     } catch (error) {
-      this.logger.error(`Failed to get active sessions: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to get active sessions: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -278,7 +289,9 @@ export class AuthService {
       this.logger.log('Successfully revoked all sessions');
       return response;
     } catch (error) {
-      this.logger.error(`Failed to revoke all sessions: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to revoke all sessions: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -307,7 +320,9 @@ export class AuthService {
       this.logger.log('Access token validation successful');
       return response;
     } catch (error) {
-      this.logger.error(`Access token validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Access token validation failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -367,7 +382,9 @@ export class AuthService {
       this.logger.log('SSO token validation successful');
       return response;
     } catch (error) {
-      this.logger.error(`SSO token validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `SSO token validation failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -408,7 +425,9 @@ export class AuthService {
       this.logger.log('Successfully changed password');
       return response;
     } catch (error) {
-      this.logger.error(`Failed to change password: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to change password: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -440,7 +459,9 @@ export class AuthService {
       this.logger.log('Successfully initiated forgot password');
       return response;
     } catch (error) {
-      this.logger.error(`Failed to initiate forgot password: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to initiate forgot password: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
