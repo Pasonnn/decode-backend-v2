@@ -7,9 +7,7 @@ export class RefreshSessionDto {
 }
 
 export class GetActiveSessionsDto {
-    @IsNotEmpty()
-    @IsString()
-    user_id: string;
+    // user_id will be extracted from the authenticated user's token
 }
 
 export class LogoutDto {
@@ -19,9 +17,7 @@ export class LogoutDto {
 }
 
 export class RevokeAllSessionsDto {
-    @IsNotEmpty()
-    @IsString()
-    user_id: string;
+    // user_id will be extracted from the authenticated user's token
 }
 
 export class CleanupExpiredSessionsDto {
@@ -37,9 +33,7 @@ export class ValidateAccessDto {
 }
 
 export class CreateSsoTokenDto {
-    @IsNotEmpty()
-    @IsString()
-    user_id: string;
+    // user_id will be extracted from the authenticated user's token
 }
 
 export class ValidateSsoTokenDto {

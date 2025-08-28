@@ -22,6 +22,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { SessionStrategy } from './strategies/session.strategy';
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
 
+// Guards Import
+import { AuthGuard } from './common/guards/auth.guard';
+
 // Utils Import
 import { PasswordUtils } from './utils/password.utils';
 
@@ -101,6 +104,9 @@ import jwtConfig from './config/jwt.config';
     // Strategies
     JwtStrategy, 
     SessionStrategy,
+    
+    // Guards
+    AuthGuard,
     
     // Infrastructure
     RedisInfrastructure,

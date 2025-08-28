@@ -3,9 +3,7 @@ import { IsNotEmpty, IsString, MinLength, MaxLength, Matches } from "class-valid
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 
 export class ChangePasswordDto {
-    @IsNotEmpty()
-    @IsString()
-    user_id: string;
+    // user_id will be extracted from the authenticated user's token
 
     @IsNotEmpty()
     @IsString()
@@ -22,9 +20,7 @@ export class ChangePasswordDto {
 }
 
 export class EmailVerificationChangePasswordDto {
-    @IsNotEmpty()
-    @IsString()
-    user_id: string;
+    // user_id will be extracted from the authenticated user's token
 }
 
 export class VerifyEmailChangePasswordDto {

@@ -135,11 +135,16 @@ export class AuthService {
     /**
      * Logout user by invalidating session
      */
-    async logout(sessionToken: string): Promise<Response> {
+    async logout(sessionToken: string, authorization: string): Promise<Response> {
         try {
             this.logger.log('Logout attempt');
             
-            const response = await this.authServiceClient.logout({ session_token: sessionToken });
+            const config = {
+                headers: {
+                    'Authorization': authorization
+                }
+            };
+            const response = await this.authServiceClient.post('/auth/session/logout', { session_token: sessionToken }, config);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Logout failed');
@@ -156,9 +161,9 @@ export class AuthService {
     /**
      * Validate access token
      */
-    async validateToken(accessToken: string): Promise<Response> {
+    async validateToken(accessToken: string, authorization: string): Promise<Response> {
         try {
-            const response = await this.authServiceClient.validateToken(accessToken);
+            const response = await this.authServiceClient.validateToken(accessToken, authorization);
             return response;
         } catch (error) {
             this.logger.error(`Token validation failed: ${error.message}`);
@@ -169,9 +174,9 @@ export class AuthService {
     /**
      * Get user info by access token
      */
-    async getUserInfo(accessToken: string): Promise<Response> {
+    async getUserInfo(accessToken: string, authorization: string): Promise<Response> {
         try {
-            const response = await this.authServiceClient.infoByAccessToken({ access_token: accessToken });
+            const response = await this.authServiceClient.infoByAccessToken({ access_token: accessToken, authorization });
             return response;
         } catch (error) {
             this.logger.error(`Get user info failed: ${error.message}`);
@@ -184,20 +189,25 @@ export class AuthService {
     /**
      * Get active sessions for a user
      */
-    async getActiveSessions(userId: string): Promise<Response> {
+    async getActiveSessions(authorization: string): Promise<Response> {
         try {
-            this.logger.log(`Getting active sessions for user: ${userId}`);
+            this.logger.log('Getting active sessions for current user');
             
-            const response = await this.authServiceClient.getActiveSessions({ user_id: userId });
+            const config = {
+                headers: {
+                    'Authorization': authorization
+                }
+            };
+            const response = await this.authServiceClient.post('/auth/session/active', {}, config);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Failed to get active sessions');
             }
 
-            this.logger.log(`Successfully retrieved active sessions for user: ${userId}`);
+            this.logger.log('Successfully retrieved active sessions');
             return response;
         } catch (error) {
-            this.logger.error(`Failed to get active sessions for user ${userId}: ${error.message}`);
+            this.logger.error(`Failed to get active sessions: ${error.message}`);
             throw error;
         }
     }
@@ -205,20 +215,25 @@ export class AuthService {
     /**
      * Revoke all sessions for a user
      */
-    async revokeAllSessions(userId: string): Promise<Response> {
+    async revokeAllSessions(authorization: string): Promise<Response> {
         try {
-            this.logger.log(`Revoking all sessions for user: ${userId}`);
+            this.logger.log('Revoking all sessions for current user');
             
-            const response = await this.authServiceClient.revokeAllSessions({ user_id: userId });
+            const config = {
+                headers: {
+                    'Authorization': authorization
+                }
+            };
+            const response = await this.authServiceClient.post('/auth/session/revoke-all', {}, config);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Failed to revoke all sessions');
             }
 
-            this.logger.log(`Successfully revoked all sessions for user: ${userId}`);
+            this.logger.log('Successfully revoked all sessions');
             return response;
         } catch (error) {
-            this.logger.error(`Failed to revoke all sessions for user ${userId}: ${error.message}`);
+            this.logger.error(`Failed to revoke all sessions: ${error.message}`);
             throw error;
         }
     }
@@ -226,11 +241,11 @@ export class AuthService {
     /**
      * Validate access token
      */
-    async validateAccess(accessToken: string): Promise<Response> {
+    async validateAccess(accessToken: string, authorization: string): Promise<Response> {
         try {
             this.logger.log('Validating access token');
             
-            const response = await this.authServiceClient.validateAccess({ access_token: accessToken });
+            const response = await this.authServiceClient.validateAccess({ access_token: accessToken, authorization });
             
             if (!response.success) {
                 throw new UnauthorizedException(response.message || 'Access token validation failed');
@@ -247,11 +262,11 @@ export class AuthService {
     /**
      * Create SSO token
      */
-    async createSsoToken(userId: string): Promise<Response> {
+    async createSsoToken(userId: string, authorization: string): Promise<Response> {
         try {
             this.logger.log(`Creating SSO token for user: ${userId}`);
             
-            const response = await this.authServiceClient.createSsoToken({ user_id: userId });
+            const response = await this.authServiceClient.createSsoToken({ user_id: userId, authorization });
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Failed to create SSO token');
@@ -268,11 +283,11 @@ export class AuthService {
     /**
      * Validate SSO token
      */
-    async validateSsoToken(ssoToken: string): Promise<Response> {
+    async validateSsoToken(ssoToken: string, authorization: string): Promise<Response> {
         try {
             this.logger.log('Validating SSO token');
             
-            const response = await this.authServiceClient.validateSsoToken({ sso_token: ssoToken });
+            const response = await this.authServiceClient.validateSsoToken({ sso_token: ssoToken, authorization });
             
             if (!response.success) {
                 throw new UnauthorizedException(response.message || 'SSO token validation failed');
@@ -291,24 +306,28 @@ export class AuthService {
     /**
      * Change user password
      */
-    async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<Response> {
+    async changePassword(oldPassword: string, newPassword: string, authorization: string): Promise<Response> {
         try {
-            this.logger.log(`Changing password for user: ${userId}`);
+            this.logger.log('Changing password for current user');
             
-            const response = await this.authServiceClient.changePassword({
-                user_id: userId,
+            const config = {
+                headers: {
+                    'Authorization': authorization
+                }
+            };
+            const response = await this.authServiceClient.post('/auth/password/change', {
                 old_password: oldPassword,
                 new_password: newPassword
-            });
+            }, config);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Password change failed');
             }
 
-            this.logger.log(`Successfully changed password for user: ${userId}`);
+            this.logger.log('Successfully changed password');
             return response;
         } catch (error) {
-            this.logger.error(`Failed to change password for user ${userId}: ${error.message}`);
+            this.logger.error(`Failed to change password: ${error.message}`);
             throw error;
         }
     }
@@ -316,20 +335,25 @@ export class AuthService {
     /**
      * Initiate forgot password process
      */
-    async initiateForgotPassword(userId: string): Promise<Response> {
+    async initiateForgotPassword(authorization: string): Promise<Response> {
         try {
-            this.logger.log(`Initiating forgot password for user: ${userId}`);
+            this.logger.log('Initiating forgot password for current user');
             
-            const response = await this.authServiceClient.emailVerificationChangePassword({ user_id: userId });
+            const config = {
+                headers: {
+                    'Authorization': authorization
+                }
+            };
+            const response = await this.authServiceClient.post('/auth/password/forgot/email-verification', {}, config);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Failed to initiate forgot password');
             }
 
-            this.logger.log(`Successfully initiated forgot password for user: ${userId}`);
+            this.logger.log('Successfully initiated forgot password');
             return response;
         } catch (error) {
-            this.logger.error(`Failed to initiate forgot password for user ${userId}: ${error.message}`);
+            this.logger.error(`Failed to initiate forgot password: ${error.message}`);
             throw error;
         }
     }
@@ -337,11 +361,16 @@ export class AuthService {
     /**
      * Verify email for forgot password
      */
-    async verifyEmailForgotPassword(code: string): Promise<Response> {
+    async verifyEmailForgotPassword(code: string, authorization: string): Promise<Response> {
         try {
             this.logger.log('Verifying email for forgot password');
             
-            const response = await this.authServiceClient.verifyEmailChangePassword({ code });
+            const config = {
+                headers: {
+                    'Authorization': authorization
+                }
+            };
+            const response = await this.authServiceClient.post('/auth/password/forgot/verify-email', { code }, config);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Email verification failed');
@@ -358,14 +387,19 @@ export class AuthService {
     /**
      * Change password using forgot password flow
      */
-    async changeForgotPassword(code: string, newPassword: string): Promise<Response> {
+    async changeForgotPassword(code: string, newPassword: string, authorization: string): Promise<Response> {
         try {
             this.logger.log('Changing password using forgot password flow');
             
-            const response = await this.authServiceClient.changeForgotPassword({
+            const config = {
+                headers: {
+                    'Authorization': authorization
+                }
+            };
+            const response = await this.authServiceClient.post('/auth/password/forgot/change', {
                 code,
                 new_password: newPassword
-            });
+            }, config);
             
             if (!response.success) {
                 throw new BadRequestException(response.message || 'Password change failed');

@@ -38,6 +38,11 @@ import { SessionService } from './services/session.service';
 import { PasswordService } from './services/password.service';
 import { InfoService } from './services/info.service';
 
+// Guards Import
+import { AuthGuard, Public } from './common/guards/auth.guard';
+import { CurrentUser } from './common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from './common/guards/auth.guard';
+
 // Auth Controller Class
 @Controller('auth')
 export class AuthController {
@@ -54,6 +59,7 @@ export class AuthController {
      * @returns Service status object
      */
     @Get('healthz')
+    @Public()
     checkHealth(): {status: string} {
         return {status: 'ok'};
     }
@@ -64,6 +70,7 @@ export class AuthController {
      * @returns Response containing verification status and user details
      */
     @Post('register/email-verification')
+    @Public()
     async emailVerificationRegister(@Body() dto: RegisterInfoDto): Promise<Response> {
         const email_verification_register_response = await this.registerService.emailVerificationRegister(dto);
         return email_verification_register_response;
@@ -75,6 +82,7 @@ export class AuthController {
      * @returns Response confirming successful registration
      */
     @Post('register/verify-email')
+    @Public()
     async verifyEmailRegister(@Body() dto: VerifyEmailDto): Promise<Response> {
         const verify_email_register_response = await this.registerService.verifyEmailRegister(dto.code);
         return verify_email_register_response;
@@ -86,6 +94,7 @@ export class AuthController {
      * @returns Response containing authentication tokens and user session data
      */
     @Post('login')
+    @Public()
     async login(@Body() dto: LoginDto): Promise<Response> {
         const login_response = await this.loginService.login(dto.email_or_username, dto.password, dto.fingerprint_hashed);
         return login_response;
@@ -97,6 +106,7 @@ export class AuthController {
      * @returns Response confirming device verification status
      */
     @Post('login/fingerprint/email-verification')
+    @Public()
     async fingerprintEmailVerification(@Body() dto: FingerprintEmailVerificationDto): Promise<Response> {
         const verify_device_fingerprint_email_verification_response = await this.loginService.verifyDeviceFingerprintEmailVerification(dto.code);
         return verify_device_fingerprint_email_verification_response;
@@ -108,6 +118,7 @@ export class AuthController {
      * @returns Response containing new access token and updated session information
      */
     @Post('session/refresh')
+    @Public()
     async refreshSession(@Body() dto: RefreshSessionDto): Promise<Response> {
         const refresh_session_response = await this.sessionService.refreshSession(dto.session_token);
         return refresh_session_response;
@@ -119,8 +130,9 @@ export class AuthController {
      * @returns Response containing list of active user sessions
      */
     @Post('session/active')
-    async getActiveSessions(@Body() dto: GetActiveSessionsDto): Promise<Response> {
-        const get_active_sessions_response = await this.sessionService.getUserActiveSessions(dto.user_id);
+    @UseGuards(AuthGuard)
+    async getActiveSessions(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+        const get_active_sessions_response = await this.sessionService.getUserActiveSessions(user.userId);
         return get_active_sessions_response;
     }
 
@@ -130,6 +142,7 @@ export class AuthController {
      * @returns Response confirming successful logout
      */
     @Post('session/logout')
+    @Public()
     async logout(@Body() dto: LogoutDto): Promise<Response> {
         const logout_response = await this.sessionService.logout(dto.session_token);
         return logout_response;
@@ -141,8 +154,9 @@ export class AuthController {
      * @returns Response confirming all sessions have been terminated
      */
     @Post('session/revoke-all')
-    async revokeAllSessions(@Body() dto: RevokeAllSessionsDto): Promise<Response> {
-        const revoke_all_sessions_response = await this.sessionService.revokeAllSessions(dto.user_id);
+    @UseGuards(AuthGuard)
+    async revokeAllSessions(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+        const revoke_all_sessions_response = await this.sessionService.revokeAllSessions(user.userId);
         return revoke_all_sessions_response;
     }
 
@@ -152,6 +166,7 @@ export class AuthController {
      * @returns Response containing token validity and associated user information
      */
     @Post('session/validate-access')
+    @Public()
     async validateAccess(@Body() dto: ValidateAccessDto): Promise<Response> {
         const validate_access_response = await this.sessionService.validateAccess(dto.access_token);
         return validate_access_response;
@@ -163,8 +178,9 @@ export class AuthController {
      * @returns Response containing SSO token for service integration
      */
     @Post('session/sso')
-    async createSsoToken(@Body() dto: CreateSsoTokenDto): Promise<Response> {
-        const create_sso_token_response = await this.sessionService.createSsoToken(dto.user_id);
+    @UseGuards(AuthGuard)
+    async createSsoToken(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+        const create_sso_token_response = await this.sessionService.createSsoToken(user.userId);
         return create_sso_token_response;
     }
 
@@ -174,6 +190,7 @@ export class AuthController {
      * @returns Response containing SSO token validity and user context
      */
     @Post('session/sso/validate')
+    @Public()
     async validateSsoToken(@Body() dto: ValidateSsoTokenDto): Promise<Response> {
         const validate_sso_token_response = await this.sessionService.validateSsoToken(dto.sso_token);
         return validate_sso_token_response;
@@ -185,8 +202,9 @@ export class AuthController {
      * @returns Response confirming successful password change
      */
     @Post('password/change')
-    async changePassword(@Body() dto: ChangePasswordDto): Promise<Response> {
-        const change_password_response = await this.passwordService.changePassword(dto.user_id, dto.old_password, dto.new_password);
+    @UseGuards(AuthGuard)
+    async changePassword(@CurrentUser() user: AuthenticatedUser, @Body() dto: ChangePasswordDto): Promise<Response> {
+        const change_password_response = await this.passwordService.changePassword(user.userId, dto.old_password, dto.new_password);
         return change_password_response;
     }
 
@@ -196,8 +214,9 @@ export class AuthController {
      * @returns Response confirming email verification sent for password reset
      */
     @Post('password/forgot/email-verification')
-    async emailVerificationChangePassword(@Body() dto: EmailVerificationChangePasswordDto): Promise<Response> {
-        const email_verification_change_password_response = await this.passwordService.emailVerificationChangePassword(dto.user_id);
+    @UseGuards(AuthGuard)
+    async emailVerificationChangePassword(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+        const email_verification_change_password_response = await this.passwordService.emailVerificationChangePassword(user.userId);
         return email_verification_change_password_response;
     }
 
@@ -207,6 +226,7 @@ export class AuthController {
      * @returns Response confirming email verification for password reset
      */
     @Post('password/forgot/verify-email')
+    @UseGuards(AuthGuard)
     async verifyEmailChangePassword(@Body() dto: VerifyEmailChangePasswordDto): Promise<Response> {
         const verify_email_change_password_response = await this.passwordService.verifyEmailChangePassword(dto.code);
         return verify_email_change_password_response;
@@ -218,6 +238,7 @@ export class AuthController {
      * @returns Response confirming successful password reset
      */
     @Post('password/forgot/change')
+    @UseGuards(AuthGuard)
     async changeForgotPassword(@Body() dto: ChangeForgotPasswordDto): Promise<Response> {
         const change_forgot_password_response = await this.passwordService.changeForgotPassword(dto.code, dto.new_password);
         return change_forgot_password_response;
@@ -229,6 +250,7 @@ export class AuthController {
      * @returns Response containing user profile information
      */
     @Post('info/by-access-token')
+    @Public()
     async infoByAccessToken(@Body() dto: InfoByAccessTokenDto): Promise<Response> {
         const info_by_access_token_response = await this.infoService.getUserInfoByAccessToken(dto.access_token);
         return info_by_access_token_response;
@@ -240,6 +262,7 @@ export class AuthController {
      * @returns Response containing user profile information
      */
     @Post('info/by-user-id')
+    @UseGuards(AuthGuard)
     async infoByUserId(@Body() dto: InfoByUserIdDto): Promise<Response> {
         const info_by_user_id_response = await this.infoService.getUserInfoByUserId(dto.user_id);
         return info_by_user_id_response;
@@ -251,6 +274,7 @@ export class AuthController {
      * @returns Response containing user profile information
      */
     @Post('info/by-email-or-username')
+    @UseGuards(AuthGuard)
     async infoByEmailOrUsername(@Body() dto: InfoByEmailOrUsernameDto): Promise<Response> {
         const info_by_email_or_username_response = await this.infoService.getUserInfoByEmailOrUsername(dto.email_or_username);
         return info_by_email_or_username_response;

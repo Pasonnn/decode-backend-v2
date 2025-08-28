@@ -55,7 +55,6 @@ export class InfoService {
                 message: ERROR_MESSAGES.USER_INFO.INVALID_ACCESS_TOKEN,
             }
         }
-        console.log('validate_access_token_response', validate_access_token_response);
         const user_id = (validate_access_token_response.data as JwtPayload).user_id;
         // Get user info
         const user = await this.userModel.findById(user_id);
