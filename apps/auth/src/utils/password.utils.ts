@@ -13,10 +13,9 @@ export class PasswordUtils {
    * @param password - Plain text password to hash
    * @returns Hashed password
    */
-  async hashPassword(password: string): Promise<string> {
+  hashPassword(password: string): string {
     const saltRounds = authConfig().password.saltRounds;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    return hashedPassword;
+    return bcrypt.hashSync(password, saltRounds);
   }
 
   /**
@@ -25,11 +24,28 @@ export class PasswordUtils {
    * @param hashedPassword - Hashed password to compare against
    * @returns True if passwords match, false otherwise
    */
-  async comparePassword(
-    password: string,
-    hashedPassword: string,
-  ): Promise<boolean> {
-    return await bcrypt.compare(password, hashedPassword);
+  comparePassword(password: string, hashedPassword: string): boolean {
+    return bcrypt.compareSync(password, hashedPassword);
+  }
+
+  /**
+   * Generate a secure salt
+   * @param length - Length of the salt (default: 32)
+   * @returns Random salt
+   */
+  generateSalt(length: number = 32): string {
+    return crypto.randomBytes(length).toString('hex');
+  }
+
+  /**
+   * Hash password with custom salt
+   * @param password - Plain text password
+   * @param salt - Custom salt
+   * @returns Hashed password
+   */
+  hashPasswordWithSalt(password: string, salt: string): string {
+    const saltRounds = authConfig().password.saltRounds;
+    return bcrypt.hashSync(password + salt, saltRounds);
   }
 
   /**
@@ -340,25 +356,5 @@ export class PasswordUtils {
     }
 
     return matrix[str2.length][str1.length];
-  }
-
-  /**
-   * Generate a secure salt
-   * @param length - Length of the salt (default: 32)
-   * @returns Random salt
-   */
-  generateSalt(length: number = 32): string {
-    return crypto.randomBytes(length).toString('hex');
-  }
-
-  /**
-   * Hash password with custom salt
-   * @param password - Plain text password
-   * @param salt - Custom salt
-   * @returns Hashed password
-   */
-  async hashPasswordWithSalt(password: string, salt: string): Promise<string> {
-    const saltRounds = authConfig().password.saltRounds;
-    return await bcrypt.hash(password + salt, saltRounds);
   }
 }

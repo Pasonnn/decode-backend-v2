@@ -17,6 +17,7 @@ import { JwtPayload } from '../interfaces/jwt-payload.interface';
 // Infrastructure and Strategies Import
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 import { JwtStrategy } from '../strategies/jwt.strategy';
+import { SessionStrategy } from '../strategies/session.strategy';
 
 // Logger Import
 import { Logger } from '@nestjs/common';
@@ -32,6 +33,7 @@ export class SessionService {
     private readonly jwtStrategy: JwtStrategy,
     @InjectModel(Session.name) private sessionModel: Model<Session>,
     private readonly redisInfrastructure: RedisInfrastructure,
+    private readonly sessionStrategy: SessionStrategy,
   ) {
     this.logger = new Logger(SessionService.name);
   }
@@ -42,7 +44,7 @@ export class SessionService {
   ): Promise<Response<SessionDoc>> {
     try {
       // Generate session token
-      const session_token = this.jwtStrategy.createRefreshToken(user_id);
+      const session_token = this.sessionStrategy.createRefreshToken(user_id);
       // Create session
       const session = await this.sessionModel.create({
         user_id: new Types.ObjectId(user_id),
@@ -85,7 +87,7 @@ export class SessionService {
     }
   }
 
-  async refreshSession(session_token: string): Promise<Response<SessionDoc>> {
+  async refreshSession(session_token: string): Promise<Response> {
     try {
       // Validate session token
       const validate_session_response =
@@ -97,7 +99,7 @@ export class SessionService {
         return validate_session_response;
       }
       // Generate new session token
-      const new_session_token = this.jwtStrategy.createRefreshToken(
+      const new_session_token = this.sessionStrategy.createRefreshToken(
         validate_session_response.data.user_id.toString(),
       );
       // Generate new access token
@@ -107,7 +109,7 @@ export class SessionService {
       );
       // Update session on database
       await this.sessionModel.updateOne(
-        { _id: validate_session_response.data._id },
+        { session_token: session_token },
         { $set: { session_token: new_session_token } },
       );
       this.logger.log(
@@ -119,7 +121,6 @@ export class SessionService {
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
         message: ERROR_MESSAGES.SUCCESS.SESSION_REFRESHED,
         data: {
-          ...validate_session_response.data,
           session_token: new_session_token,
           access_token,
         } as unknown as SessionDoc,
@@ -352,7 +353,7 @@ export class SessionService {
       }
       const user_id = sso_token_response;
       // Generate session token
-      const session_token = this.jwtStrategy.createRefreshToken(user_id);
+      const session_token = this.sessionStrategy.createRefreshToken(user_id);
       // Delete sso token from redis
       await this.redisInfrastructure.del(`sso:${sso_token}`);
       // Return response
@@ -377,13 +378,17 @@ export class SessionService {
 
   private async validateSession(
     session_token: string,
-  ): Promise<Response<SessionDoc>> {
+  ): Promise<Response<JwtPayload>> {
     try {
       // Validate session token
       const validate_session_token_response =
-        this.jwtStrategy.validateRefreshToken(session_token);
+        this.sessionStrategy.validateRefreshToken(session_token);
       if (!validate_session_token_response.success) {
-        return validate_session_token_response;
+        return {
+          success: false,
+          statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+          message: ERROR_MESSAGES.SESSION.INVALID_SESSION_TOKEN,
+        };
       }
       // Validate session token
       const session = await this.sessionModel.findOne({
@@ -416,9 +421,7 @@ export class SessionService {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
         message: ERROR_MESSAGES.SUCCESS.SESSION_VALID,
-        data: {
-          ...session.toObject(),
-        } as unknown as SessionDoc,
+        data: session as unknown as JwtPayload,
       };
     } catch (error) {
       this.logger.error(`Error validating session for token`, error);
@@ -435,26 +438,34 @@ export class SessionService {
       // Validate session token
       const validate_session_response =
         await this.validateSession(session_token);
-      if (
-        !validate_session_response.success ||
-        !validate_session_response.data
-      ) {
+      if (!validate_session_response.success) {
         return validate_session_response;
       }
       // Revoke session
       await this.sessionModel.updateOne(
-        { _id: validate_session_response.data._id },
+        { session_token: session_token },
         { $set: { revoked_at: new Date(), is_active: false } },
       );
+      // Find revoked session
+      const revoked_session = await this.sessionModel.findOne({
+        session_token: session_token,
+      });
+      if (!revoked_session) {
+        return {
+          success: false,
+          statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+          message: ERROR_MESSAGES.SESSION.SESSION_NOT_FOUND,
+        };
+      }
       this.logger.log(
-        `Session revoked for user ${validate_session_response.data.user_id.toString()}`,
+        `Session revoked for session ${revoked_session.session_token}`,
       );
       // Return response
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
         message: ERROR_MESSAGES.SUCCESS.SESSION_REVOKED,
-        data: validate_session_response.data,
+        data: revoked_session as unknown as SessionDoc,
       };
     } catch (error) {
       this.logger.error(`Error revoking session`, error);

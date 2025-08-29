@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +9,6 @@ import { User } from '../schemas/user.schema';
 
 // Infrastructure and Strategies Import
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
-import { JwtStrategy } from '../strategies/jwt.strategy';
 
 // Services
 import { PasswordService } from './password.service';
@@ -37,9 +35,7 @@ interface EmailVerificationValue {
 export class RegisterService {
   private readonly logger: Logger;
   constructor(
-    private readonly configService: ConfigService,
     private readonly redisInfrastructure: RedisInfrastructure,
-    private readonly jwtStrategy: JwtStrategy,
     private readonly passwordService: PasswordService,
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
@@ -57,7 +53,7 @@ export class RegisterService {
     const { username, email, password } = register_info;
     // Check if password is strong enough
     const password_verification_and_hashing_response =
-      await this.passwordService.passwordVerificationAndHashing(password);
+      this.passwordService.passwordVerificationAndHashing(password);
     if (
       !password_verification_and_hashing_response.success ||
       !password_verification_and_hashing_response.data
@@ -196,7 +192,6 @@ export class RegisterService {
   private async checkEmailVerificationCode(
     email_verification_code: string,
   ): Promise<Response<{ email: string }>> {
-    console.log('checkEmailVerificationCode');
     // Get email verification code from Redis
     const email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.EMAIL_VERIFICATION}:${email_verification_code}`;
     const email_verification_code_value = (await this.redisInfrastructure.get(

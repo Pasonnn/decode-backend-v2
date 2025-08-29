@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,7 +7,6 @@ import { ClientProxy } from '@nestjs/microservices';
 // Schemas Import
 import { User } from '../schemas/user.schema';
 import { DeviceFingerprint } from '../schemas/device-fingerprint.schema';
-import { Session } from '../schemas/session.schema';
 
 // Interfaces Import
 import { Response } from '../interfaces/response.interface';
@@ -17,8 +15,6 @@ import { SessionDoc } from '../interfaces/session-doc.interface';
 
 // Infrastructure and Strategies Import
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
-import { JwtStrategy } from '../strategies/jwt.strategy';
-import { PasswordUtils } from '../utils/password.utils';
 
 // Services Import
 import { SessionService } from './session.service';
@@ -33,15 +29,11 @@ import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 export class LoginService {
   private readonly logger: Logger;
   constructor(
-    private readonly configService: ConfigService,
-    private readonly passwordUtils: PasswordUtils,
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(DeviceFingerprint.name)
     private deviceFingerprintModel: Model<DeviceFingerprint>,
-    @InjectModel(Session.name) private sessionModel: Model<Session>,
     private readonly sessionService: SessionService,
     private readonly redisInfrastructure: RedisInfrastructure,
-    private readonly jwtStrategy: JwtStrategy,
     private readonly infoService: InfoService,
     private readonly passwordService: PasswordService,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
@@ -62,7 +54,7 @@ export class LoginService {
       if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
         return getUserInfoResponse;
       }
-      const checkPasswordResponse = await this.passwordService.checkPassword(
+      const checkPasswordResponse = this.passwordService.checkPassword(
         password,
         getUserInfoResponse.data.password_hashed,
       );
@@ -310,24 +302,19 @@ export class LoginService {
     email_verification_code: string,
   ): Promise<Response> {
     // Validate device fingerprint email verification
-    const device_fingerprint_data_string = (await this.redisInfrastructure.get(
+    const device_fingerprint_data = (await this.redisInfrastructure.get(
       `${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`,
-    )) as string;
-    if (!device_fingerprint_data_string) {
+    )) as {
+      user_id: string;
+      fingerprint_hashed: string;
+    };
+    if (!device_fingerprint_data) {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
         message: ERROR_MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
       };
     }
-
-    // Parse the device fingerprint data from JSON
-    const device_fingerprint_data = JSON.parse(
-      device_fingerprint_data_string,
-    ) as {
-      user_id: string;
-      fingerprint_hashed: string;
-    };
 
     // Find device fingerprint in database
     const user_id = new Types.ObjectId(device_fingerprint_data.user_id);

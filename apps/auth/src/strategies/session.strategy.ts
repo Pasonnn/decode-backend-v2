@@ -1,26 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
-
-// Define interfaces for JWT payload and request types
-interface JwtPayload {
-  user_id: string;
-  iat?: number;
-  exp?: number;
-}
-
-interface RequestWithAuth extends Request {
-  headers: Request['headers'] & {
-    authorization?: string;
-  };
-  cookies: Request['cookies'];
-  query: Request['query'] & {
-    sessionToken?: string;
-  };
-}
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { Response } from '../interfaces/response.interface';
 
 @Injectable()
 export class SessionStrategy extends PassportStrategy(Strategy) {
@@ -28,13 +12,23 @@ export class SessionStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     super({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('jwt.secret.sessionToken'),
-      issuer: configService.get<string>('jwt.sessionToken.issuer'),
-      audience: configService.get<string>('jwt.sessionToken.audience'),
+      secretOrKey: configService.get<string>('jwt.secret.sessionToken') || '',
+      issuer: configService.get<string>('jwt.sessionToken.issuer') || '',
+      audience: configService.get<string>('jwt.sessionToken.audience') || '',
     });
+  }
+
+  validate(payload: JwtPayload) {
+    // This method is called by Passport after JWT verification
+    // Return the user object that will be attached to the request
+    return {
+      userId: payload.user_id,
+    };
   }
 
   createRefreshToken(user_id: string): string {
@@ -47,41 +41,25 @@ export class SessionStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validateRefreshToken(req: RequestWithAuth): JwtPayload {
+  validateRefreshToken(refresh_token: string): Response<JwtPayload> {
     try {
-      // extract token from header
-      const token = this.extractRefreshToken(req);
-      if (!token) {
-        throw new UnauthorizedException('No refresh token provided');
-      }
-      const payload = this.jwtService.verify<JwtPayload>(token, {
+      const payload = this.jwtService.verify<JwtPayload>(refresh_token, {
         secret: this.configService.get<string>('jwt.secret.sessionToken'),
         issuer: this.configService.get<string>('jwt.sessionToken.issuer'),
         audience: this.configService.get<string>('jwt.sessionToken.audience'),
       });
-      return payload;
+      return {
+        success: true,
+        statusCode: 200,
+        message: 'Refresh token validated',
+        data: payload,
+      };
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      return {
+        success: false,
+        statusCode: 401,
+        message: 'Invalid refresh token',
+      };
     }
-  }
-
-  extractRefreshToken(req: RequestWithAuth): string | null {
-    // From Authorization header
-    if (req.headers?.authorization?.startsWith('Session ')) {
-      const token = req.headers.authorization.split(' ')[1];
-      return token || null;
-    }
-
-    // From cookies (if using cookie-parser)
-    if (req.cookies?.sessionToken) {
-      return req.cookies.sessionToken;
-    }
-
-    // From query parameters
-    if (req.query?.sessionToken && typeof req.query.sessionToken === 'string') {
-      return req.query.sessionToken;
-    }
-
-    return null;
   }
 }

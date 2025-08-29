@@ -15,19 +15,21 @@ export class EmailService {
 
   private initializeTransporter() {
     this.transporter = nodemailer.createTransport({
-      host: this.configService.get('SMTP_HOST', 'smtp.gmail.com'),
-      port: this.configService.get('SMTP_PORT', 587),
+      host: this.configService.get<string>('SMTP_HOST', 'smtp.gmail.com'),
+      port: this.configService.get<number>('SMTP_PORT', 587),
       secure: false, // true for 465, false for other ports
       auth: {
-        user: this.configService.get('SMTP_USER'),
-        pass: this.configService.get('SMTP_PASS'),
+        user: this.configService.get<string>('SMTP_USER'),
+        pass: this.configService.get<string>('SMTP_PASS'),
       },
     });
   }
 
   async sendEmail(request: EmailRequestDto): Promise<boolean> {
     try {
+      console.log('request', request);
       const recipientEmail = this.getEmailFromRequest(request);
+      console.log('recipientEmail', recipientEmail);
       this.logger.log(
         `Processing email request: ${request.type} to ${recipientEmail}`,
       );
@@ -49,6 +51,7 @@ export class EmailService {
   }
 
   private getEmailTemplate(request: EmailRequestDto) {
+    console.log('request', request);
     switch (request.type) {
       case 'create-account':
         return EmailTemplates.createAccount(
@@ -78,14 +81,14 @@ export class EmailService {
 
   private async sendEmailWithTemplate(request: EmailRequestDto, template: any) {
     const recipientEmail = this.getEmailFromRequest(request);
-    const senderEmail = this.configService.get('SMTP_USER');
+    const senderEmail = this.configService.get<string>('SMTP_USER');
 
     const mailOptions = {
       from: senderEmail,
       to: recipientEmail,
-      subject: template.subject,
-      html: template.html,
-      text: template.text,
+      subject: template.subject as string,
+      html: template.html as string,
+      text: template.text as string,
     };
 
     this.logger.log(`Sending email from: ${mailOptions.from}`);
@@ -96,6 +99,8 @@ export class EmailService {
   }
 
   private getEmailFromRequest(request: EmailRequestDto): string {
+    console.log('request', request);
+    console.log('request.data.email', request.data.email);
     switch (request.type) {
       case 'create-account':
         return request.data.email;

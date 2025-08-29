@@ -45,7 +45,7 @@ export class PasswordService {
       return getUserInfoResponse;
     }
     // Check if old password is correct
-    const check_password_response = await this.checkPassword(
+    const check_password_response = this.checkPassword(
       old_password,
       getUserInfoResponse.data.password_hashed,
     );
@@ -54,7 +54,7 @@ export class PasswordService {
     }
     // Hash new password
     const password_verification_and_hashing_response =
-      await this.passwordVerificationAndHashing(new_password);
+      this.passwordVerificationAndHashing(new_password);
     if (
       !password_verification_and_hashing_response.success ||
       !password_verification_and_hashing_response.data
@@ -81,27 +81,14 @@ export class PasswordService {
     if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
       return getUserInfoResponse;
     }
-    // Create and store verification code
-    const verification_code = uuidv4().slice(
-      0,
-      AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH,
+    // Send email verification
+    const sendEmailVerificationResponse = await this.sendEmailVerification(
+      user_id,
+      getUserInfoResponse.data.email,
     );
-    const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${verification_code}`;
-    const verification_code_value = {
-      user_id: getUserInfoResponse.data._id.toString(),
-      verification_code: verification_code,
-    };
-    await this.redisInfrastructure.set(
-      verification_code_key,
-      JSON.stringify(verification_code_value),
-      AUTH_CONSTANTS.REDIS.PASSWORD_RESET_EXPIRES_IN,
-    );
-    // Send verification code to user
-    this.emailService.emit('email_request', {
-      type: AUTH_CONSTANTS.EMAIL.TYPES.FORGOT_PASSWORD_VERIFY,
-      email: getUserInfoResponse.data.email,
-      verification_code: verification_code,
-    });
+    if (!sendEmailVerificationResponse.success) {
+      return sendEmailVerificationResponse;
+    }
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
@@ -161,7 +148,7 @@ export class PasswordService {
     await this.redisInfrastructure.del(verification_code_key);
     // Hash new password
     const password_verification_and_hashing_response =
-      await this.passwordVerificationAndHashing(new_password);
+      this.passwordVerificationAndHashing(new_password);
     if (
       !password_verification_and_hashing_response.success ||
       !password_verification_and_hashing_response.data
@@ -179,12 +166,9 @@ export class PasswordService {
     return password_change_response;
   }
 
-  async checkPassword(
-    password: string,
-    password_hashed: string,
-  ): Promise<Response> {
+  checkPassword(password: string, password_hashed: string): Response {
     // Check if password is correct
-    const is_password_correct = await this.passwordUtils.comparePassword(
+    const is_password_correct = this.passwordUtils.comparePassword(
       password,
       password_hashed,
     );
@@ -202,9 +186,9 @@ export class PasswordService {
     };
   }
 
-  async passwordVerificationAndHashing(
+  passwordVerificationAndHashing(
     password: string,
-  ): Promise<Response<{ password_hashed: string }>> {
+  ): Response<{ password_hashed: string }> {
     // Check if password is strong enough
     const password_strength =
       this.passwordUtils.validatePasswordStrength(password);
@@ -216,7 +200,7 @@ export class PasswordService {
       };
     }
     // Hash password
-    const password_hashed = await this.passwordUtils.hashPassword(password);
+    const password_hashed = this.passwordUtils.hashPassword(password);
     // Return success response
     return {
       success: true,
@@ -248,6 +232,41 @@ export class PasswordService {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
       message: ERROR_MESSAGES.SUCCESS.PASSWORD_CHANGED,
+    };
+  }
+
+  private async sendEmailVerification(
+    user_id: string,
+    email: string,
+  ): Promise<Response> {
+    // Create and store verification code
+    const verification_code = uuidv4().slice(
+      0,
+      AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH,
+    );
+    const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${verification_code}`;
+    const verification_code_value = {
+      user_id: user_id,
+      verification_code: verification_code,
+    };
+    await this.redisInfrastructure.set(
+      verification_code_key,
+      JSON.stringify(verification_code_value),
+      AUTH_CONSTANTS.REDIS.PASSWORD_RESET_EXPIRES_IN,
+    );
+    // Send verification code to user
+    this.emailService.emit('email_request', {
+      type: AUTH_CONSTANTS.EMAIL.TYPES.FORGOT_PASSWORD_VERIFY,
+      data: {
+        email: email,
+        otpCode: verification_code,
+      },
+    });
+    // Return success response
+    return {
+      success: true,
+      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }
 }

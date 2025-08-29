@@ -53,13 +53,13 @@ export class AuthGuard implements CanActivate {
     private readonly configService: ConfigService,
   ) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const isPublic = this.reflector.get<boolean>(
       PUBLIC_KEY,
       context.getHandler(),
     );
     if (isPublic) {
-      return true;
+      return true as boolean;
     }
 
     const request = context.switchToHttp().getRequest<RequestWithUser>();
