@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HealthService } from './health.service';
-import { Response } from '../../interfaces/response.interface';
+import type { Response } from '../../interfaces/response.interface';
 
 @ApiTags('health')
 @Controller('health')
@@ -37,8 +37,8 @@ export class HealthController {
    * @returns Service status object
    */
   @Get('healthz')
-  async checkHealth(): Promise<Response> {
-    const health_check_response = await this.healthService.checkHealth();
+  checkHealth(): Response {
+    const health_check_response = this.healthService.checkHealth();
     return health_check_response;
   }
 }

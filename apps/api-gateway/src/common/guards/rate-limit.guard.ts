@@ -67,7 +67,9 @@ export class RateLimitGuard implements CanActivate {
         throw error;
       }
 
-      this.logger.error(`Rate limiting error: ${error.message}`);
+      this.logger.error(
+        `Rate limiting error: ${error instanceof Error ? error.message : String(error)}`,
+      );
       // If Redis is down, allow the request (fail open)
       return true;
     }
@@ -80,7 +82,8 @@ export class RateLimitGuard implements CanActivate {
 
     // Default key generation based on IP and user ID
     const ip = this.getClientIP(request);
-    const userId = (request as any).user?.userId;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const userId = (request as any)?.user?.userId;
 
     if (userId) {
       return `rate_limit:user:${userId}`;

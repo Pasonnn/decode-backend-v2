@@ -58,8 +58,8 @@ async function bootstrap() {
     `,
   });
 
-  const port = configService.get('apiGateway.port') || 4000;
-  const host = configService.get('apiGateway.host') || '0.0.0.0';
+  const port = configService.get<number>('apiGateway.port') || 4000;
+  const host = configService.get<string>('apiGateway.host') || '0.0.0.0';
 
   await app.listen(port, host);
   console.info(`[ApiGateway] API Gateway is running on ${host}:${port}`);

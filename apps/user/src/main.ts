@@ -5,4 +5,7 @@ async function bootstrap() {
   const app = await NestFactory.create(UserModule);
   await app.listen(process.env.port ?? 3000);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Failed to start user service:', error);
+  process.exit(1);
+});

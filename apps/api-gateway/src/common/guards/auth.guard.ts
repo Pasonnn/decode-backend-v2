@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Request } from 'express';
+import { AxiosError } from 'axios';
 
 // Interfaces
 export interface AuthenticatedUser {
@@ -102,7 +103,10 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      this.logger.error(`Authentication failed: ${error.message}`, error.stack);
+      this.logger.error(
+        `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : String(error),
+      );
       throw error;
     }
   }
@@ -155,10 +159,11 @@ export class AuthGuard implements CanActivate {
 
       return user;
     } catch (error) {
-      if (error.response?.status === 401) {
+      if (error instanceof AxiosError && error.response?.status === 401) {
         throw new UnauthorizedException('Invalid or expired access token');
       }
-      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+
+      if (error instanceof AxiosError) {
         this.logger.error('Auth service is unavailable');
         throw new UnauthorizedException('Authentication service unavailable');
       }

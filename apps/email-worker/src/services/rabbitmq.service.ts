@@ -1,10 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  ClientProxy,
-  ClientProxyFactory,
-  Transport,
-} from '@nestjs/microservices';
+import { ClientProxy, ClientProxyFactory } from '@nestjs/microservices';
 import { EmailService } from './email-worker.service';
 import { EmailRequestDto } from '../dto/email.dto';
 
@@ -38,7 +34,10 @@ export class RabbitMQService implements OnModuleInit {
       // Start consuming messages
       this.startConsuming();
     } catch (error) {
-      this.logger.error('Failed to connect to RabbitMQ', error.stack);
+      this.logger.error(
+        'Failed to connect to RabbitMQ',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 
@@ -55,7 +54,7 @@ export class RabbitMQService implements OnModuleInit {
     } catch (error) {
       this.logger.error(
         `Failed to queue email request: ${request.type}`,
-        error.stack,
+        error instanceof Error ? error.stack : String(error),
       );
       throw error;
     }
@@ -75,7 +74,7 @@ export class RabbitMQService implements OnModuleInit {
       const duration = Date.now() - startTime;
       this.logger.error(
         `Email processing failed after ${duration}ms: ${request.type}`,
-        error.stack,
+        error instanceof Error ? error.stack : String(error),
       );
       throw error;
     }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { SetMetadata } from '@nestjs/common';
 
 export interface RateLimitOptions {
@@ -53,7 +54,7 @@ export const AuthRateLimit = {
       windowMs: 15 * 60 * 1000, // 15 minutes
       max: 5,
       message: 'Too many login attempts, please try again later.',
-      keyGenerator: (req) => `auth:login:${req.ip}`,
+      keyGenerator: (req: any) => `auth:login:${req.ip as string}`,
     }),
 
   register: () =>
@@ -61,7 +62,7 @@ export const AuthRateLimit = {
       windowMs: 60 * 60 * 1000, // 1 hour
       max: 3,
       message: 'Too many registration attempts, please try again later.',
-      keyGenerator: (req) => `auth:register:${req.ip}`,
+      keyGenerator: (req: any) => `auth:register:${req.ip as string}`,
     }),
 
   forgotPassword: () =>
@@ -69,7 +70,7 @@ export const AuthRateLimit = {
       windowMs: 60 * 60 * 1000, // 1 hour
       max: 3,
       message: 'Too many password reset attempts, please try again later.',
-      keyGenerator: (req) => `auth:forgot:${req.ip}`,
+      keyGenerator: (req: any) => `auth:forgot:${req.ip as string}`,
     }),
 
   verifyEmail: () =>
@@ -77,7 +78,7 @@ export const AuthRateLimit = {
       windowMs: 5 * 60 * 1000, // 5 minutes
       max: 5,
       message: 'Too many email verification attempts, please try again later.',
-      keyGenerator: (req) => `auth:verify:${req.ip}`,
+      keyGenerator: (req: any) => `auth:verify:${req.ip as string}`,
     }),
 };
 
@@ -88,7 +89,9 @@ export const UserRateLimit = {
       windowMs: 60 * 1000, // 1 minute
       max: 60,
       message: 'Too many requests, please try again later.',
-      keyGenerator: (req) => `user:${req.user?.userId || req.ip}`,
+
+      keyGenerator: (req: any) =>
+        `user:${req.user?.userId || (req.ip as string)}`,
     }),
 
   strict: () =>
@@ -96,7 +99,8 @@ export const UserRateLimit = {
       windowMs: 60 * 1000, // 1 minute
       max: 30,
       message: 'Too many requests, please try again later.',
-      keyGenerator: (req) => `user:strict:${req.user?.userId || req.ip}`,
+      keyGenerator: (req: any) =>
+        `user:strict:${req.user?.userId || (req.ip as string)}`,
     }),
 
   burst: () =>
@@ -104,7 +108,8 @@ export const UserRateLimit = {
       windowMs: 10 * 1000, // 10 seconds
       max: 10,
       message: 'Too many requests, please slow down.',
-      keyGenerator: (req) => `user:burst:${req.user?.userId || req.ip}`,
+      keyGenerator: (req: any) =>
+        `user:burst:${req.user?.userId || (req.ip as string)}`,
     }),
 };
 
@@ -115,7 +120,8 @@ export const AdminRateLimit = {
       windowMs: 60 * 1000, // 1 minute
       max: 100,
       message: 'Too many admin requests, please try again later.',
-      keyGenerator: (req) => `admin:${req.user?.userId || req.ip}`,
+      keyGenerator: (req: any) =>
+        `admin:${req.user?.userId || (req.ip as string)}`,
     }),
 
   strict: () =>
@@ -123,7 +129,8 @@ export const AdminRateLimit = {
       windowMs: 60 * 1000, // 1 minute
       max: 50,
       message: 'Too many admin requests, please try again later.',
-      keyGenerator: (req) => `admin:strict:${req.user?.userId || req.ip}`,
+      keyGenerator: (req: any) =>
+        `admin:strict:${req.user?.userId || (req.ip as string)}`,
     }),
 };
 
@@ -134,7 +141,7 @@ export const IPRateLimit = {
       windowMs: 60 * 1000, // 1 minute
       max: 100,
       message: 'Too many requests from this IP, please try again later.',
-      keyGenerator: (req) => `ip:${req.ip}`,
+      keyGenerator: (req: any) => `ip:${req.ip as string}`,
     }),
 
   strict: () =>
@@ -142,6 +149,6 @@ export const IPRateLimit = {
       windowMs: 60 * 1000, // 1 minute
       max: 30,
       message: 'Too many requests from this IP, please try again later.',
-      keyGenerator: (req) => `ip:strict:${req.ip}`,
+      keyGenerator: (req: any) => `ip:strict:${req.ip as string}`,
     }),
 };

@@ -81,15 +81,19 @@ export abstract class BaseHttpClient {
 
   private handleError(error: any, method: string, url: string): never {
     this.logger.error(
-      `HTTP ${method} ${this.baseURL}${url} failed: ${error.message}`,
+      `HTTP ${method} ${this.baseURL}${url} failed: ${error instanceof Error ? error.message : String(error)}`,
     );
 
-    if (error.response) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (error?.response) {
       throw new Error(
-        `Service error: ${error.response.data?.message || error.message}`,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        `Service error: ${error?.response?.data?.message || (error instanceof Error ? error.message : String(error))}`,
       );
     }
 
-    throw new Error(`Network error: ${error.message}`);
+    throw new Error(
+      `Network error: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
