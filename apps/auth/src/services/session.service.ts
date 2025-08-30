@@ -376,9 +376,7 @@ export class SessionService {
     }
   }
 
-  private async validateSession(
-    session_token: string,
-  ): Promise<Response<JwtPayload>> {
+  async validateSession(session_token: string): Promise<Response<JwtPayload>> {
     try {
       // Validate session token
       const validate_session_token_response =

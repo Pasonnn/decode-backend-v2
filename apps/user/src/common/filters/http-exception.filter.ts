@@ -44,11 +44,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ) {
         const responseObj = exceptionResponse as Record<string, unknown>;
         message = (responseObj.message as string) || exception.message;
-        error =
-          typeof responseObj.error === 'string' ||
-          typeof responseObj.error === 'object'
-            ? (responseObj.error as string | Record<string, unknown>)
-            : 'Service communication failed';
+        error = responseObj.error;
       } else {
         message = exception.message;
       }

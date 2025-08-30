@@ -11,6 +11,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { SessionService } from '../../services/session.service';
 
 export const ROLES_KEY = 'roles';
 export const PERMISSIONS_KEY = 'permissions';
@@ -51,9 +52,10 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly sessionService: SessionService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.get<boolean>(
       PUBLIC_KEY,
       context.getHandler(),
@@ -66,11 +68,14 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('Access token is required');
+      throw new UnauthorizedException({
+        message: 'Access token is required',
+        error: 'MISSING_TOKEN',
+      });
     }
 
     try {
-      const user = this.validateToken(token);
+      const user = await this.validateToken(token);
       request.user = user;
 
       // Check roles if required
@@ -81,10 +86,21 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
+      // If it's already a NestJS exception, re-throw it
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Authentication failed: ${errorMessage}`);
-      throw new UnauthorizedException('Invalid access token');
+      throw new UnauthorizedException({
+        message: 'Invalid access token',
+        error: 'AUTHENTICATION_ERROR',
+      });
     }
   }
 
@@ -97,13 +113,24 @@ export class AuthGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 
-  private validateToken(token: string): AuthenticatedUser {
+  private async validateToken(token: string): Promise<AuthenticatedUser> {
     try {
       const payload = this.jwtService.verify<JwtPayload>(token, {
         secret: this.configService.get<string>('jwt.secret.accessToken'),
         issuer: this.configService.get<string>('jwt.accessToken.issuer'),
         audience: this.configService.get<string>('jwt.accessToken.audience'),
       });
+
+      // Check if session is valid
+      const session = await this.sessionService.validateSession(
+        payload.session_token as string,
+      );
+      if (!session.success) {
+        throw new UnauthorizedException({
+          message: session.message,
+          error: 'INVALID_SESSION',
+        });
+      }
 
       return {
         userId: payload.user_id,
@@ -117,7 +144,10 @@ export class AuthGuard implements CanActivate {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Token validation failed: ${errorMessage}`);
-      throw new UnauthorizedException('Invalid access token');
+      throw new UnauthorizedException({
+        message: 'Invalid access token',
+        error: 'TOKEN_VALIDATION_ERROR',
+      });
     }
   }
 
@@ -132,9 +162,10 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!requiredRoles.includes(user.role)) {
-      throw new ForbiddenException(
-        `Access denied. Required roles: ${requiredRoles.join(', ')}. User role: ${user.role}`,
-      );
+      throw new ForbiddenException({
+        message: `Access denied. Required roles: ${requiredRoles.join(', ')}. User role: ${user.role}`,
+        error: 'INSUFFICIENT_PERMISSIONS',
+      });
     }
   }
 
@@ -156,9 +187,10 @@ export class AuthGuard implements CanActivate {
     );
 
     if (!hasPermission) {
-      throw new ForbiddenException(
-        `Access denied. Required permissions: ${requiredPermissions.join(', ')}`,
-      );
+      throw new ForbiddenException({
+        message: `Access denied. Required permissions: ${requiredPermissions.join(', ')}`,
+        error: 'INSUFFICIENT_PERMISSIONS',
+      });
     }
   }
 

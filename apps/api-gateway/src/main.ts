@@ -3,10 +3,18 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ApiGatewayModule } from './api-gateway.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
   const configService = app.get(ConfigService);
+
+  // Global exception filters
+  app.useGlobalFilters(
+    new ValidationExceptionFilter(),
+    new HttpExceptionFilter(),
+  );
 
   // Global pipes - following your auth service pattern
   app.useGlobalPipes(

@@ -83,7 +83,10 @@ export class AuthGuard implements CanActivate {
     // Extract token from request
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new UnauthorizedException('Access token is required');
+      throw new UnauthorizedException({
+        message: 'Access token is required',
+        error: 'MISSING_TOKEN',
+      });
     }
 
     try {
@@ -103,11 +106,25 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
+      // If it's already a NestJS exception, re-throw it
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
+      // Log the error for debugging
       this.logger.error(
         `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
-      throw error;
+
+      // Convert unknown errors to UnauthorizedException
+      throw new UnauthorizedException({
+        message: 'Authentication failed',
+        error: 'AUTHENTICATION_ERROR',
+      });
     }
   }
 
@@ -140,7 +157,10 @@ export class AuthGuard implements CanActivate {
       );
 
       if (!response.data.success || !response.data.data) {
-        throw new UnauthorizedException('Invalid access token');
+        throw new UnauthorizedException({
+          message: 'Invalid access token',
+          error: 'INVALID_TOKEN',
+        });
       }
 
       const userData = response.data.data;
@@ -160,16 +180,25 @@ export class AuthGuard implements CanActivate {
       return user;
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 401) {
-        throw new UnauthorizedException('Invalid or expired access token');
+        throw new UnauthorizedException({
+          message: 'Invalid or expired access token',
+          error: 'TOKEN_EXPIRED',
+        });
       }
       if (
         error instanceof AxiosError &&
         (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND')
       ) {
         this.logger.error('Auth service is unavailable');
-        throw new UnauthorizedException('Authentication service unavailable');
+        throw new UnauthorizedException({
+          message: 'Authentication service unavailable',
+          error: 'SERVICE_UNAVAILABLE',
+        });
       }
-      throw new UnauthorizedException('Token validation failed');
+      throw new UnauthorizedException({
+        message: 'Token validation failed',
+        error: 'VALIDATION_ERROR',
+      });
     }
   }
 
@@ -187,9 +216,10 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!requiredRoles.includes(user.role)) {
-      throw new ForbiddenException(
-        `Access denied. Required roles: ${requiredRoles.join(', ')}. Your role: ${user.role}`,
-      );
+      throw new ForbiddenException({
+        message: `Access denied. Required roles: ${requiredRoles.join(', ')}. Your role: ${user.role}`,
+        error: 'INSUFFICIENT_PERMISSIONS',
+      });
     }
   }
 
