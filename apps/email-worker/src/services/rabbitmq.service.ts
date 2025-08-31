@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { ClientProxy, ClientProxyFactory } from '@nestjs/microservices';
 import { EmailService } from './email-worker.service';
 import { EmailRequestDto } from '../dto/email.dto';
 
@@ -30,11 +30,14 @@ export class RabbitMQService implements OnModuleInit {
     try {
       await this.client.connect();
       this.logger.log('Connected to RabbitMQ successfully');
-      
+
       // Start consuming messages
       this.startConsuming();
     } catch (error) {
-      this.logger.error('Failed to connect to RabbitMQ', error.stack);
+      this.logger.error(
+        'Failed to connect to RabbitMQ',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 
@@ -49,7 +52,10 @@ export class RabbitMQService implements OnModuleInit {
       await this.client.emit('email_request', request).toPromise();
       this.logger.log(`Email request queued: ${request.type}`);
     } catch (error) {
-      this.logger.error(`Failed to queue email request: ${request.type}`, error.stack);
+      this.logger.error(
+        `Failed to queue email request: ${request.type}`,
+        error instanceof Error ? error.stack : String(error),
+      );
       throw error;
     }
   }
@@ -59,12 +65,17 @@ export class RabbitMQService implements OnModuleInit {
     this.logger.log(`Processing email request ${request.type}`);
     try {
       await this.emailService.sendEmail(request);
-      
+
       const duration = Date.now() - startTime;
-      this.logger.log(`Email processed successfully in ${duration}ms: ${request.type}`);
+      this.logger.log(
+        `Email processed successfully in ${duration}ms: ${request.type}`,
+      );
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.logger.error(`Email processing failed after ${duration}ms: ${request.type}`, error.stack);
+      this.logger.error(
+        `Email processing failed after ${duration}ms: ${request.type}`,
+        error instanceof Error ? error.stack : String(error),
+      );
       throw error;
     }
   }

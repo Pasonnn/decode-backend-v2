@@ -17,4 +17,5 @@ async function bootstrap() {
   await app.listen();
   console.log('Email Worker Microservice is listening');
 }
-bootstrap();
+
+void bootstrap();

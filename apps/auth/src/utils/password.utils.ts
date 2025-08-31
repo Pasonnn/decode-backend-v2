@@ -10,12 +10,12 @@ export class PasswordUtils {
 
   /**
    * Hash a password using bcrypt
-   * @param password - Plain text password
+   * @param password - Plain text password to hash
    * @returns Hashed password
    */
-  async hashPassword(password: string): Promise<string> {
+  hashPassword(password: string): string {
     const saltRounds = authConfig().password.saltRounds;
-    return await bcrypt.hash(password, saltRounds);
+    return bcrypt.hashSync(password, saltRounds);
   }
 
   /**
@@ -24,10 +24,28 @@ export class PasswordUtils {
    * @param hashedPassword - Hashed password to compare against
    * @returns True if passwords match, false otherwise
    */
-  async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
-    const is_password_correct = await bcrypt.compare(password, hashedPassword);
-    const hash_new_password = await this.hashPassword(password);
-    return is_password_correct;
+  comparePassword(password: string, hashedPassword: string): boolean {
+    return bcrypt.compareSync(password, hashedPassword);
+  }
+
+  /**
+   * Generate a secure salt
+   * @param length - Length of the salt (default: 32)
+   * @returns Random salt
+   */
+  generateSalt(length: number = 32): string {
+    return crypto.randomBytes(length).toString('hex');
+  }
+
+  /**
+   * Hash password with custom salt
+   * @param password - Plain text password
+   * @param salt - Custom salt
+   * @returns Hashed password
+   */
+  hashPasswordWithSalt(password: string, salt: string): string {
+    const saltRounds = authConfig().password.saltRounds;
+    return bcrypt.hashSync(password + salt, saltRounds);
   }
 
   /**
@@ -52,7 +70,7 @@ export class PasswordUtils {
       hasUppercase: /[A-Z]/.test(password),
       hasLowercase: /[a-z]/.test(password),
       hasNumbers: /\d/.test(password),
-      hasSpecialChars: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasSpecialChars: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     };
 
     const feedback: string[] = [];
@@ -60,7 +78,9 @@ export class PasswordUtils {
 
     // Check minimum length
     if (!requirements.minLength) {
-      feedback.push(`Password must be at least ${authConfig().password.minLength} characters long`);
+      feedback.push(
+        `Password must be at least ${authConfig().password.minLength} characters long`,
+      );
     } else {
       score += 1;
     }
@@ -103,17 +123,26 @@ export class PasswordUtils {
 
     // Check for common patterns
     const commonPatterns = [
-      '123456', 'password', 'qwerty', 'admin', 'letmein',
-      'welcome', 'monkey', 'dragon', 'master', 'football'
+      '123456',
+      'password',
+      'qwerty',
+      'admin',
+      'letmein',
+      'welcome',
+      'monkey',
+      'dragon',
+      'master',
+      'football',
     ];
-    
+
     const lowerPassword = password.toLowerCase();
-    if (commonPatterns.some(pattern => lowerPassword.includes(pattern))) {
+    if (commonPatterns.some((pattern) => lowerPassword.includes(pattern))) {
       feedback.push('Password should not contain common words or patterns');
       score = Math.max(0, score - 2);
     }
 
-    const isValid = Object.values(requirements).every(req => req) && score >= 3;
+    const isValid =
+      Object.values(requirements).every((req) => req) && score >= 3;
 
     return {
       isValid,
@@ -137,7 +166,7 @@ export class PasswordUtils {
       includeNumbers?: boolean;
       includeSpecialChars?: boolean;
       excludeSimilar?: boolean;
-    } = {}
+    } = {},
   ): string {
     const {
       includeUppercase = true,
@@ -187,14 +216,32 @@ export class PasswordUtils {
    */
   isPasswordCompromised(password: string): boolean {
     const compromisedPatterns = [
-      'password', '123456', 'qwerty', 'admin', 'letmein',
-      'welcome', 'monkey', 'dragon', 'master', 'football',
-      'abc123', 'password123', 'admin123', 'root', 'guest',
-      'user', 'test', 'demo', 'sample', 'example'
+      'password',
+      '123456',
+      'qwerty',
+      'admin',
+      'letmein',
+      'welcome',
+      'monkey',
+      'dragon',
+      'master',
+      'football',
+      'abc123',
+      'password123',
+      'admin123',
+      'root',
+      'guest',
+      'user',
+      'test',
+      'demo',
+      'sample',
+      'example',
     ];
 
     const lowerPassword = password.toLowerCase();
-    return compromisedPatterns.some(pattern => lowerPassword.includes(pattern));
+    return compromisedPatterns.some((pattern) =>
+      lowerPassword.includes(pattern),
+    );
   }
 
   /**
@@ -225,7 +272,10 @@ export class PasswordUtils {
    * @param newPassword - New password
    * @returns Validation result
    */
-  validatePasswordChange(oldPassword: string, newPassword: string): {
+  validatePasswordChange(
+    oldPassword: string,
+    newPassword: string,
+  ): {
     isValid: boolean;
     feedback: string[];
   } {
@@ -237,7 +287,10 @@ export class PasswordUtils {
     }
 
     // Check if new password is too similar to old password
-    const similarity = this.calculatePasswordSimilarity(oldPassword, newPassword);
+    const similarity = this.calculatePasswordSimilarity(
+      oldPassword,
+      newPassword,
+    );
     if (similarity > 0.7) {
       feedback.push('New password is too similar to the current password');
     }
@@ -260,7 +313,10 @@ export class PasswordUtils {
    * @param password2 - Second password
    * @returns Similarity score (0-1, where 1 is identical)
    */
-  private calculatePasswordSimilarity(password1: string, password2: string): number {
+  private calculatePasswordSimilarity(
+    password1: string,
+    password2: string,
+  ): number {
     const longer = password1.length > password2.length ? password1 : password2;
     const shorter = password1.length > password2.length ? password2 : password1;
 
@@ -277,10 +333,16 @@ export class PasswordUtils {
    * @returns Edit distance
    */
   private levenshteinDistance(str1: string, str2: string): number {
-    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    const matrix: number[][] = Array(str2.length + 1)
+      .fill(null)
+      .map(() => Array(str1.length + 1).fill(0) as number[]);
 
-    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    for (let i = 0; i <= str1.length; i++) {
+      matrix[0][i] = i;
+    }
+    for (let j = 0; j <= str2.length; j++) {
+      matrix[j][0] = j;
+    }
 
     for (let j = 1; j <= str2.length; j++) {
       for (let i = 1; i <= str1.length; i++) {
@@ -288,31 +350,11 @@ export class PasswordUtils {
         matrix[j][i] = Math.min(
           matrix[j][i - 1] + 1, // deletion
           matrix[j - 1][i] + 1, // insertion
-          matrix[j - 1][i - 1] + indicator // substitution
+          matrix[j - 1][i - 1] + indicator, // substitution
         );
       }
     }
 
     return matrix[str2.length][str1.length];
-  }
-
-  /**
-   * Generate a secure salt
-   * @param length - Length of the salt (default: 32)
-   * @returns Random salt
-   */
-  generateSalt(length: number = 32): string {
-    return crypto.randomBytes(length).toString('hex');
-  }
-
-  /**
-   * Hash password with custom salt
-   * @param password - Plain text password
-   * @param salt - Custom salt
-   * @returns Hashed password
-   */
-  async hashPasswordWithSalt(password: string, salt: string): Promise<string> {
-    const saltRounds = authConfig().password.saltRounds;
-    return await bcrypt.hash(password + salt, saltRounds);
   }
 }

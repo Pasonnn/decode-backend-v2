@@ -1,68 +1,63 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { Response } from '../interfaces/response.interface';
 
 @Injectable()
 export class SessionStrategy extends PassportStrategy(Strategy) {
-    constructor(
-        private readonly configService: ConfigService,
-        private readonly jwtService: JwtService,
-    ) {
-        super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false,
-            secretOrKey: configService.get('jwt.secret.sessionToken'),
-            issuer: configService.get('jwt.sessionToken.issuer'),
-            audience: configService.get('jwt.sessionToken.audience'),
-        });
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+  ) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: configService.get<string>('jwt.secret.sessionToken') || '',
+      issuer: configService.get<string>('jwt.sessionToken.issuer') || '',
+      audience: configService.get<string>('jwt.sessionToken.audience') || '',
+    });
+  }
+
+  validate(payload: JwtPayload) {
+    // This method is called by Passport after JWT verification
+    // Return the user object that will be attached to the request
+    return {
+      userId: payload.user_id,
+    };
+  }
+
+  createRefreshToken(user_id: string): string {
+    const payload: JwtPayload = { user_id };
+    return this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('jwt.secret.sessionToken'),
+      expiresIn: this.configService.get<string>('jwt.sessionToken.expiresIn'),
+      issuer: this.configService.get<string>('jwt.sessionToken.issuer'),
+      audience: this.configService.get<string>('jwt.sessionToken.audience'),
+    });
+  }
+
+  validateRefreshToken(refresh_token: string): Response<JwtPayload> {
+    try {
+      const payload = this.jwtService.verify<JwtPayload>(refresh_token, {
+        secret: this.configService.get<string>('jwt.secret.sessionToken'),
+        issuer: this.configService.get<string>('jwt.sessionToken.issuer'),
+        audience: this.configService.get<string>('jwt.sessionToken.audience'),
+      });
+      return {
+        success: true,
+        statusCode: 200,
+        message: 'Refresh token validated',
+        data: payload,
+      };
+    } catch {
+      return {
+        success: false,
+        statusCode: 401,
+        message: 'Invalid refresh token',
+      };
     }
-
-    async createRefreshToken(user_id: string) {
-        const payload = { user_id };
-        return this.jwtService.sign(payload, {
-            secret: this.configService.get('jwt.secret.sessionToken'),
-            expiresIn: this.configService.get('jwt.sessionToken.expiresIn'),
-            issuer: this.configService.get('jwt.sessionToken.issuer'),
-            audience: this.configService.get('jwt.sessionToken.audience'),
-        });
-    }
-
-    async validateRefreshToken(req: any) {
-        try {
-            // extract token from header
-            const token = this.extractRefreshToken(req);
-            if (!token) {
-                throw new UnauthorizedException('No refresh token provided');
-            }
-            const payload = this.jwtService.verify(token, {
-                secret: this.configService.get('jwt.secret.sessionToken'),
-                issuer: this.configService.get('jwt.sessionToken.issuer'),
-                audience: this.configService.get('jwt.sessionToken.audience'),
-            });
-            return payload;
-        } catch (error) {
-            throw new UnauthorizedException('Invalid refresh token');
-        }
-    }
-
-    extractRefreshToken(req: any): string | null {
-        // From Authorization header
-        if (req.headers?.['authorization']?.startsWith('Session ')) {
-            return req.headers['authorization'].split(' ')[1];
-        }
-
-        // From cookies (if using cookie-parser)
-        if (req.cookies?.['sessionToken']) {
-            return req.cookies['sessionToken'];
-        }
-
-        // From query parameters
-        if (req.query?.['sessionToken']) {
-            return req.query['sessionToken'];
-        }
-
-        return null;
-    }
+  }
 }

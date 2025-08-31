@@ -1,4 +1,4 @@
-import { IsEmail, IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty } from 'class-validator';
 
 export class CreateAccountEmailDto {
   @IsEmail()
@@ -32,7 +32,7 @@ export class ForgotPasswordVerifyEmailDto {
   otpCode: string;
 }
 
-export type EmailRequestDto = 
+export type EmailRequestDto =
   | { type: 'create-account'; data: CreateAccountEmailDto }
   | { type: 'welcome-message'; data: WelcomeMessageEmailDto }
   | { type: 'fingerprint-verify'; data: FingerprintVerifyEmailDto }
