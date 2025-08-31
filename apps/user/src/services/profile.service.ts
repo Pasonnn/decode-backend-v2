@@ -12,7 +12,6 @@ import { User } from '../schemas/user.schema';
 // Constants Import
 import { USER_CONSTANTS } from '../constants/user.constants';
 import { ERROR_MESSAGES } from '../constants/error-messages.constants';
-
 @Injectable()
 export class ProfileService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
@@ -40,7 +39,61 @@ export class ProfileService {
     }
   }
 
-  async setProfilePicture(input: {
+  async updateUserDisplayName(input: {
+    user_id: string;
+    display_name: string;
+  }): Promise<Response<UserDoc>> {
+    try {
+      const { user_id, display_name } = input;
+      const user = await this.userModel.findById(user_id);
+      if (!user) {
+        return {
+          success: false,
+          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+        };
+      }
+      user.display_name = display_name;
+      await user.save();
+      return {
+        success: true,
+        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        message: ERROR_MESSAGES.SUCCESS.PROFILE_UPDATED,
+        data: user as UserDoc,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async updateUserBio(input: {
+    user_id: string;
+    bio: string;
+  }): Promise<Response<UserDoc>> {
+    try {
+      const { user_id, bio } = input;
+      const user = await this.userModel.findById(user_id);
+      if (!user) {
+        return {
+          success: false,
+          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+        };
+      }
+      user.bio = bio;
+      await user.save();
+      return {
+        success: true,
+        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        message: ERROR_MESSAGES.SUCCESS.PROFILE_UPDATED,
+        data: user as UserDoc,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async updateUserAvatar(input: {
     user_id: string;
     avatar_ipfs_hash: string;
     avatar_fallback_url: string;
@@ -63,6 +116,33 @@ export class ProfileService {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
         message: ERROR_MESSAGES.SUCCESS.PROFILE_PICTURE_UPLOADED,
+        data: user as UserDoc,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async updateUserRole(input: {
+    user_id: string;
+    role: string;
+  }): Promise<Response<UserDoc>> {
+    try {
+      const { user_id, role } = input;
+      const user = await this.userModel.findById(user_id);
+      if (!user) {
+        return {
+          success: false,
+          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+        };
+      }
+      user.role = role;
+      await user.save();
+      return {
+        success: true,
+        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        message: ERROR_MESSAGES.SUCCESS.PROFILE_UPDATED,
         data: user as UserDoc,
       };
     } catch (error) {

@@ -142,49 +142,44 @@ export const ERROR_MESSAGES = {
   // Username Change Errors
   USERNAME: {
     USERNAME_CHANGE_INITIATION_FAILED: 'Failed to initiate username change',
-    USERNAME_CHANGE_VERIFICATION_FAILED: 'Failed to verify username change code',
+    USERNAME_CHANGE_VERIFICATION_FAILED:
+      'Failed to verify username change code',
     USERNAME_CHANGE_FAILED: 'Failed to change username',
     USERNAME_ALREADY_EXISTS: 'Username already exists',
     USERNAME_INVALID_FORMAT: 'Invalid username format',
     USERNAME_TOO_SHORT: 'Username too short',
     USERNAME_TOO_LONG: 'Username too long',
-    USERNAME_CONTAINS_INVALID_CHARACTERS: 'Username contains invalid characters',
+    USERNAME_CONTAINS_INVALID_CHARACTERS:
+      'Username contains invalid characters',
     USERNAME_CHANGE_CODE_INVALID: 'Invalid username change verification code',
     USERNAME_CHANGE_CODE_EXPIRED: 'Username change verification code expired',
-    USERNAME_CHANGE_CODE_NOT_FOUND: 'Username change verification code not found',
+    USERNAME_CHANGE_CODE_NOT_FOUND:
+      'Username change verification code not found',
     USERNAME_CHANGE_NOT_INITIATED: 'Username change not initiated',
     USERNAME_CHANGE_ALREADY_IN_PROGRESS: 'Username change already in progress',
     USERNAME_CHANGE_COOLDOWN_ACTIVE: 'Username change cooldown period active',
-    USERNAME_CHANGE_EMAIL_FAILED: 'Failed to send username change verification email',
+    USERNAME_CHANGE_EMAIL_FAILED:
+      'Failed to send username change verification email',
     USERNAME_CHANGE_LIMIT_EXCEEDED: 'Username change limit exceeded',
   },
 
   // Email Change Errors
   EMAIL_CHANGE: {
     EMAIL_CHANGE_INITIATION_FAILED: 'Failed to initiate email change',
-    EMAIL_CHANGE_VERIFICATION_FAILED:
-      'Failed to verify email change code',
+    EMAIL_CHANGE_VERIFICATION_FAILED: 'Failed to verify email change code',
     EMAIL_CHANGE_FAILED: 'Failed to change email',
     NEW_EMAIL_ALREADY_EXISTS: 'New email already exists',
     NEW_EMAIL_INVALID_FORMAT: 'Invalid new email format',
-    EMAIL_CHANGE_CODE_INVALID:
-      'Invalid email change verification code',
-    EMAIL_CHANGE_CODE_EXPIRED:
-      'Email change verification code expired',
-    EMAIL_CHANGE_CODE_NOT_FOUND:
-      'Email change verification code not found',
+    EMAIL_CHANGE_CODE_INVALID: 'Invalid email change verification code',
+    EMAIL_CHANGE_CODE_EXPIRED: 'Email change verification code expired',
+    EMAIL_CHANGE_CODE_NOT_FOUND: 'Email change verification code not found',
     EMAIL_CHANGE_NOT_INITIATED: 'Email change not initiated',
-    EMAIL_CHANGE_ALREADY_IN_PROGRESS:
-      'Email change already in progress',
-    EMAIL_CHANGE_COOLDOWN_ACTIVE:
-      'Email change cooldown period active',
-    EMAIL_CHANGE_EMAIL_FAILED:
-      'Failed to send email change verification email',
+    EMAIL_CHANGE_ALREADY_IN_PROGRESS: 'Email change already in progress',
+    EMAIL_CHANGE_COOLDOWN_ACTIVE: 'Email change cooldown period active',
+    EMAIL_CHANGE_EMAIL_FAILED: 'Failed to send email change verification email',
     EMAIL_CHANGE_LIMIT_EXCEEDED: 'Email change limit exceeded',
-    CURRENT_EMAIL_VERIFICATION_REQUIRED:
-      'Current email verification required',
-    NEW_EMAIL_VERIFICATION_REQUIRED:
-      'New email verification required',
+    CURRENT_EMAIL_VERIFICATION_REQUIRED: 'Current email verification required',
+    NEW_EMAIL_VERIFICATION_REQUIRED: 'New email verification required',
   },
 
   // Account Management Errors
@@ -193,12 +188,17 @@ export const ERROR_MESSAGES = {
     ACCOUNT_REACTIVATION_FAILED: 'Failed to reactivate account',
     ACCOUNT_ALREADY_DEACTIVATED: 'Account is already deactivated',
     ACCOUNT_ALREADY_ACTIVE: 'Account is already active',
-    ACCOUNT_DEACTIVATION_CONFIRMATION_REQUIRED: 'Account deactivation confirmation required',
-    ACCOUNT_REACTIVATION_CONFIRMATION_REQUIRED: 'Account reactivation confirmation required',
-    ACCOUNT_DEACTIVATION_EMAIL_FAILED: 'Failed to send account deactivation email',
-    ACCOUNT_REACTIVATION_EMAIL_FAILED: 'Failed to send account reactivation email',
+    ACCOUNT_DEACTIVATION_CONFIRMATION_REQUIRED:
+      'Account deactivation confirmation required',
+    ACCOUNT_REACTIVATION_CONFIRMATION_REQUIRED:
+      'Account reactivation confirmation required',
+    ACCOUNT_DEACTIVATION_EMAIL_FAILED:
+      'Failed to send account deactivation email',
+    ACCOUNT_REACTIVATION_EMAIL_FAILED:
+      'Failed to send account reactivation email',
     ACCOUNT_STATUS_INVALID: 'Invalid account status',
-    ACCOUNT_DEACTIVATION_REASON_REQUIRED: 'Account deactivation reason required',
+    ACCOUNT_DEACTIVATION_REASON_REQUIRED:
+      'Account deactivation reason required',
     ACCOUNT_REACTIVATION_NOT_ALLOWED: 'Account reactivation not allowed',
     ACCOUNT_PERMANENTLY_DELETED: 'Account has been permanently deleted',
     ACCOUNT_SUSPENDED: 'Account has been suspended',
@@ -273,7 +273,7 @@ export const ERROR_MESSAGES = {
 
   // Success Messages (for consistency)
   SUCCESS: {
-    LOGIN_SUCCESSFUL: 'Login successful',
+    SEARCH_SUCCESSFUL: 'Search successful',
     REGISTRATION_SUCCESSFUL: 'Registration successful',
     EMAIL_VERIFICATION_SENT: 'Email verification sent',
     EMAIL_VERIFICATION_SUCCESSFUL: 'Email verification successful',

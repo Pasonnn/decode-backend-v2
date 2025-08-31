@@ -135,7 +135,7 @@ export const USER_CONSTANTS = {
     MIN_PAGE: 1,
     SUGGESTIONS_LIMIT: 10,
     MAX_SUGGESTIONS: 50,
-    SEARCH_FIELDS: ['username', 'display_name', 'biography'],
+    SEARCH_FIELDS: ['username', 'display_name', 'bio'],
     SORT_FIELDS: ['username', 'display_name', 'created_at', 'last_login'],
     SORT_ORDERS: ['asc', 'desc'],
   },
