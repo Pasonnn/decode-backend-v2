@@ -1,6 +1,5 @@
 // Import the necessary modules
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, Res, Req } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 
 // DTOs Import
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
