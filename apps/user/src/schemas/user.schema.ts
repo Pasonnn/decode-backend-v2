@@ -16,7 +16,7 @@ export class User extends Document {
   password_hashed: string;
 
   @Prop({ required: false, default: 'Hi, i am a new Decode User' })
-  biography: string;
+  bio: string;
 
   @Prop({
     required: false,
@@ -38,8 +38,14 @@ export class User extends Document {
   })
   role: string;
 
-  @Prop({ required: false, default: new Date() })
-  last_login: Date;
+  @Prop({ required: false, default: null, type: Date })
+  last_login: Date | null;
+
+  @Prop({ required: false, default: null, type: Date })
+  last_username_change: Date | null;
+
+  @Prop({ required: false, default: null, type: Date })
+  last_email_change: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

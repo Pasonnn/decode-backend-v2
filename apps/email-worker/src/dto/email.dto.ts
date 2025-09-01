@@ -32,8 +32,28 @@ export class ForgotPasswordVerifyEmailDto {
   otpCode: string;
 }
 
+export class UsernameChangeVerifyEmailDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  otpCode: string;
+}
+
+export class EmailChangeVerifyEmailDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  otpCode: string;
+}
+
 export type EmailRequestDto =
   | { type: 'create-account'; data: CreateAccountEmailDto }
   | { type: 'welcome-message'; data: WelcomeMessageEmailDto }
   | { type: 'fingerprint-verify'; data: FingerprintVerifyEmailDto }
-  | { type: 'forgot-password-verify'; data: ForgotPasswordVerifyEmailDto };
+  | { type: 'forgot-password-verify'; data: ForgotPasswordVerifyEmailDto }
+  | { type: 'username-change-verify'; data: UsernameChangeVerifyEmailDto }
+  | { type: 'email-change-verify'; data: EmailChangeVerifyEmailDto };

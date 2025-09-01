@@ -36,7 +36,6 @@ export const ERROR_MESSAGES = {
     USER_CREATION_FAILED: 'Failed to create user',
     WELCOME_EMAIL_FAILED: 'Failed to send welcome email',
     REGISTRATION_ERROR: 'Registration failed',
-    REGISTER_INFO_NOT_FOUND: 'Register info not found',
   },
 
   // Session Errors
@@ -111,6 +110,101 @@ export const ERROR_MESSAGES = {
     USER_INFO_FETCH_FAILED: 'Failed to fetch user information',
   },
 
+  // Profile Management Errors
+  PROFILE: {
+    PROFILE_NOT_FOUND: 'Profile not found',
+    PROFILE_FETCH_FAILED: 'Failed to fetch profile',
+    PROFILE_UPDATE_FAILED: 'Failed to update profile',
+    PROFILE_PICTURE_UPLOAD_FAILED: 'Failed to upload profile picture',
+    PROFILE_PICTURE_DELETE_FAILED: 'Failed to delete profile picture',
+    PROFILE_PICTURE_NOT_FOUND: 'Profile picture not found',
+    INVALID_PROFILE_DATA: 'Invalid profile data',
+    PROFILE_PICTURE_SIZE_EXCEEDED: 'Profile picture size exceeds limit',
+    PROFILE_PICTURE_FORMAT_INVALID: 'Invalid profile picture format',
+    PROFILE_PICTURE_PROCESSING_FAILED: 'Failed to process profile picture',
+    PUBLIC_PROFILE_ACCESS_DENIED: 'Access to public profile denied',
+    PROFILE_VISIBILITY_SETTING_INVALID: 'Invalid profile visibility setting',
+  },
+
+  // User Search & Discovery Errors
+  SEARCH: {
+    SEARCH_FAILED: 'Search operation failed',
+    INVALID_SEARCH_PARAMETERS: 'Invalid search parameters',
+    SEARCH_QUERY_TOO_SHORT: 'Search query too short',
+    SEARCH_QUERY_TOO_LONG: 'Search query too long',
+    INVALID_FILTER_PARAMETERS: 'Invalid filter parameters',
+    SUGGESTIONS_FETCH_FAILED: 'Failed to fetch user suggestions',
+    SEARCH_RATE_LIMIT_EXCEEDED: 'Search rate limit exceeded',
+    INVALID_SORT_PARAMETER: 'Invalid sort parameter',
+    INVALID_PAGINATION_PARAMETERS: 'Invalid pagination parameters',
+  },
+
+  // Username Change Errors
+  USERNAME: {
+    USERNAME_CHANGE_INITIATION_FAILED: 'Failed to initiate username change',
+    USERNAME_CHANGE_VERIFICATION_FAILED:
+      'Failed to verify username change code',
+    USERNAME_CHANGE_FAILED: 'Failed to change username',
+    USERNAME_ALREADY_EXISTS: 'Username already exists',
+    USERNAME_INVALID_FORMAT: 'Invalid username format',
+    USERNAME_TOO_SHORT: 'Username too short',
+    USERNAME_TOO_LONG: 'Username too long',
+    USERNAME_CONTAINS_INVALID_CHARACTERS:
+      'Username contains invalid characters',
+    USERNAME_CHANGE_CODE_INVALID: 'Invalid username change verification code',
+    USERNAME_CHANGE_CODE_EXPIRED: 'Username change verification code expired',
+    USERNAME_CHANGE_CODE_NOT_FOUND:
+      'Username change verification code not found',
+    USERNAME_CHANGE_NOT_INITIATED: 'Username change not initiated',
+    USERNAME_CHANGE_ALREADY_IN_PROGRESS: 'Username change already in progress',
+    USERNAME_CHANGE_COOLDOWN_ACTIVE: 'Username change cooldown period active',
+    USERNAME_CHANGE_EMAIL_FAILED:
+      'Failed to send username change verification email',
+    USERNAME_CHANGE_LIMIT_EXCEEDED: 'Username change limit exceeded',
+  },
+
+  // Email Change Errors
+  EMAIL_CHANGE: {
+    EMAIL_CHANGE_INITIATION_FAILED: 'Failed to initiate email change',
+    EMAIL_CHANGE_VERIFICATION_FAILED: 'Failed to verify email change code',
+    EMAIL_CHANGE_FAILED: 'Failed to change email',
+    NEW_EMAIL_ALREADY_EXISTS: 'New email already exists',
+    NEW_EMAIL_INVALID_FORMAT: 'Invalid new email format',
+    EMAIL_CHANGE_CODE_INVALID: 'Invalid email change verification code',
+    EMAIL_CHANGE_CODE_EXPIRED: 'Email change verification code expired',
+    EMAIL_CHANGE_CODE_NOT_FOUND: 'Email change verification code not found',
+    EMAIL_CHANGE_NOT_INITIATED: 'Email change not initiated',
+    EMAIL_CHANGE_ALREADY_IN_PROGRESS: 'Email change already in progress',
+    EMAIL_CHANGE_COOLDOWN_ACTIVE: 'Email change cooldown period active',
+    EMAIL_CHANGE_EMAIL_FAILED: 'Failed to send email change verification email',
+    EMAIL_CHANGE_LIMIT_EXCEEDED: 'Email change limit exceeded',
+    CURRENT_EMAIL_VERIFICATION_REQUIRED: 'Current email verification required',
+    NEW_EMAIL_VERIFICATION_REQUIRED: 'New email verification required',
+  },
+
+  // Account Management Errors
+  ACCOUNT: {
+    ACCOUNT_DEACTIVATION_FAILED: 'Failed to deactivate account',
+    ACCOUNT_REACTIVATION_FAILED: 'Failed to reactivate account',
+    ACCOUNT_ALREADY_DEACTIVATED: 'Account is already deactivated',
+    ACCOUNT_ALREADY_ACTIVE: 'Account is already active',
+    ACCOUNT_DEACTIVATION_CONFIRMATION_REQUIRED:
+      'Account deactivation confirmation required',
+    ACCOUNT_REACTIVATION_CONFIRMATION_REQUIRED:
+      'Account reactivation confirmation required',
+    ACCOUNT_DEACTIVATION_EMAIL_FAILED:
+      'Failed to send account deactivation email',
+    ACCOUNT_REACTIVATION_EMAIL_FAILED:
+      'Failed to send account reactivation email',
+    ACCOUNT_STATUS_INVALID: 'Invalid account status',
+    ACCOUNT_DEACTIVATION_REASON_REQUIRED:
+      'Account deactivation reason required',
+    ACCOUNT_REACTIVATION_NOT_ALLOWED: 'Account reactivation not allowed',
+    ACCOUNT_PERMANENTLY_DELETED: 'Account has been permanently deleted',
+    ACCOUNT_SUSPENDED: 'Account has been suspended',
+    ACCOUNT_UNDER_REVIEW: 'Account is under review',
+  },
+
   // Validation Errors
   VALIDATION: {
     REQUIRED_FIELD: 'This field is required',
@@ -163,12 +257,31 @@ export const ERROR_MESSAGES = {
     TIMEOUT: 'Microservice timeout',
   },
 
+  // File Upload Errors
+  FILE_UPLOAD: {
+    FILE_TOO_LARGE: 'File size exceeds maximum limit',
+    INVALID_FILE_TYPE: 'Invalid file type',
+    FILE_UPLOAD_FAILED: 'File upload failed',
+    FILE_PROCESSING_FAILED: 'File processing failed',
+    FILE_STORAGE_FAILED: 'File storage failed',
+    FILE_DELETE_FAILED: 'File deletion failed',
+    FILE_NOT_FOUND: 'File not found',
+    INVALID_FILE_FORMAT: 'Invalid file format',
+    FILE_CORRUPTED: 'File is corrupted',
+    UPLOAD_DIRECTORY_NOT_FOUND: 'Upload directory not found',
+  },
+
   // Success Messages (for consistency)
   SUCCESS: {
-    LOGIN_SUCCESSFUL: 'Login successful',
+    SEARCH_SUCCESSFUL: 'Search successful',
+    USERNAME_ALREADY_EXISTS: 'Username already exists',
+    USERNAME_AVAILABLE: 'Username is available',
+    EMAIL_ALREADY_EXISTS: 'Email already exists',
+    EMAIL_AVAILABLE: 'Email is available',
     REGISTRATION_SUCCESSFUL: 'Registration successful',
     EMAIL_VERIFICATION_SENT: 'Email verification sent',
     EMAIL_VERIFICATION_SUCCESSFUL: 'Email verification successful',
+    EMAIL_CHANGE_CODE_VERIFIED: 'Email change code verified',
     PASSWORD_CHANGED: 'Password changed successfully',
     PASSWORD_RESET_SENT: 'Password reset email sent',
     PASSWORD_CODE_VERIFIED: 'Password code verified',
@@ -188,5 +301,20 @@ export const ERROR_MESSAGES = {
     USER_CREATED: 'User created successfully',
     USER_INFO_FETCHED: 'User information fetched successfully',
     USER_UPDATED: 'User updated successfully',
+    PROFILE_FETCHED: 'Profile fetched successfully',
+    PROFILE_UPDATED: 'Profile updated successfully',
+    PROFILE_PICTURE_UPLOADED: 'Profile picture uploaded successfully',
+    PROFILE_PICTURE_DELETED: 'Profile picture deleted successfully',
+    USER_SEARCH_COMPLETED: 'User search completed successfully',
+    USER_SUGGESTIONS_FETCHED: 'User suggestions fetched successfully',
+    USERNAME_CHANGE_INITIATED: 'Username change initiated successfully',
+    USERNAME_CHANGE_VERIFIED: 'Username change verified successfully',
+    USERNAME_CHANGE_CODE_VERIFIED: 'Username change code verified successfully',
+    USERNAME_CHANGED: 'Username changed successfully',
+    EMAIL_CHANGE_INITIATED: 'Email change initiated successfully',
+    EMAIL_CHANGE_VERIFIED: 'Email change verified successfully',
+    EMAIL_CHANGED: 'Email changed successfully',
+    ACCOUNT_DEACTIVATED: 'Account deactivated successfully',
+    ACCOUNT_REACTIVATED: 'Account reactivated successfully',
   },
 };

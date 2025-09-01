@@ -69,3 +69,15 @@ export class VerifyEmailDto {
   @MaxLength(6)
   code: string;
 }
+
+export class SendEmailVerificationDto {
+  @ApiProperty({
+    description: 'User email address',
+    example: 'john.doe@example.com',
+    maxLength: 255,
+  })
+  @IsNotEmpty()
+  @IsEmail()
+  @MaxLength(255)
+  email: string;
+}

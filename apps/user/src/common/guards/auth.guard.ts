@@ -149,7 +149,7 @@ export class AuthGuard implements CanActivate {
           {
             headers: {
               'Content-Type': 'application/json',
-              'User-Agent': 'API-Gateway/1.0',
+              'User-Agent': 'User-Service/1.0',
             },
             timeout: 5000, // 5 second timeout
           },
@@ -185,10 +185,8 @@ export class AuthGuard implements CanActivate {
           error: 'TOKEN_EXPIRED',
         });
       }
-      if (
-        error instanceof AxiosError &&
-        (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND')
-      ) {
+
+      if (error instanceof AxiosError) {
         this.logger.error('Auth service is unavailable');
         throw new UnauthorizedException({
           message: 'Authentication service unavailable',
@@ -212,7 +210,7 @@ export class AuthGuard implements CanActivate {
     );
 
     if (!requiredRoles || requiredRoles.length === 0) {
-      return;
+      return; // No role requirements
     }
 
     if (!requiredRoles.includes(user.role)) {

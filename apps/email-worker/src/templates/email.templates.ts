@@ -245,4 +245,130 @@ export class EmailTemplates {
         `,
     };
   }
+
+  static usernameChangeVerify(email: string, otpCode: string): EmailTemplate {
+    return {
+      subject: 'Username Change Request - Verify Your Identity',
+      html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Username Change Verification</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #8e44ad;">🔄 Username Change Request</h2>
+              <p>Hi there,</p>
+              <p>We received a request to change the username for your Decode account.</p>
+              
+              <p>To proceed with the username change, please use the verification code below:</p>
+              
+              <div style="background-color: #f8f9fa; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+                <h1 style="color: #3498db; font-size: 32px; margin: 0; letter-spacing: 4px;">${otpCode}</h1>
+              </div>
+              
+              <p><strong>This code will expire in 5 minutes.</strong></p>
+              
+              <div style="background-color: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3498db;">
+                <p style="margin: 0; color: #0c5460;">
+                  <strong>💡 Note:</strong> Changing your username will update how other users see you on the platform.
+                </p>
+              </div>
+              
+              <p>If you didn't request a username change, please ignore this email or contact our support team immediately.</p>
+              
+              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+              <p style="font-size: 12px; color: #666;">
+                This email was sent to ${email}. If you have any questions, please contact our support team.
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+      text: `
+  🔄 Username Change Request
+  
+  Hi there,
+  
+  We received a request to change the username for your Decode account.
+  
+  To proceed with the username change, please use the verification code below:
+  
+  ${otpCode}
+  
+  This code will expire in 5 minutes.
+  
+  💡 Note: Changing your username will update how other users see you on the platform.
+  
+  If you didn't request a username change, please ignore this email or contact our support team immediately.
+  
+  ---
+  This email was sent to ${email}. If you have any questions, please contact our support team.
+        `,
+    };
+  }
+
+  static emailChangeVerify(email: string, otpCode: string): EmailTemplate {
+    return {
+      subject: 'Email Change Request - Verify Your Identity',
+      html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Email Change Verification</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #e67e22;">📧 Email Change Request</h2>
+              <p>Hi there,</p>
+              <p>We received a request to change the email address for your Decode account.</p>
+              
+              <p>To proceed with the email change, please use the verification code below:</p>
+              
+              <div style="background-color: #f8f9fa; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+                <h1 style="color: #3498db; font-size: 32px; margin: 0; letter-spacing: 4px;">${otpCode}</h1>
+              </div>
+              
+              <p><strong>This code will expire in 5 minutes.</strong></p>
+              
+              <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                <p style="margin: 0; color: #856404;">
+                  <strong>⚠️ Important:</strong> This change will affect how you log in to your account and receive notifications.
+                </p>
+              </div>
+              
+              <p>If you didn't request an email change, please ignore this email or contact our support team immediately.</p>
+              
+              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+              <p style="font-size: 12px; color: #666;">
+                This email was sent to ${email}. If you have any questions, please contact our support team.
+              </p>
+            </div>
+          </body>
+          </html>
+        `,
+      text: `
+  📧 Email Change Request
+  
+  Hi there,
+  
+  We received a request to change the email address for your Decode account.
+  
+  To proceed with the email change, please use the verification code below:
+  
+  ${otpCode}
+  
+  This code will expire in 5 minutes.
+  
+  ⚠️ Important: This change will affect how you log in to your account and receive notifications.
+  
+  If you didn't request an email change, please ignore this email or contact our support team immediately.
+  
+  ---
+  This email was sent to ${email}. If you have any questions, please contact our support team.
+        `,
+    };
+  }
 }

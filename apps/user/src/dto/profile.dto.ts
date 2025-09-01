@@ -26,18 +26,6 @@ export class GetUserProfileDto {
 
 export class UpdateUserDisplayNameDto {
   @ApiProperty({
-    description: 'User ID to update display name for',
-    example: '507f1f77bcf86cd799439011',
-    pattern: '^[0-9a-fA-F]{24}$',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(USER_CONSTANTS.VALIDATION.USER_ID.PATTERN, {
-    message: 'Invalid user ID format',
-  })
-  user_id: string;
-
-  @ApiProperty({
     description: 'New display name for the user',
     example: 'John Doe',
     minLength: USER_CONSTANTS.PROFILE.DISPLAY_NAME.MIN_LENGTH,
@@ -57,19 +45,7 @@ export class UpdateUserDisplayNameDto {
 
 export class UpdateUserBioDto {
   @ApiProperty({
-    description: 'User ID to update bio for',
-    example: '507f1f77bcf86cd799439011',
-    pattern: '^[0-9a-fA-F]{24}$',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(USER_CONSTANTS.VALIDATION.USER_ID.PATTERN, {
-    message: 'Invalid user ID format',
-  })
-  user_id: string;
-
-  @ApiProperty({
-    description: 'New biography for the user',
+    description: 'New bio for the user',
     example: 'Software engineer passionate about technology and innovation',
     minLength: USER_CONSTANTS.PROFILE.BIOGRAPHY.MIN_LENGTH,
     maxLength: USER_CONSTANTS.PROFILE.BIOGRAPHY.MAX_LENGTH,
@@ -82,18 +58,6 @@ export class UpdateUserBioDto {
 }
 
 export class UpdateUserAvatarDto {
-  @ApiProperty({
-    description: 'User ID to update avatar for',
-    example: '507f1f77bcf86cd799439011',
-    pattern: '^[0-9a-fA-F]{24}$',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(USER_CONSTANTS.VALIDATION.USER_ID.PATTERN, {
-    message: 'Invalid user ID format',
-  })
-  user_id: string;
-
   @ApiProperty({
     description: 'IPFS hash for the avatar image',
     example: 'bafkreibmridohwxgfwdrju5ixnw26awr22keihoegdn76yymilgsqyx4le',
@@ -129,18 +93,6 @@ export class UpdateUserAvatarDto {
 
 export class UpdateUserRoleDto {
   @ApiProperty({
-    description: 'User ID to update role for',
-    example: '507f1f77bcf86cd799439011',
-    pattern: '^[0-9a-fA-F]{24}$',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(USER_CONSTANTS.VALIDATION.USER_ID.PATTERN, {
-    message: 'Invalid user ID format',
-  })
-  user_id: string;
-
-  @ApiProperty({
     description: 'New role for the user',
     example: 'moderator',
     enum: USER_CONSTANTS.ROLES.ALL,
@@ -151,41 +103,4 @@ export class UpdateUserRoleDto {
     message: 'Role must be one of: user, admin, moderator',
   })
   role: string;
-}
-
-export class UploadProfilePictureDto {
-  @ApiProperty({
-    description: 'User ID to upload profile picture for',
-    example: '507f1f77bcf86cd799439011',
-    pattern: '^[0-9a-fA-F]{24}$',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(USER_CONSTANTS.VALIDATION.USER_ID.PATTERN, {
-    message: 'Invalid user ID format',
-  })
-  user_id: string;
-
-  @ApiProperty({
-    description: 'Profile picture file (image)',
-    type: 'string',
-    format: 'binary',
-    maxLength: USER_CONSTANTS.PROFILE.PICTURE_UPLOAD.MAX_FILE_SIZE,
-  })
-  @IsNotEmpty()
-  file: any; // Using any for file upload to avoid type issues
-}
-
-export class RemoveProfilePictureDto {
-  @ApiProperty({
-    description: 'User ID to remove profile picture for',
-    example: '507f1f77bcf86cd799439011',
-    pattern: '^[0-9a-fA-F]{24}$',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(USER_CONSTANTS.VALIDATION.USER_ID.PATTERN, {
-    message: 'Invalid user ID format',
-  })
-  user_id: string;
 }

@@ -21,7 +21,7 @@ export enum SortOrder {
 export enum SearchField {
   USERNAME = 'username',
   DISPLAY_NAME = 'display_name',
-  BIOGRAPHY = 'biography',
+  BIOGRAPHY = 'bio',
 }
 
 export class SearchUserDto {
@@ -113,33 +113,6 @@ export class SearchUsernameDto {
     message: 'Username must contain only letters, numbers, and underscores',
   })
   username: string;
-
-  @ApiProperty({
-    description: 'Page number for pagination',
-    example: 1,
-    minimum: USER_CONSTANTS.SEARCH.MIN_PAGE,
-    default: USER_CONSTANTS.SEARCH.DEFAULT_PAGE,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(USER_CONSTANTS.SEARCH.MIN_PAGE)
-  @Max(USER_CONSTANTS.PAGINATION.MAX_PAGE)
-  page?: number = USER_CONSTANTS.SEARCH.DEFAULT_PAGE;
-
-  @ApiProperty({
-    description: 'Number of results per page',
-    example: 20,
-    minimum: USER_CONSTANTS.SEARCH.MIN_LIMIT,
-    maximum: USER_CONSTANTS.SEARCH.MAX_LIMIT,
-    default: USER_CONSTANTS.SEARCH.DEFAULT_LIMIT,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(USER_CONSTANTS.SEARCH.MIN_LIMIT)
-  @Max(USER_CONSTANTS.SEARCH.MAX_LIMIT)
-  limit?: number = USER_CONSTANTS.SEARCH.DEFAULT_LIMIT;
 }
 
 export class SearchEmailDto {
@@ -158,33 +131,6 @@ export class SearchEmailDto {
     message: 'Invalid email format',
   })
   email: string;
-
-  @ApiProperty({
-    description: 'Page number for pagination',
-    example: 1,
-    minimum: USER_CONSTANTS.SEARCH.MIN_PAGE,
-    default: USER_CONSTANTS.SEARCH.DEFAULT_PAGE,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(USER_CONSTANTS.SEARCH.MIN_PAGE)
-  @Max(USER_CONSTANTS.PAGINATION.MAX_PAGE)
-  page?: number = USER_CONSTANTS.SEARCH.DEFAULT_PAGE;
-
-  @ApiProperty({
-    description: 'Number of results per page',
-    example: 20,
-    minimum: USER_CONSTANTS.SEARCH.MIN_LIMIT,
-    maximum: USER_CONSTANTS.SEARCH.MAX_LIMIT,
-    default: USER_CONSTANTS.SEARCH.DEFAULT_LIMIT,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(USER_CONSTANTS.SEARCH.MIN_LIMIT)
-  @Max(USER_CONSTANTS.SEARCH.MAX_LIMIT)
-  limit?: number = USER_CONSTANTS.SEARCH.DEFAULT_LIMIT;
 }
 
 export class SearchUsernameOrEmailDto {
@@ -199,65 +145,4 @@ export class SearchUsernameOrEmailDto {
   @MinLength(USER_CONSTANTS.SEARCH.MIN_QUERY_LENGTH)
   @MaxLength(USER_CONSTANTS.SEARCH.MAX_QUERY_LENGTH)
   username_or_email: string;
-
-  @ApiProperty({
-    description: 'Page number for pagination',
-    example: 1,
-    minimum: USER_CONSTANTS.SEARCH.MIN_PAGE,
-    default: USER_CONSTANTS.SEARCH.DEFAULT_PAGE,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(USER_CONSTANTS.SEARCH.MIN_PAGE)
-  @Max(USER_CONSTANTS.PAGINATION.MAX_PAGE)
-  page?: number = USER_CONSTANTS.SEARCH.DEFAULT_PAGE;
-
-  @ApiProperty({
-    description: 'Number of results per page',
-    example: 20,
-    minimum: USER_CONSTANTS.SEARCH.MIN_LIMIT,
-    maximum: USER_CONSTANTS.SEARCH.MAX_LIMIT,
-    default: USER_CONSTANTS.SEARCH.DEFAULT_LIMIT,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(USER_CONSTANTS.SEARCH.MIN_LIMIT)
-  @Max(USER_CONSTANTS.SEARCH.MAX_LIMIT)
-  limit?: number = USER_CONSTANTS.SEARCH.DEFAULT_LIMIT;
-}
-
-export class GetUserSuggestionsDto {
-  @ApiProperty({
-    description: 'Number of suggestions to return',
-    example: 10,
-    minimum: 1,
-    maximum: USER_CONSTANTS.SEARCH.MAX_SUGGESTIONS,
-    default: USER_CONSTANTS.SEARCH.SUGGESTIONS_LIMIT,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  @Max(USER_CONSTANTS.SEARCH.MAX_SUGGESTIONS)
-  limit?: number = USER_CONSTANTS.SEARCH.SUGGESTIONS_LIMIT;
-
-  @ApiProperty({
-    description: 'Exclude current user from suggestions',
-    example: true,
-    default: true,
-    required: false,
-  })
-  @IsOptional()
-  excludeCurrentUser?: boolean = true;
-
-  @ApiProperty({
-    description: 'Filter by location',
-    example: 'San Francisco',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  location?: string;
 }

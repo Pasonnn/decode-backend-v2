@@ -17,7 +17,11 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
-import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
+import {
+  RegisterInfoDto,
+  VerifyEmailDto,
+  SendEmailVerificationDto,
+} from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import {
   LogoutDto,
@@ -26,7 +30,9 @@ import {
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
-  VerifyEmailChangePasswordDto,
+  InitiateForgotPasswordDto,
+  VerifyEmailForgotPasswordDto,
+  ChangeForgotPasswordDto,
 } from './dto/password.dto';
 import { Response } from '../../interfaces/response.interface';
 import { AuthGuard, Public } from '../../common/guards/auth.guard';
@@ -75,6 +81,23 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto): Promise<Response> {
     return this.authService.verifyEmail(verifyEmailDto);
+  }
+
+  @ApiOperation({ summary: 'Send email verification' })
+  @ApiResponse({
+    status: 200,
+    description: 'Email verification sent successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid email' })
+  @Post('register/send-email-verification')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async sendEmailVerification(
+    @Body() sendEmailVerificationDto: SendEmailVerificationDto,
+  ): Promise<Response> {
+    return this.authService.sendEmailVerification(
+      sendEmailVerificationDto.email,
+    );
   }
 
   @ApiOperation({ summary: 'Verify device fingerprint' })
@@ -258,31 +281,39 @@ export class AuthController {
     description: 'Forgot password process initiated successfully',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiBearerAuth('JWT-auth')
   @Post('password/forgot/initiate')
-  @UseGuards(AuthGuard)
+  @Public()
   @HttpCode(HttpStatus.OK)
   async initiateForgotPassword(
-    @Headers('authorization') authorization: string,
+    @Body() initiateForgotPasswordDto: InitiateForgotPasswordDto,
   ): Promise<Response> {
-    return this.authService.initiateForgotPassword(authorization);
+    return this.authService.initiateForgotPassword(
+      initiateForgotPasswordDto.username_or_email,
+    );
   }
 
   @ApiOperation({ summary: 'Verify email for forgot password' })
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
   @ApiResponse({ status: 400, description: 'Invalid verification code' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiBearerAuth('JWT-auth')
   @Post('password/forgot/verify-email')
-  @UseGuards(AuthGuard)
+  @Public()
   @HttpCode(HttpStatus.OK)
   async verifyEmailForgotPassword(
-    @Body() verifyEmailDto: VerifyEmailChangePasswordDto,
-    @Headers('authorization') authorization: string,
+    @Body() verifyEmailDto: VerifyEmailForgotPasswordDto,
   ): Promise<Response> {
-    return this.authService.verifyEmailForgotPassword(
-      verifyEmailDto.code,
-      authorization,
+    return this.authService.verifyEmailForgotPassword(verifyEmailDto.code);
+  }
+
+  @Post('password/forgot/change')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async changeForgotPassword(
+    @Body() changeForgotPasswordDto: ChangeForgotPasswordDto,
+  ): Promise<Response> {
+    return this.authService.changeForgotPassword(
+      changeForgotPasswordDto.code,
+      changeForgotPasswordDto.new_password,
     );
   }
 }
