@@ -27,6 +27,7 @@ import {
   InfoByAccessTokenDto,
   InfoByUserIdDto,
   InfoByEmailOrUsernameDto,
+  ExistUserByEmailOrUsernameDto,
 } from './dto/info.dto';
 
 // Interfaces Import
@@ -362,5 +363,20 @@ export class AuthController {
         dto.email_or_username,
       );
     return info_by_email_or_username_response;
+  }
+
+  /**
+   * Checks if user exists using email or username
+   * @param dto - Email or username for user lookup {email_or_username: string}
+   * @returns Response containing user existence status
+   */
+  @Post('info/exist-by-email-or-username')
+  @Public()
+  async existUserByEmailOrUsername(
+    @Body() dto: ExistUserByEmailOrUsernameDto,
+  ): Promise<Response> {
+    const exist_user_by_email_or_username_response =
+      await this.infoService.existUserByEmailOrUsername(dto.email_or_username);
+    return exist_user_by_email_or_username_response;
   }
 }

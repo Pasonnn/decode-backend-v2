@@ -17,3 +17,9 @@ export class InfoByEmailOrUsernameDto {
   @IsString()
   email_or_username: string;
 }
+
+export class ExistUserByEmailOrUsernameDto {
+  @IsNotEmpty()
+  @IsString()
+  email_or_username: string;
+}

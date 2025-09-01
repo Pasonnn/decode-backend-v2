@@ -188,5 +188,6 @@ export const ERROR_MESSAGES = {
     USER_CREATED: 'User created successfully',
     USER_INFO_FETCHED: 'User information fetched successfully',
     USER_UPDATED: 'User updated successfully',
+    USER_FOUND: 'User found',
   },
 };

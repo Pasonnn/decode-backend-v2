@@ -13,6 +13,7 @@ import {
 } from './dto/login.dto';
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ExistUserByEmailOrUsernameDto } from './dto/info.dto';
 
 @Injectable()
 export class AuthService {
@@ -279,6 +280,16 @@ export class AuthService {
       );
       throw error;
     }
+  }
+
+  /**
+   * Check if user exists using email or username
+   */
+  async existUserByEmailOrUsername(emailOrUsername: string): Promise<Response> {
+    const response = await this.authServiceClient.existUserByEmailOrUsername({
+      email_or_username: emailOrUsername,
+    });
+    return response;
   }
 
   // Session Management Methods

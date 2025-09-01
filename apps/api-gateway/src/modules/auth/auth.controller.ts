@@ -38,6 +38,7 @@ import {
   VerifyEmailForgotPasswordDto,
   ChangeForgotPasswordDto,
 } from './dto/password.dto';
+import { ExistUserByEmailOrUsernameDto } from './dto/info.dto';
 import { Response } from '../../interfaces/response.interface';
 import { AuthGuard, Public } from '../../common/guards/auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -334,5 +335,17 @@ export class AuthController {
       changeForgotPasswordDto.code,
       changeForgotPasswordDto.new_password,
     );
+  }
+
+  @ApiOperation({ summary: 'Check if user exists' })
+  @ApiResponse({ status: 200, description: 'User exists' })
+  @ApiResponse({ status: 400, description: 'User does not exist' })
+  @Post('info/exist-by-email-or-username')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async existUserByEmailOrUsername(
+    @Body() dto: ExistUserByEmailOrUsernameDto,
+  ): Promise<Response> {
+    return this.authService.existUserByEmailOrUsername(dto.email_or_username);
   }
 }

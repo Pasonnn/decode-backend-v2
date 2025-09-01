@@ -107,6 +107,10 @@ export interface InfoByEmailOrUsernameRequest {
   authorization: string;
 }
 
+export interface ExistUserByEmailOrUsernameRequest {
+  email_or_username: string;
+}
+
 @Injectable()
 export class AuthServiceClient extends BaseHttpClient {
   constructor(
@@ -288,6 +292,12 @@ export class AuthServiceClient extends BaseHttpClient {
       },
     };
     return this.post('/auth/info/by-email-or-username', data, config);
+  }
+
+  async existUserByEmailOrUsername(
+    data: ExistUserByEmailOrUsernameRequest,
+  ): Promise<Response> {
+    return this.post('/auth/info/exist-by-email-or-username', data);
   }
 
   // Legacy method for backward compatibility

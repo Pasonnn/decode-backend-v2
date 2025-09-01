@@ -94,4 +94,24 @@ export class InfoService {
       data: user as UserDoc,
     };
   }
+
+  async existUserByEmailOrUsername(
+    email_or_username: string,
+  ): Promise<Response> {
+    const user = await this.userModel.findOne({
+      $or: [{ email: email_or_username }, { username: email_or_username }],
+    });
+    if (!user) {
+      return {
+        success: false,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+      };
+    }
+    return {
+      success: true,
+      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      message: ERROR_MESSAGES.SUCCESS.USER_FOUND,
+    };
+  }
 }
