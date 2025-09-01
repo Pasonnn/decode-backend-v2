@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { HttpModule } from '@nestjs/axios';
 import { UserController } from './user.controller';
 import { ProfileService } from './services/profile.service';
 import { UsernameService } from './services/username.service';
@@ -12,6 +13,7 @@ import { RedisInfrastructure } from 'apps/auth/src/infrastructure/redis.infrastr
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    HttpModule,
     ClientsModule.register([
       {
         name: 'EMAIL_SERVICE',

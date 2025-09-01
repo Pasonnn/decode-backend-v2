@@ -7,17 +7,8 @@ import {
   Param,
   Query,
   UseGuards,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProfileService } from './services/profile.service';
 import { UsernameService } from './services/username.service';
 import { SearchService } from './services/search.service';
@@ -30,13 +21,16 @@ import { UpdateUserBioDto } from './dto/profile.dto';
 import { UpdateUserAvatarDto } from './dto/profile.dto';
 import { UpdateUserRoleDto } from './dto/profile.dto';
 import { VerifyUsernameCodeDto, ChangeUsernameDto } from './dto/username.dto';
-import { SearchUserDto, SearchUsernameDto, SearchEmailDto } from './dto/search.dto';
+import {
+  SearchUserDto,
+  SearchUsernameDto,
+  SearchEmailDto,
+} from './dto/search.dto';
 import { VerifyEmailCodeDto, ChangeEmailDto } from './dto/email.dto';
 
 // Guards and Decorators
 import { AuthGuard } from './common/guards/auth.guard';
 import { Roles, UserRole } from './common/decorators/roles.decorator';
-import { Public } from './common/decorators/public.decorator';
 
 // Interfaces
 import { Response } from './interfaces/response.interface';
@@ -215,4 +209,23 @@ export class UserController {
     });
   }
 
+  @Get('search/existing-username')
+  @UseGuards(AuthGuard)
+  async searchExistingUsername(
+    @Query() query: SearchUsernameDto,
+  ): Promise<Response<void>> {
+    return await this.searchService.searchExistingUsername({
+      username: query.username,
+    });
+  }
+
+  @Get('search/existing-email')
+  @UseGuards(AuthGuard)
+  async searchExistingEmail(
+    @Query() query: SearchEmailDto,
+  ): Promise<Response<void>> {
+    return await this.searchService.searchExistingEmail({
+      email: query.email,
+    });
+  }
 }

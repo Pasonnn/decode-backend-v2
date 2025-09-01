@@ -38,11 +38,14 @@ export class User extends Document {
   })
   role: string;
 
-  @Prop({ required: false, default: null })
+  @Prop({ required: false, default: null, type: Date })
   last_login: Date | null;
 
-  @Prop({ required: false, default: null })
+  @Prop({ required: false, default: null, type: Date })
   last_username_change: Date | null;
+
+  @Prop({ required: false, default: null, type: Date })
+  last_email_change: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

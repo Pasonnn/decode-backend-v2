@@ -111,12 +111,13 @@ export const USER_CONSTANTS = {
     },
   },
 
-  // Verification Code Configuration
+  // Verification Configuration
   VERIFICATION: {
     CODE_LENGTH: 6,
-    EXPIRES_IN: 5 * 60, // 5 minutes in seconds
+    EXPIRES_IN: 300, // 5 minutes in seconds
     MAX_ATTEMPTS: 3,
-    ATTEMPT_WINDOW: 15 * 60, // 15 minutes in seconds
+    ATTEMPT_WINDOW: 900, // 15 minutes in seconds
+    RESEND_COOLDOWN: 60, // 1 minute in seconds
   },
 
   // User Roles Configuration
@@ -130,17 +131,15 @@ export const USER_CONSTANTS = {
 
   // Search Configuration
   SEARCH: {
-    MIN_QUERY_LENGTH: 2,
-    MAX_QUERY_LENGTH: 100,
-    DEFAULT_LIMIT: 20,
-    MAX_LIMIT: 100,
-    MIN_LIMIT: 1,
     DEFAULT_PAGE: 1,
+    DEFAULT_LIMIT: 20,
     MIN_PAGE: 1,
-    SUGGESTIONS_LIMIT: 10,
-    MAX_SUGGESTIONS: 50,
-    SEARCH_FIELDS: ['username', 'display_name', 'bio'],
-    SORT_FIELDS: ['username', 'display_name', 'created_at', 'last_login'],
+    MAX_PAGE: 1000,
+    MIN_LIMIT: 1,
+    MAX_LIMIT: 100,
+    MIN_QUERY_LENGTH: 1,
+    MAX_QUERY_LENGTH: 100,
+    SORT_FIELDS: ['username', 'display_name', 'created_at'],
     SORT_ORDERS: ['asc', 'desc'],
   },
 
@@ -224,19 +223,21 @@ export const USER_CONSTANTS = {
   // Redis Configuration
   REDIS: {
     // Timeouts in seconds
-    USERNAME_CHANGE_EXPIRES_IN: 5 * 60, // 5 minutes
-    EMAIL_CHANGE_EXPIRES_IN: 5 * 60, // 5 minutes
-    PROFILE_CACHE_EXPIRES_IN: 30 * 60, // 30 minutes
-    SEARCH_CACHE_EXPIRES_IN: 5 * 60, // 5 minutes
+    DEFAULT_TTL: 300, // 5 minutes
+    SESSION_TTL: 3600, // 1 hour
+    VERIFICATION_TTL: 300, // 5 minutes
+    RATE_LIMIT_TTL: 60, // 1 minute
+    CACHE_TTL: 1800, // 30 minutes
 
     // Key prefixes
     KEYS: {
+      SESSION: 'session',
+      VERIFICATION: 'verification',
+      RATE_LIMIT: 'rate_limit',
       USERNAME_CHANGE: 'username_change',
       EMAIL_CHANGE: 'email_change',
-      PROFILE_CACHE: 'user_profile',
-      SEARCH_CACHE: 'user_search',
-      VERIFICATION_ATTEMPTS: 'verification_attempts',
-      RATE_LIMIT: 'user_rate_limit',
+      PASSWORD_RESET: 'password_reset',
+      LOGIN_ATTEMPT: 'login_attempt',
     },
   },
 
@@ -313,6 +314,23 @@ export const USER_CONSTANTS = {
     ACCOUNT_DEACTIVATED: 'Account is deactivated',
     INSUFFICIENT_PERMISSIONS: 'Insufficient permissions',
     RATE_LIMIT_EXCEEDED: 'Rate limit exceeded',
+    PROFILE: {
+      PROFILE_NOT_FOUND: 'Profile not found',
+    },
+    USERNAME: {
+      USERNAME_CHANGE_COOLDOWN_ACTIVE: 'Username change cooldown is active',
+      USERNAME_CHANGE_CODE_INVALID: 'Invalid username change verification code',
+    },
+    EMAIL_CHANGE: {
+      NEW_EMAIL_ALREADY_EXISTS: 'New email already exists',
+      EMAIL_CHANGE_CODE_INVALID: 'Invalid email change verification code',
+    },
+    USER_INFO: {
+      USER_NOT_FOUND: 'User not found',
+    },
+    SEARCH: {
+      SEARCH_FAILED: 'Search operation failed',
+    },
   },
 
   // Success Messages
@@ -327,6 +345,15 @@ export const USER_CONSTANTS = {
     ACCOUNT_DEACTIVATED: 'Account deactivated successfully',
     ACCOUNT_REACTIVATED: 'Account reactivated successfully',
     VERIFICATION_CODE_SENT: 'Verification code sent successfully',
+    PROFILE_FETCHED: 'Profile fetched successfully',
+    USERNAME_CHANGE_CODE_VERIFIED: 'Username change code verified successfully',
+    EMAIL_CHANGE_CODE_VERIFIED: 'Email change code verified successfully',
+    USERNAME_ALREADY_EXISTS: 'Username already exists',
+    USERNAME_AVAILABLE: 'Username is available',
+    EMAIL_ALREADY_EXISTS: 'Email already exists',
+    EMAIL_AVAILABLE: 'Email is available',
+    SEARCH_SUCCESSFUL: 'Search completed successfully',
+    EMAIL_VERIFICATION_SENT: 'Email verification sent successfully',
   },
 
   // Pagination Configuration
