@@ -180,6 +180,43 @@ export class LoginService {
     }
   }
 
+  async resendDeviceFingerprintEmailVerification(
+    username_or_email: string,
+    fingerprint_hashed: string,
+  ): Promise<Response> {
+    try {
+      this.logger.log(
+        `Resend device fingerprint email verification request received for ${username_or_email}`,
+      );
+      // Get User Data
+      const getUserInfoResponse =
+        await this.infoService.getUserInfoByEmailOrUsername(username_or_email);
+      if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
+        return getUserInfoResponse;
+      }
+      // Send Device Fingerprint Email Verification
+      const sendDeviceFingerprintEmailVerificationResponse =
+        await this.sendDeviceFingerprintEmailVerification(
+          getUserInfoResponse.data._id,
+          fingerprint_hashed,
+        );
+      if (!sendDeviceFingerprintEmailVerificationResponse.success) {
+        return sendDeviceFingerprintEmailVerificationResponse;
+      }
+      return sendDeviceFingerprintEmailVerificationResponse;
+    } catch (error) {
+      this.logger.error(
+        `Error resending device fingerprint email verification for ${username_or_email}`,
+        error,
+      );
+      return {
+        success: false,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: ERROR_MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
+      };
+    }
+  }
+
   private async checkDeviceFingerprint(
     user_id: string,
     fingerprint_hashed: string,

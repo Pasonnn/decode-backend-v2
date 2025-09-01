@@ -16,7 +16,11 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
+import {
+  LoginDto,
+  FingerprintEmailVerificationDto,
+  ResendDeviceFingerprintEmailVerificationDto,
+} from './dto/login.dto';
 import {
   RegisterInfoDto,
   VerifyEmailDto,
@@ -113,6 +117,21 @@ export class AuthController {
     @Body() fingerprintDto: FingerprintEmailVerificationDto,
   ): Promise<Response> {
     return this.authService.verifyFingerprint(fingerprintDto);
+  }
+
+  @ApiOperation({ summary: 'Resend device fingerprint email verification' })
+  @ApiResponse({
+    status: 200,
+    description: 'Device fingerprint email verification resent successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  @Post('login/fingerprint/resend-email-verification')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async resendDeviceFingerprintEmailVerification(
+    @Body() dto: ResendDeviceFingerprintEmailVerificationDto,
+  ): Promise<Response> {
+    return this.authService.resendDeviceFingerprintEmailVerification(dto);
   }
 
   @ApiOperation({ summary: 'Refresh session token' })

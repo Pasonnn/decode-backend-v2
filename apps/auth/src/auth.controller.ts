@@ -7,7 +7,11 @@ import {
   VerifyEmailDto,
   SendEmailVerificationDto,
 } from './dto/register.dto';
-import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
+import {
+  LoginDto,
+  FingerprintEmailVerificationDto,
+  ResendDeviceFingerprintEmailVerificationDto,
+} from './dto/login.dto';
 import {
   RefreshSessionDto,
   LogoutDto,
@@ -131,6 +135,19 @@ export class AuthController {
         dto.code,
       );
     return verify_device_fingerprint_email_verification_response;
+  }
+
+  @Post('login/fingerprint/resend-email-verification')
+  @Public()
+  async resendDeviceFingerprintEmailVerification(
+    @Body() dto: ResendDeviceFingerprintEmailVerificationDto,
+  ): Promise<Response> {
+    const resend_device_fingerprint_email_verification_response =
+      await this.loginService.resendDeviceFingerprintEmailVerification(
+        dto.username_or_email,
+        dto.fingerprint_hashed,
+      );
+    return resend_device_fingerprint_email_verification_response;
   }
 
   /**

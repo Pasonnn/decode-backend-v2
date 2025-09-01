@@ -30,6 +30,11 @@ export interface FingerprintEmailVerificationRequest {
   code: string;
 }
 
+export interface ResendDeviceFingerprintEmailVerificationRequest {
+  username_or_email: string;
+  fingerprint_hashed: string;
+}
+
 export interface RefreshSessionRequest {
   session_token: string;
 }
@@ -145,6 +150,12 @@ export class AuthServiceClient extends BaseHttpClient {
     data: FingerprintEmailVerificationRequest,
   ): Promise<Response> {
     return this.post('/auth/login/fingerprint/email-verification', data);
+  }
+
+  async resendDeviceFingerprintEmailVerification(
+    data: ResendDeviceFingerprintEmailVerificationRequest,
+  ): Promise<Response> {
+    return this.post('/auth/login/fingerprint/resend-email-verification', data);
   }
 
   // Session Management Endpoints

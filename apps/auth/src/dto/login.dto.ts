@@ -28,3 +28,15 @@ export class FingerprintEmailVerificationDto {
   @MaxLength(AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH)
   code: string;
 }
+
+export class ResendDeviceFingerprintEmailVerificationDto {
+  @IsNotEmpty()
+  @IsString()
+  username_or_email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(AUTH_CONSTANTS.VALIDATION.FINGERPRINT_HASH.MIN_LENGTH)
+  @MaxLength(AUTH_CONSTANTS.VALIDATION.FINGERPRINT_HASH.MAX_LENGTH)
+  fingerprint_hashed: string;
+}

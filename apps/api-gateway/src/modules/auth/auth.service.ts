@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import { AuthServiceClient } from '../../infrastructure/external-services/auth-service.client';
 import { Response } from '../../interfaces/response.interface';
-import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
+import {
+  LoginDto,
+  FingerprintEmailVerificationDto,
+  ResendDeviceFingerprintEmailVerificationDto,
+} from './dto/login.dto';
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
@@ -66,6 +70,39 @@ export class AuthService {
     } catch (error) {
       this.logger.error(
         `Fingerprint verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Resend device fingerprint email verification
+   */
+  async resendDeviceFingerprintEmailVerification(
+    dto: ResendDeviceFingerprintEmailVerificationDto,
+  ): Promise<Response> {
+    try {
+      this.logger.log('Resend device fingerprint email verification attempt');
+
+      const response =
+        await this.authServiceClient.resendDeviceFingerprintEmailVerification(
+          dto,
+        );
+
+      if (!response.success) {
+        throw new BadRequestException(
+          response.message ||
+            'Resend device fingerprint email verification failed',
+        );
+      }
+
+      this.logger.log(
+        'Resend device fingerprint email verification successful',
+      );
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Resend device fingerprint email verification failed: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }

@@ -50,3 +50,29 @@ export class FingerprintEmailVerificationDto {
   @MaxLength(6)
   code: string;
 }
+
+export class ResendDeviceFingerprintEmailVerificationDto {
+  @ApiProperty({
+    description: 'User email or username for authentication',
+    example: 'user@example.com or exampleusername',
+    minLength: 1,
+    maxLength: 255,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  username_or_email: string;
+
+  @ApiProperty({
+    description: 'Device fingerprint hash for security verification',
+    example: 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
+    minLength: 32,
+    maxLength: 64,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(32)
+  @MaxLength(64)
+  fingerprint_hashed: string;
+}
