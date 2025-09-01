@@ -17,7 +17,11 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
-import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
+import {
+  RegisterInfoDto,
+  VerifyEmailDto,
+  SendEmailVerificationDto,
+} from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import {
   LogoutDto,
@@ -75,6 +79,23 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto): Promise<Response> {
     return this.authService.verifyEmail(verifyEmailDto);
+  }
+
+  @ApiOperation({ summary: 'Send email verification' })
+  @ApiResponse({
+    status: 200,
+    description: 'Email verification sent successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid email' })
+  @Post('register/send-email-verification')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async sendEmailVerification(
+    @Body() sendEmailVerificationDto: SendEmailVerificationDto,
+  ): Promise<Response> {
+    return this.authService.sendEmailVerification(
+      sendEmailVerificationDto.email,
+    );
   }
 
   @ApiOperation({ summary: 'Verify device fingerprint' })

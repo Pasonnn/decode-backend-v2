@@ -16,6 +16,10 @@ export interface VerifyEmailRequest {
   code: string;
 }
 
+export interface SendEmailVerificationRequest {
+  email: string;
+}
+
 export interface LoginRequest {
   email_or_username: string;
   password: string;
@@ -124,6 +128,12 @@ export class AuthServiceClient extends BaseHttpClient {
 
   async verifyEmailRegister(data: VerifyEmailRequest): Promise<Response> {
     return this.post('/auth/register/verify-email', data);
+  }
+
+  async sendEmailVerification(
+    data: SendEmailVerificationRequest,
+  ): Promise<Response> {
+    return this.post('/auth/register/send-email-verification', data);
   }
 
   // Login Endpoints

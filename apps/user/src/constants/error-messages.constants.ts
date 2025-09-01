@@ -274,9 +274,14 @@ export const ERROR_MESSAGES = {
   // Success Messages (for consistency)
   SUCCESS: {
     SEARCH_SUCCESSFUL: 'Search successful',
+    USERNAME_ALREADY_EXISTS: 'Username already exists',
+    USERNAME_AVAILABLE: 'Username is available',
+    EMAIL_ALREADY_EXISTS: 'Email already exists',
+    EMAIL_AVAILABLE: 'Email is available',
     REGISTRATION_SUCCESSFUL: 'Registration successful',
     EMAIL_VERIFICATION_SENT: 'Email verification sent',
     EMAIL_VERIFICATION_SUCCESSFUL: 'Email verification successful',
+    EMAIL_CHANGE_CODE_VERIFIED: 'Email change code verified',
     PASSWORD_CHANGED: 'Password changed successfully',
     PASSWORD_RESET_SENT: 'Password reset email sent',
     PASSWORD_CODE_VERIFIED: 'Password code verified',
@@ -304,6 +309,7 @@ export const ERROR_MESSAGES = {
     USER_SUGGESTIONS_FETCHED: 'User suggestions fetched successfully',
     USERNAME_CHANGE_INITIATED: 'Username change initiated successfully',
     USERNAME_CHANGE_VERIFIED: 'Username change verified successfully',
+    USERNAME_CHANGE_CODE_VERIFIED: 'Username change code verified successfully',
     USERNAME_CHANGED: 'Username changed successfully',
     EMAIL_CHANGE_INITIATED: 'Email change initiated successfully',
     EMAIL_CHANGE_VERIFIED: 'Email change verified successfully',

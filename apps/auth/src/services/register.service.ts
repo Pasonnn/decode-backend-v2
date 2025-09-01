@@ -157,11 +157,23 @@ export class RegisterService {
     };
   }
 
-  private async sendEmailVerification(email: string): Promise<Response> {
+  async sendEmailVerification(email: string): Promise<Response> {
     const emailVerificationCode = uuidv4().slice(
       0,
       AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH,
     );
+    // Check if user data in still in Redis
+    const register_info_key = `${AUTH_CONSTANTS.REDIS.KEYS.REGISTER_INFO}:${email}`;
+    const register_info_value = (await this.redisInfrastructure.get(
+      register_info_key,
+    )) as RegisterInfoValue;
+    if (!register_info_value) {
+      return {
+        success: false,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.NOT_FOUND,
+        message: ERROR_MESSAGES.REGISTRATION.REGISTER_INFO_NOT_FOUND,
+      };
+    }
     // Store email verification code with email in Redis
     const email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.EMAIL_VERIFICATION}:${emailVerificationCode}`;
     const email_verification_code_value: EmailVerificationValue = {
@@ -252,7 +264,7 @@ export class RegisterService {
       display_name: register_info_value.username,
       password_hashed: register_info_value.password_hashed,
       role: AUTH_CONSTANTS.USER.DEFAULT_ROLE,
-      biography: AUTH_CONSTANTS.USER.DEFAULT_BIOGRAPHY,
+      bio: AUTH_CONSTANTS.USER.DEFAULT_BIOGRAPHY,
       avatar_ipfs_hash: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_IPFS_HASH,
       avatar_fallback_url: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_FALLBACK_URL,
     });

@@ -2,7 +2,11 @@
 import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 
 // DTOs Import
-import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
+import {
+  RegisterInfoDto,
+  VerifyEmailDto,
+  SendEmailVerificationDto,
+} from './dto/register.dto';
 import { LoginDto, FingerprintEmailVerificationDto } from './dto/login.dto';
 import {
   RefreshSessionDto,
@@ -83,6 +87,16 @@ export class AuthController {
     const verify_email_register_response =
       await this.registerService.verifyEmailRegister(dto.code);
     return verify_email_register_response;
+  }
+
+  @Post('register/send-email-verification')
+  @Public()
+  async sendEmailVerification(
+    @Body() dto: SendEmailVerificationDto,
+  ): Promise<Response> {
+    const send_email_verification_response =
+      await this.registerService.sendEmailVerification(dto.email);
+    return send_email_verification_response;
   }
 
   /**

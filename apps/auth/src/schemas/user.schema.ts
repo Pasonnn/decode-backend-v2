@@ -16,7 +16,7 @@ export class User extends Document {
   password_hashed: string;
 
   @Prop({ required: false, default: 'Hi, i am a new Decode User' })
-  biography: string;
+  bio: string;
 
   @Prop({
     required: false,

@@ -43,3 +43,10 @@ export class VerifyEmailDto {
   @MaxLength(AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH)
   code: string;
 }
+
+export class SendEmailVerificationDto {
+  @IsNotEmpty()
+  @IsEmail()
+  @MaxLength(AUTH_CONSTANTS.VALIDATION.EMAIL.MAX_LENGTH)
+  email: string;
+}

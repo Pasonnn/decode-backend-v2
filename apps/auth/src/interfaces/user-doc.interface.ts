@@ -6,7 +6,7 @@ export type UserDoc = {
   password_hashed: string;
   role: string;
   display_name: string;
-  biography: string;
+  bio: string;
   avatar_ipfs_hash: string;
   avatar_fallback_url: string;
   last_login: Date;

@@ -76,6 +76,18 @@ export class EmailService {
           request.data.otpCode,
         );
 
+      case 'username-change-verify':
+        return EmailTemplates.usernameChangeVerify(
+          request.data.email,
+          request.data.otpCode,
+        );
+
+      case 'email-change-verify':
+        return EmailTemplates.emailChangeVerify(
+          request.data.email,
+          request.data.otpCode,
+        );
+
       default:
         throw new Error(
           `Unknown email type request: ${JSON.stringify(request)}`,
@@ -117,6 +129,10 @@ export class EmailService {
       case 'fingerprint-verify':
         return request.data.email;
       case 'forgot-password-verify':
+        return request.data.email;
+      case 'username-change-verify':
+        return request.data.email;
+      case 'email-change-verify':
         return request.data.email;
       default:
         return 'unknown';

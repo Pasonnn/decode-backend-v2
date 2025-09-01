@@ -48,4 +48,58 @@ export class SearchService {
       };
     }
   }
+
+  async searchExistingUsername(input: {
+    username: string;
+  }): Promise<Response<void>> {
+    try {
+      const { username } = input;
+      const user = await this.userModel.findOne({ username: username });
+      if (user) {
+        return {
+          success: true,
+          statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+          message: ERROR_MESSAGES.SUCCESS.USERNAME_ALREADY_EXISTS,
+        };
+      }
+      return {
+        success: true,
+        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        message: ERROR_MESSAGES.SUCCESS.USERNAME_AVAILABLE,
+      };
+    } catch (error: unknown) {
+      console.error(`Error searching existing username: ${error as string}`);
+      return {
+        success: false,
+        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: ERROR_MESSAGES.SEARCH.SEARCH_FAILED,
+      };
+    }
+  }
+
+  async searchExistingEmail(input: { email: string }): Promise<Response<void>> {
+    try {
+      const { email } = input;
+      const user = await this.userModel.findOne({ email: email });
+      if (user) {
+        return {
+          success: true,
+          statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+          message: ERROR_MESSAGES.SUCCESS.EMAIL_ALREADY_EXISTS,
+        };
+      }
+      return {
+        success: true,
+        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        message: ERROR_MESSAGES.SUCCESS.EMAIL_AVAILABLE,
+      };
+    } catch (error: unknown) {
+      console.error(`Error searching existing email: ${error as string}`);
+      return {
+        success: false,
+        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: ERROR_MESSAGES.SEARCH.SEARCH_FAILED,
+      };
+    }
+  }
 }

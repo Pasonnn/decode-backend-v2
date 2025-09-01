@@ -36,6 +36,7 @@ export const ERROR_MESSAGES = {
     USER_CREATION_FAILED: 'Failed to create user',
     WELCOME_EMAIL_FAILED: 'Failed to send welcome email',
     REGISTRATION_ERROR: 'Registration failed',
+    REGISTER_INFO_NOT_FOUND: 'Register info not found',
   },
 
   // Session Errors

@@ -127,6 +127,24 @@ export class AuthService {
   }
 
   /**
+   * Send email verification
+   */
+  async sendEmailVerification(email: string): Promise<Response> {
+    try {
+      this.logger.log('Sending email verification');
+      const response = await this.authServiceClient.sendEmailVerification({
+        email,
+      });
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Sending email verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Refresh session token
    */
   async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<Response> {

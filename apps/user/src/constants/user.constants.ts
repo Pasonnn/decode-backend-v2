@@ -105,6 +105,10 @@ export const USER_CONSTANTS = {
     MAX_LENGTH: 254,
     PATTERN: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     CHANGE_COOLDOWN: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    TYPES: {
+      USERNAME_CHANGE_VERIFY: 'username-change-verify',
+      EMAIL_CHANGE_VERIFY: 'email-change-verify',
+    },
   },
 
   // Verification Code Configuration
