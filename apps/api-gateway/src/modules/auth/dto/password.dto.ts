@@ -84,3 +84,27 @@ export class ChangeForgotPasswordDto {
   })
   new_password: string;
 }
+
+export class InitiateForgotPasswordDto {
+  @ApiProperty({
+    description: 'Username or email',
+    example: 'john_doe',
+  })
+  @IsNotEmpty()
+  @IsString()
+  username_or_email: string;
+}
+
+export class VerifyEmailForgotPasswordDto {
+  @ApiProperty({
+    description: '6-digit email verification code',
+    example: '123456',
+    minLength: 6,
+    maxLength: 6,
+  })
+  @IsNotEmpty()
+  @MinLength(6)
+  @MaxLength(6)
+  @IsString()
+  code: string;
+}

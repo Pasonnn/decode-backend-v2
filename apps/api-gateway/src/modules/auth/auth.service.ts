@@ -453,19 +453,13 @@ export class AuthService {
   /**
    * Initiate forgot password process
    */
-  async initiateForgotPassword(authorization: string): Promise<Response> {
+  async initiateForgotPassword(username_or_email: string): Promise<Response> {
     try {
       this.logger.log('Initiating forgot password for current user');
 
-      const config = {
-        headers: {
-          Authorization: authorization,
-        },
-      };
       const response = await this.authServiceClient.post(
         '/auth/password/forgot/email-verification',
-        {},
-        config,
+        { username_or_email },
       );
 
       if (!response.success) {
@@ -487,22 +481,14 @@ export class AuthService {
   /**
    * Verify email for forgot password
    */
-  async verifyEmailForgotPassword(
-    code: string,
-    authorization: string,
-  ): Promise<Response> {
+  async verifyEmailForgotPassword(code: string): Promise<Response> {
     try {
       this.logger.log('Verifying email for forgot password');
 
-      const config = {
-        headers: {
-          Authorization: authorization,
-        },
-      };
       const response = await this.authServiceClient.post(
         '/auth/password/forgot/verify-email',
         { code },
-        config,
+        {},
       );
 
       if (!response.success) {
@@ -516,6 +502,30 @@ export class AuthService {
     } catch (error) {
       this.logger.error(
         `Failed to verify email for forgot password: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Change password for forgot password
+   */
+  async changeForgotPassword(
+    code: string,
+    new_password: string,
+  ): Promise<Response> {
+    try {
+      this.logger.log('Changing password for forgot password');
+
+      const response = await this.authServiceClient.post(
+        '/auth/password/forgot/change',
+        { code, new_password },
+      );
+      this.logger.log('Successfully changed password for forgot password');
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to change password for forgot password: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }

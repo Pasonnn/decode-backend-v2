@@ -7,6 +7,7 @@ import { InfoService } from './info.service';
 // Interfaces
 import { Response } from '../interfaces/response.interface';
 import { UserDoc } from '../interfaces/user-doc.interface';
+
 // Utils
 import { PasswordUtils } from '../utils/password.utils';
 // Models
@@ -74,17 +75,21 @@ export class PasswordService {
   }
 
   // password/forgot/email-verification
-  async emailVerificationChangePassword(user_id: string): Promise<Response> {
+  async emailVerificationChangePassword(
+    username_or_email: string,
+  ): Promise<Response> {
     // Get user info
     const getUserInfoResponse =
-      await this.infoService.getUserInfoByUserId(user_id);
+      await this.infoService.getUserInfoByEmailOrUsername(username_or_email);
     if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
       return getUserInfoResponse;
     }
+    const user_id = getUserInfoResponse.data._id.toString();
+    const email = getUserInfoResponse.data.email;
     // Send email verification
     const sendEmailVerificationResponse = await this.sendEmailVerification(
       user_id,
-      getUserInfoResponse.data.email,
+      email,
     );
     if (!sendEmailVerificationResponse.success) {
       return sendEmailVerificationResponse;
@@ -143,6 +148,8 @@ export class PasswordService {
     ) {
       return verify_email_change_password_response;
     }
+    console.log(verify_email_change_password_response);
+    const user_id = verify_email_change_password_response.data._id.toString();
     // Delete verification code from Redis
     const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${email_verification_code}`;
     await this.redisInfrastructure.del(verification_code_key);
@@ -159,9 +166,10 @@ export class PasswordService {
       password_verification_and_hashing_response.data.password_hashed;
     // Change password
     const password_change_response = await this.passwordChange(
-      verify_email_change_password_response.data._id.toString(),
+      user_id,
       new_password_hashed,
     );
+    console.log(password_change_response);
     // Return success response
     return password_change_response;
   }

@@ -39,6 +39,7 @@ import { InfoService } from './services/info.service';
 import { AuthGuard, Public } from './common/guards/auth.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './common/guards/auth.guard';
+import { InitiateForgotPasswordDto } from 'apps/api-gateway/src/modules/auth/dto/password.dto';
 
 // Auth Controller Class
 @Controller('auth')
@@ -256,12 +257,14 @@ export class AuthController {
    * @returns Response confirming email verification sent for password reset
    */
   @Post('password/forgot/email-verification')
-  @UseGuards(AuthGuard)
+  @Public()
   async emailVerificationChangePassword(
-    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: InitiateForgotPasswordDto,
   ): Promise<Response> {
     const email_verification_change_password_response =
-      await this.passwordService.emailVerificationChangePassword(user.userId);
+      await this.passwordService.emailVerificationChangePassword(
+        dto.username_or_email,
+      );
     return email_verification_change_password_response;
   }
 
@@ -271,7 +274,7 @@ export class AuthController {
    * @returns Response confirming email verification for password reset
    */
   @Post('password/forgot/verify-email')
-  @UseGuards(AuthGuard)
+  @Public()
   async verifyEmailChangePassword(
     @Body() dto: VerifyEmailChangePasswordDto,
   ): Promise<Response> {
@@ -286,7 +289,7 @@ export class AuthController {
    * @returns Response confirming successful password reset
    */
   @Post('password/forgot/change')
-  @UseGuards(AuthGuard)
+  @Public()
   async changeForgotPassword(
     @Body() dto: ChangeForgotPasswordDto,
   ): Promise<Response> {
