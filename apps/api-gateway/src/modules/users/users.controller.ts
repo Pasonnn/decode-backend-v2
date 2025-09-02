@@ -82,6 +82,7 @@ export class UsersController {
   // ==================== PROFILE ENDPOINTS ====================
 
   @Get('profile/me')
+  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({
     status: 200,
@@ -107,8 +108,12 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async getUserProfile(
     @Param('user_id') userId: string,
+    @Headers('authorization') authorization: string,
   ): Promise<Response<UserDoc>> {
-    return await this.usersService.getUserProfile({ user_id: userId });
+    return await this.usersService.getUserProfile(
+      { user_id: userId },
+      authorization,
+    );
   }
 
   @Put('profile/display-name')
@@ -124,10 +129,9 @@ export class UsersController {
   async updateDisplayName(
     @Body() body: UpdateUserDisplayNameDto,
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<UserDoc>> {
     return await this.usersService.updateUserDisplayName(
-      { user_id: user.userId, display_name: body.display_name },
+      { display_name: body.display_name },
       authorization,
     );
   }
@@ -145,10 +149,9 @@ export class UsersController {
   async updateBio(
     @Body() body: UpdateUserBioDto,
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<UserDoc>> {
     return await this.usersService.updateUserBio(
-      { user_id: user.userId, bio: body.bio },
+      { bio: body.bio },
       authorization,
     );
   }
@@ -166,11 +169,9 @@ export class UsersController {
   async updateAvatar(
     @Body() body: UpdateUserAvatarDto,
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<UserDoc>> {
     return await this.usersService.updateUserAvatar(
       {
-        user_id: user.userId,
         avatar_ipfs_hash: body.avatar_ipfs_hash,
         avatar_fallback_url: body.avatar_fallback_url,
       },
@@ -209,12 +210,8 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async changeUsernameInitiate(
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
-    return await this.usersService.changeUsernameInitiate(
-      { user_id: user.userId },
-      authorization,
-    );
+    return await this.usersService.changeUsernameInitiate(authorization);
   }
 
   @Post('username/change/verify-email')
@@ -229,10 +226,9 @@ export class UsersController {
   async changeUsernameVerifyEmail(
     @Body() body: VerifyUsernameCodeDto,
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.usersService.changeUsernameVerifyEmail(
-      { user_id: user.userId, code: body.code },
+      { code: body.code },
       authorization,
     );
   }
@@ -249,11 +245,9 @@ export class UsersController {
   async changeUsername(
     @Body() body: ChangeUsernameDto,
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.usersService.changeUsername(
       {
-        user_id: user.userId,
         new_username: body.new_username,
         code: body.code,
       },
@@ -273,10 +267,8 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async changeEmailInitiate(
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.usersService.changeEmailInitiate(
-      { user_id: user.userId },
       authorization,
     );
   }
@@ -293,10 +285,9 @@ export class UsersController {
   async changeEmailVerifyEmail(
     @Body() body: VerifyEmailCodeDto,
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.usersService.changeEmailVerifyEmail(
-      { user_id: user.userId, code: body.code },
+      { code: body.code },
       authorization,
     );
   }
@@ -313,11 +304,9 @@ export class UsersController {
   async newEmailInitiate(
     @Body() body: ChangeEmailDto,
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.usersService.newEmailInitiate(
       {
-        user_id: user.userId,
         new_email: body.new_email,
         code: body.code,
       },
@@ -337,10 +326,9 @@ export class UsersController {
   async newEmailVerify(
     @Body() body: VerifyEmailCodeDto,
     @Headers('authorization') authorization: string,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.usersService.newEmailVerify(
-      { user_id: user.userId, code: body.code },
+      { code: body.code },
       authorization,
     );
   }
@@ -348,6 +336,7 @@ export class UsersController {
   // ==================== SEARCH ENDPOINTS ====================
 
   @Get('search')
+  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Search users by username or email' })
   @ApiResponse({
     status: 200,
@@ -356,11 +345,14 @@ export class UsersController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
-  async search(@Query() query: SearchUserDto): Promise<Response<UserDoc[]>> {
-    return await this.usersService.searchUsers(query);
+  async search(@Query() query: SearchUserDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response<UserDoc[]>> {
+    return await this.usersService.searchUsers(query,authorization);
   }
 
   @Get('search/existing-username')
+  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Check if username exists' })
   @ApiResponse({
     status: 200,
@@ -371,11 +363,13 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async searchExistingUsername(
     @Query() query: SearchUsernameDto,
+    @Headers('authorization') authorization: string,
   ): Promise<Response<void>> {
-    return await this.usersService.checkUsernameExists(query);
+    return await this.usersService.checkUsernameExists(query, authorization);
   }
 
   @Get('search/existing-email')
+  @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Check if email exists' })
   @ApiResponse({
     status: 200,
@@ -387,6 +381,6 @@ export class UsersController {
   async searchExistingEmail(
     @Query() query: SearchEmailDto,
   ): Promise<Response<void>> {
-    return await this.usersService.checkEmailExists(query);
+    return await this.usersService.checkEmailExists(query, authorization);
   }
 }

@@ -9,10 +9,8 @@ import type {
   UpdateUserBioRequest,
   UpdateUserAvatarRequest,
   UpdateUserRoleRequest,
-  ChangeUsernameInitiateRequest,
   VerifyUsernameCodeRequest,
   ChangeUsernameRequest,
-  ChangeEmailInitiateRequest,
   VerifyEmailCodeRequest,
   NewEmailInitiateRequest,
   VerifyNewEmailCodeRequest,
@@ -35,10 +33,14 @@ export class UsersService {
    */
   async getUserProfile(
     data: GetUserProfileRequest,
+    authorization: string,
   ): Promise<Response<UserDoc>> {
     try {
       this.logger.log(`Getting profile for user: ${data.user_id}`);
-      const response = await this.userServiceClient.getUserProfile(data);
+      const response = await this.userServiceClient.getUserProfile(
+        data,
+        authorization,
+      );
 
       if (!response.success) {
         throw new Error(response.message || 'Failed to get user profile');
@@ -92,7 +94,7 @@ export class UsersService {
     authorization: string,
   ): Promise<Response<UserDoc>> {
     try {
-      this.logger.log(`Updating display name for user: ${data.user_id}`);
+      this.logger.log(`Updating display name for user`);
       const response = await this.userServiceClient.updateUserDisplayName(
         data,
         authorization,
@@ -102,13 +104,11 @@ export class UsersService {
         throw new Error(response.message || 'Failed to update display name');
       }
 
-      this.logger.log(
-        `Successfully updated display name for user: ${data.user_id}`,
-      );
+      this.logger.log(`Successfully updated display name for user`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to update display name for user ${data.user_id}: ${
+        `Failed to update display name for user: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -124,7 +124,7 @@ export class UsersService {
     authorization: string,
   ): Promise<Response<UserDoc>> {
     try {
-      this.logger.log(`Updating bio for user: ${data.user_id}`);
+      this.logger.log(`Updating bio for user`);
       const response = await this.userServiceClient.updateUserBio(
         data,
         authorization,
@@ -134,11 +134,11 @@ export class UsersService {
         throw new Error(response.message || 'Failed to update bio');
       }
 
-      this.logger.log(`Successfully updated bio for user: ${data.user_id}`);
+      this.logger.log(`Successfully updated bio for user`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to update bio for user ${data.user_id}: ${
+        `Failed to update bio for user: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -154,7 +154,7 @@ export class UsersService {
     authorization: string,
   ): Promise<Response<UserDoc>> {
     try {
-      this.logger.log(`Updating avatar for user: ${data.user_id}`);
+      this.logger.log(`Updating avatar for user`);
       const response = await this.userServiceClient.updateUserAvatar(
         data,
         authorization,
@@ -164,11 +164,11 @@ export class UsersService {
         throw new Error(response.message || 'Failed to update avatar');
       }
 
-      this.logger.log(`Successfully updated avatar for user: ${data.user_id}`);
+      this.logger.log(`Successfully updated avatar for user`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to update avatar for user ${data.user_id}: ${
+        `Failed to update avatar for user: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -184,9 +184,7 @@ export class UsersService {
     authorization: string,
   ): Promise<Response<UserDoc>> {
     try {
-      this.logger.log(
-        `Updating role for user: ${data.user_id} to ${data.role}`,
-      );
+      this.logger.log(`Updating role for user to ${data.role}`);
       const response = await this.userServiceClient.updateUserRole(
         data,
         authorization,
@@ -196,13 +194,11 @@ export class UsersService {
         throw new Error(response.message || 'Failed to update user role');
       }
 
-      this.logger.log(
-        `Successfully updated role for user: ${data.user_id} to ${data.role}`,
-      );
+      this.logger.log(`Successfully updated role for user to ${data.role}`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to update role for user ${data.user_id}: ${
+        `Failed to update role for user to ${data.role}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -215,16 +211,11 @@ export class UsersService {
   /**
    * Initiate username change process
    */
-  async changeUsernameInitiate(
-    data: ChangeUsernameInitiateRequest,
-    authorization: string,
-  ): Promise<Response<void>> {
+  async changeUsernameInitiate(authorization: string): Promise<Response<void>> {
     try {
-      this.logger.log(`Initiating username change for user: ${data.user_id}`);
-      const response = await this.userServiceClient.changeUsernameInitiate(
-        data,
-        authorization,
-      );
+      this.logger.log(`Initiating username change for user`);
+      const response =
+        await this.userServiceClient.changeUsernameInitiate(authorization);
 
       if (!response.success) {
         throw new Error(
@@ -232,13 +223,11 @@ export class UsersService {
         );
       }
 
-      this.logger.log(
-        `Successfully initiated username change for user: ${data.user_id}`,
-      );
+      this.logger.log(`Successfully initiated username change for user`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to initiate username change for user ${data.user_id}: ${
+        `Failed to initiate username change for user: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -254,9 +243,7 @@ export class UsersService {
     authorization: string,
   ): Promise<Response<void>> {
     try {
-      this.logger.log(
-        `Verifying username change code for user: ${data.user_id}`,
-      );
+      this.logger.log(`Verifying username change code for user`);
       const response = await this.userServiceClient.changeUsernameVerifyEmail(
         data,
         authorization,
@@ -268,13 +255,11 @@ export class UsersService {
         );
       }
 
-      this.logger.log(
-        `Successfully verified username change code for user: ${data.user_id}`,
-      );
+      this.logger.log(`Successfully verified username change code for user`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to verify username change code for user ${data.user_id}: ${
+        `Failed to verify username change code for user: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -290,9 +275,7 @@ export class UsersService {
     authorization: string,
   ): Promise<Response<void>> {
     try {
-      this.logger.log(
-        `Changing username for user: ${data.user_id} to ${data.new_username}`,
-      );
+      this.logger.log(`Changing username for user to ${data.new_username}`);
       const response = await this.userServiceClient.changeUsername(
         data,
         authorization,
@@ -303,12 +286,13 @@ export class UsersService {
       }
 
       this.logger.log(
-        `Successfully changed username for user: ${data.user_id} to ${data.new_username}`,
+        `Successfully changed username for user to ${data.new_username}`,
       );
+
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to change username for user ${data.user_id}: ${
+        `Failed to change username for user to ${data.new_username}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -321,28 +305,21 @@ export class UsersService {
   /**
    * Initiate email change process
    */
-  async changeEmailInitiate(
-    data: ChangeEmailInitiateRequest,
-    authorization: string,
-  ): Promise<Response<void>> {
+  async changeEmailInitiate(authorization: string): Promise<Response<void>> {
     try {
-      this.logger.log(`Initiating email change for user: ${data.user_id}`);
-      const response = await this.userServiceClient.changeEmailInitiate(
-        data,
-        authorization,
-      );
+      this.logger.log(`Initiating email change for user`);
+      const response =
+        await this.userServiceClient.changeEmailInitiate(authorization);
 
       if (!response.success) {
         throw new Error(response.message || 'Failed to initiate email change');
       }
 
-      this.logger.log(
-        `Successfully initiated email change for user: ${data.user_id}`,
-      );
+      this.logger.log(`Successfully initiated email change for user`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to initiate email change for user ${data.user_id}: ${
+        `Failed to initiate email change for user: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -358,7 +335,7 @@ export class UsersService {
     authorization: string,
   ): Promise<Response<void>> {
     try {
-      this.logger.log(`Verifying email change code for user: ${data.user_id}`);
+      this.logger.log(`Verifying email change code for user`);
       const response = await this.userServiceClient.changeEmailVerifyEmail(
         data,
         authorization,
@@ -370,13 +347,11 @@ export class UsersService {
         );
       }
 
-      this.logger.log(
-        `Successfully verified email change code for user: ${data.user_id}`,
-      );
+      this.logger.log(`Successfully verified email change code for user`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to verify email change code for user ${data.user_id}: ${
+        `Failed to verify email change code for user: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -393,7 +368,7 @@ export class UsersService {
   ): Promise<Response<void>> {
     try {
       this.logger.log(
-        `Initiating new email change for user: ${data.user_id} to ${data.new_email}`,
+        `Initiating new email change for user to ${data.new_email}`,
       );
       const response = await this.userServiceClient.newEmailInitiate(
         data,
@@ -407,12 +382,12 @@ export class UsersService {
       }
 
       this.logger.log(
-        `Successfully initiated new email change for user: ${data.user_id}`,
+        `Successfully initiated new email change for user to ${data.new_email}`,
       );
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to initiate new email change for user ${data.user_id}: ${
+        `Failed to initiate new email change for user to ${data.new_email}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -428,7 +403,7 @@ export class UsersService {
     authorization: string,
   ): Promise<Response<void>> {
     try {
-      this.logger.log(`Verifying new email code for user: ${data.user_id}`);
+      this.logger.log(`Verifying new email code for user`);
       const response = await this.userServiceClient.newEmailVerify(
         data,
         authorization,
@@ -438,13 +413,11 @@ export class UsersService {
         throw new Error(response.message || 'Failed to verify new email code');
       }
 
-      this.logger.log(
-        `Successfully verified new email code for user: ${data.user_id}`,
-      );
+      this.logger.log(`Successfully verified new email code for user`);
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to verify new email code for user ${data.user_id}: ${
+        `Failed to verify new email code for user: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -457,10 +430,16 @@ export class UsersService {
   /**
    * Search users by username or email
    */
-  async searchUsers(data: SearchUsersRequest): Promise<Response<UserDoc[]>> {
+  async searchUsers(
+    data: SearchUsersRequest,
+    authorization: string,
+  ): Promise<Response<UserDoc[]>> {
     try {
       this.logger.log('Searching users');
-      const response = await this.userServiceClient.searchUsers(data);
+      const response = await this.userServiceClient.searchUsers(
+        data,
+        authorization,
+      );
 
       if (!response.success) {
         throw new Error(response.message || 'Failed to search users');
@@ -483,11 +462,14 @@ export class UsersService {
    */
   async checkUsernameExists(
     data: SearchUsernameRequest,
+    authorization: string,
   ): Promise<Response<void>> {
     try {
       this.logger.log(`Checking if username exists: ${data.username}`);
-      const response =
-        await this.userServiceClient.searchExistingUsername(data);
+      const response = await this.userServiceClient.searchExistingUsername(
+        data,
+        authorization,
+      );
 
       if (!response.success) {
         throw new Error(
@@ -512,10 +494,16 @@ export class UsersService {
   /**
    * Check if email exists
    */
-  async checkEmailExists(data: SearchEmailRequest): Promise<Response<void>> {
+  async checkEmailExists(
+    data: SearchEmailRequest,
+    authorization: string,
+  ): Promise<Response<void>> {
     try {
       this.logger.log(`Checking if email exists: ${data.email}`);
-      const response = await this.userServiceClient.searchExistingEmail(data);
+      const response = await this.userServiceClient.searchExistingEmail(
+        data,
+        authorization,
+      );
 
       if (!response.success) {
         throw new Error(response.message || 'Failed to check email existence');

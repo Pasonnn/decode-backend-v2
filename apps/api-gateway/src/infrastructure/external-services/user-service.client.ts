@@ -11,58 +11,40 @@ export interface GetUserProfileRequest {
 }
 
 export interface UpdateUserDisplayNameRequest {
-  user_id: string;
   display_name: string;
 }
 
 export interface UpdateUserBioRequest {
-  user_id: string;
   bio: string;
 }
 
 export interface UpdateUserAvatarRequest {
-  user_id: string;
   avatar_ipfs_hash: string;
   avatar_fallback_url: string;
 }
 
 export interface UpdateUserRoleRequest {
-  user_id: string;
   role: string;
 }
-
-export interface ChangeUsernameInitiateRequest {
-  user_id: string;
-}
-
 export interface VerifyUsernameCodeRequest {
-  user_id: string;
   code: string;
 }
 
 export interface ChangeUsernameRequest {
-  user_id: string;
   new_username: string;
   code: string;
 }
 
-export interface ChangeEmailInitiateRequest {
-  user_id: string;
-}
-
 export interface VerifyEmailCodeRequest {
-  user_id: string;
   code: string;
 }
 
 export interface NewEmailInitiateRequest {
-  user_id: string;
   new_email: string;
   code: string;
 }
 
 export interface VerifyNewEmailCodeRequest {
-  user_id: string;
   code: string;
 }
 
@@ -120,8 +102,14 @@ export class UserServiceClient extends BaseHttpClient {
    */
   async getUserProfile(
     data: GetUserProfileRequest,
+    authorization: string,
   ): Promise<Response<UserDoc>> {
-    return this.get<UserDoc>(`/users/profile/${data.user_id}`);
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.get<UserDoc>(`/users/profile/${data.user_id}`, config);
   }
 
   /**
@@ -201,16 +189,13 @@ export class UserServiceClient extends BaseHttpClient {
   /**
    * Initiate username change process
    */
-  async changeUsernameInitiate(
-    data: ChangeUsernameInitiateRequest,
-    authorization: string,
-  ): Promise<Response<void>> {
+  async changeUsernameInitiate(authorization: string): Promise<Response<void>> {
     const config = {
       headers: {
         Authorization: authorization,
       },
     };
-    return this.post<void>('/users/username/change/initiate', data, config);
+    return this.post<void>('/users/username/change/initiate', config);
   }
 
   /**
@@ -248,16 +233,13 @@ export class UserServiceClient extends BaseHttpClient {
   /**
    * Initiate email change process
    */
-  async changeEmailInitiate(
-    data: ChangeEmailInitiateRequest,
-    authorization: string,
-  ): Promise<Response<void>> {
+  async changeEmailInitiate(authorization: string): Promise<Response<void>> {
     const config = {
       headers: {
         Authorization: authorization,
       },
     };
-    return this.post<void>('/users/email/change/initiate', data, config);
+    return this.post<void>('/users/email/change/initiate', config);
   }
 
   /**
@@ -318,8 +300,17 @@ export class UserServiceClient extends BaseHttpClient {
   /**
    * Search users by username or email
    */
-  async searchUsers(data: SearchUsersRequest): Promise<Response<UserDoc[]>> {
+  async searchUsers(
+    data: SearchUsersRequest,
+    authorization: string,
+  ): Promise<Response<UserDoc[]>> {
     const queryParams = new URLSearchParams();
+
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
 
     if (data.username_or_email) {
       queryParams.append('username_or_email', data.username_or_email);
@@ -343,7 +334,7 @@ export class UserServiceClient extends BaseHttpClient {
     const queryString = queryParams.toString();
     const url = queryString ? `/users/search?${queryString}` : '/users/search';
 
-    return this.get<UserDoc[]>(url);
+    return this.get<UserDoc[]>(url, config);
   }
 
   /**
@@ -351,17 +342,35 @@ export class UserServiceClient extends BaseHttpClient {
    */
   async searchExistingUsername(
     data: SearchUsernameRequest,
+    authorization: string,
   ): Promise<Response<void>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
     return this.get<void>(
       `/users/search/existing-username?username=${data.username}`,
+      config,
     );
   }
 
   /**
    * Search for existing email
    */
-  async searchExistingEmail(data: SearchEmailRequest): Promise<Response<void>> {
-    return this.get<void>(`/users/search/existing-email?email=${data.email}`);
+  async searchExistingEmail(
+    data: SearchEmailRequest,
+    authorization: string,
+  ): Promise<Response<void>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.get<void>(
+      `/users/search/existing-email?email=${data.email}`,
+      config,
+    );
   }
 
   // Generic HTTP methods for flexibility
