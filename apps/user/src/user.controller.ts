@@ -36,7 +36,7 @@ import { Roles, UserRole } from './common/decorators/roles.decorator';
 import { Response } from './interfaces/response.interface';
 import { UserDoc } from './interfaces/user-doc.interface';
 import { CurrentUser } from './common/decorators/current-user.decorator';
-import type { AuthenticatedUser } from './common/guards/auth.guard';
+import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { USER_CONSTANTS } from './constants/user.constants';
 
 @ApiTags('User Management')

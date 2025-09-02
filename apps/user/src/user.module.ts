@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { HttpModule } from '@nestjs/axios';
 
 // Controllers Import
 import { UserController } from './user.controller';
@@ -28,6 +29,7 @@ import configuration from './config/configuration';
       envFilePath: '.env',
     }),
     ConfigModule.forFeature(configuration),
+    HttpModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({

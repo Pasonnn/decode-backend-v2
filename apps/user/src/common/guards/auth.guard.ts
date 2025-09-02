@@ -14,26 +14,9 @@ import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { Request } from 'express';
 
-// Interfaces
-export interface AuthenticatedUser {
-  userId: string;
-  email: string;
-  username: string;
-  role: 'user' | 'admin' | 'moderator';
-}
-
-export interface AuthServiceResponse {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data?: {
-    _id: string;
-    email: string;
-    username: string;
-    role: string;
-  };
-  error?: string;
-}
+// Interfaces Import
+import { AuthenticatedUser } from '../../interfaces/authenticated-user.interface';
+import { AuthServiceResponse } from '../../interfaces/auth-service-response.interface';
 
 // Decorators for role-based access
 export const ROLES_KEY = 'roles';

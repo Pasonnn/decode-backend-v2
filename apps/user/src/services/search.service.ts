@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -15,7 +15,10 @@ import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
 export class SearchService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  private readonly logger: Logger;
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {
+    this.logger = new Logger(SearchService.name);
+  }
 
   async searchUsers(input: {
     username_or_email: string;
@@ -40,7 +43,7 @@ export class SearchService {
         data: users as UserDoc[],
       };
     } catch (error: unknown) {
-      console.error(`Error searching users: ${error as string}`);
+      this.logger.error(`Error searching users: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -68,7 +71,7 @@ export class SearchService {
         message: ERROR_MESSAGES.SUCCESS.USERNAME_AVAILABLE,
       };
     } catch (error: unknown) {
-      console.error(`Error searching existing username: ${error as string}`);
+      this.logger.error(`Error searching existing username: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -94,7 +97,7 @@ export class SearchService {
         message: ERROR_MESSAGES.SUCCESS.EMAIL_AVAILABLE,
       };
     } catch (error: unknown) {
-      console.error(`Error searching existing email: ${error as string}`);
+      this.logger.error(`Error searching existing email: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,

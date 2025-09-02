@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { RedisInfrastructure } from 'apps/auth/src/infrastructure/redis.infrastructure';
+import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 import { ClientProxy } from '@nestjs/microservices';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -17,11 +17,14 @@ import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
 export class EmailService {
+  private readonly logger: Logger;
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
     private readonly redisInfrastructure: RedisInfrastructure,
-  ) {}
+  ) {
+    this.logger = new Logger(EmailService.name);
+  }
 
   async changeEmailInitiate(input: {
     user_id: string;
@@ -68,7 +71,7 @@ export class EmailService {
         message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
-      console.error(`Error changing email initiate: ${error as string}`);
+      this.logger.error(`Error changing email initiate: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -184,7 +187,7 @@ export class EmailService {
         message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
-      console.error(`Error sending email verification: ${error as string}`);
+      this.logger.error(`Error sending email verification: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
