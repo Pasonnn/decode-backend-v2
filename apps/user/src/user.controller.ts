@@ -113,10 +113,9 @@ export class UserController {
   @Roles(USER_CONSTANTS.ROLES.ADMIN as UserRole)
   async updateRole(
     @Body() body: UpdateUserRoleDto,
-    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<UserDoc>> {
     return await this.profileService.updateUserRole({
-      user_id: user.userId,
+      user_id: body.user_id,
       role: body.role,
     });
   }
@@ -162,12 +161,10 @@ export class UserController {
   @Post('email/change/initiate')
   @UseGuards(AuthGuard)
   async changeEmailInitiate(
-    @Body() body: ChangeEmailDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.emailService.changeEmailInitiate({
       user_id: user.userId,
-      new_email: body.new_email,
     });
   }
 
@@ -183,15 +180,39 @@ export class UserController {
     });
   }
 
-  @Post('email/change/complete')
+  @Post('email/change/new-email-initiate')
   @UseGuards(AuthGuard)
-  async changeEmail(
+  async newEmailInitiate(
     @Body() body: ChangeEmailDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
-    return await this.emailService.changeEmail({
+    return await this.emailService.newEmailInitiate({
       user_id: user.userId,
       new_email: body.new_email,
+      code: body.code,
+    });
+  }
+
+  @Post('email/change/send-new-email-verify')
+  @UseGuards(AuthGuard)
+  async sendNewEmailVerify(
+    @Body() body: ChangeEmailDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response<void>> {
+    return await this.emailService.sendNewEmailVerify({
+      user_id: user.userId,
+      new_email: body.new_email,
+    });
+  }
+
+  @Post('email/change/new-email-verify')
+  @UseGuards(AuthGuard)
+  async newEmailVerify(
+    @Body() body: VerifyEmailCodeDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response<void>> {
+    return await this.emailService.verifyNewEmailCode({
+      user_id: user.userId,
       code: body.code,
     });
   }

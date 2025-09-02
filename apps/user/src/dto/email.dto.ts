@@ -21,23 +21,6 @@ export class VerifyEmailCodeDto {
   @MinLength(USER_CONSTANTS.VERIFICATION.CODE_LENGTH)
   @MaxLength(USER_CONSTANTS.VERIFICATION.CODE_LENGTH)
   code: string;
-
-  @ApiProperty({
-    description: 'New email address to change to',
-    example: 'newemail@example.com',
-    minLength: USER_CONSTANTS.EMAIL.MIN_LENGTH,
-    maxLength: USER_CONSTANTS.EMAIL.MAX_LENGTH,
-    pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @IsEmail()
-  @MinLength(USER_CONSTANTS.EMAIL.MIN_LENGTH)
-  @MaxLength(USER_CONSTANTS.EMAIL.MAX_LENGTH)
-  @Matches(USER_CONSTANTS.EMAIL.PATTERN, {
-    message: 'Invalid email format',
-  })
-  new_email: string;
 }
 
 export class ChangeEmailDto {

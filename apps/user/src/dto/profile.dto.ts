@@ -11,6 +11,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { USER_CONSTANTS } from '../constants/user.constants';
 
 export class GetUserProfileDto {
+  // ==================== USER ID ====================
   @ApiProperty({
     description: 'User ID to get profile for',
     example: '507f1f77bcf86cd799439011',
@@ -25,6 +26,7 @@ export class GetUserProfileDto {
 }
 
 export class UpdateUserDisplayNameDto {
+  // ==================== DISPLAY NAME ====================
   @ApiProperty({
     description: 'New display name for the user',
     example: 'John Doe',
@@ -44,6 +46,7 @@ export class UpdateUserDisplayNameDto {
 }
 
 export class UpdateUserBioDto {
+  // ==================== BIO ====================
   @ApiProperty({
     description: 'New bio for the user',
     example: 'Software engineer passionate about technology and innovation',
@@ -58,6 +61,7 @@ export class UpdateUserBioDto {
 }
 
 export class UpdateUserAvatarDto {
+  // ==================== IPFS HASH ====================
   @ApiProperty({
     description: 'IPFS hash for the avatar image',
     example: 'bafkreibmridohwxgfwdrju5ixnw26awr22keihoegdn76yymilgsqyx4le',
@@ -74,6 +78,7 @@ export class UpdateUserAvatarDto {
   })
   avatar_ipfs_hash: string;
 
+  // ==================== FALLBACK URL ====================
   @ApiProperty({
     description: 'Fallback URL for the avatar image',
     example:
@@ -92,6 +97,20 @@ export class UpdateUserAvatarDto {
 }
 
 export class UpdateUserRoleDto {
+  // ==================== USER ID ====================
+  @ApiProperty({
+    description: 'User ID to update role for',
+    example: '507f1f77bcf86cd799439011',
+    pattern: '^[0-9a-fA-F]{24}$',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(USER_CONSTANTS.VALIDATION.USER_ID.PATTERN, {
+    message: 'Invalid user ID format',
+  })
+  user_id: string;
+
+  // ==================== ROLE ====================
   @ApiProperty({
     description: 'New role for the user',
     example: 'moderator',

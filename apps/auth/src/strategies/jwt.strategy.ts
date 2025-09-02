@@ -47,6 +47,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         issuer: this.configService.get<string>('jwt.accessToken.issuer'),
         audience: this.configService.get<string>('jwt.accessToken.audience'),
       });
+      if (!payload.exp) {
+        return {
+          success: false,
+          statusCode: 401,
+          message: 'Access token expired',
+        };
+      }
+      if (payload.exp < Date.now() / 1000) {
+        return {
+          success: false,
+          statusCode: 401,
+          message: 'Access token expired',
+        };
+      }
+      // Return response
       return {
         success: true,
         statusCode: 200,

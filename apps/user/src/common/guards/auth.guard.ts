@@ -122,7 +122,6 @@ export class AuthGuard implements CanActivate {
     if (cached && cached.expiresAt > Date.now()) {
       return cached.user;
     }
-
     try {
       // Call auth service to validate token
       const response = await firstValueFrom(

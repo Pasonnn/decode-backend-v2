@@ -180,6 +180,17 @@ export const ERROR_MESSAGES = {
     EMAIL_CHANGE_LIMIT_EXCEEDED: 'Email change limit exceeded',
     CURRENT_EMAIL_VERIFICATION_REQUIRED: 'Current email verification required',
     NEW_EMAIL_VERIFICATION_REQUIRED: 'New email verification required',
+    NEW_EMAIL_CHANGE_CODE_INVALID: 'Invalid new email change verification code',
+    NEW_EMAIL_CHANGE_CODE_EXPIRED: 'New email change verification code expired',
+    NEW_EMAIL_CHANGE_CODE_NOT_FOUND:
+      'New email change verification code not found',
+    NEW_EMAIL_CHANGE_NOT_INITIATED: 'New email change not initiated',
+    NEW_EMAIL_CHANGE_ALREADY_IN_PROGRESS:
+      'New email change already in progress',
+    NEW_EMAIL_CHANGE_COOLDOWN_ACTIVE: 'New email change cooldown period active',
+    NEW_EMAIL_CHANGE_EMAIL_FAILED:
+      'Failed to send new email change verification email',
+    NEW_EMAIL_CHANGE_LIMIT_EXCEEDED: 'New email change limit exceeded',
   },
 
   // Account Management Errors
@@ -313,6 +324,8 @@ export const ERROR_MESSAGES = {
     USERNAME_CHANGED: 'Username changed successfully',
     EMAIL_CHANGE_INITIATED: 'Email change initiated successfully',
     EMAIL_CHANGE_VERIFIED: 'Email change verified successfully',
+    NEW_EMAIL_CHANGE_INITIATED: 'New email change initiated successfully',
+    NEW_EMAIL_CHANGE_VERIFIED: 'New email change verified successfully',
     EMAIL_CHANGED: 'Email changed successfully',
     ACCOUNT_DEACTIVATED: 'Account deactivated successfully',
     ACCOUNT_REACTIVATED: 'Account reactivated successfully',

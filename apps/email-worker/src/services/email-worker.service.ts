@@ -29,9 +29,7 @@ export class EmailService {
 
   async sendEmail(request: EmailRequestDto): Promise<boolean> {
     try {
-      console.log('request', request);
       const recipientEmail = this.getEmailFromRequest(request);
-      console.log('recipientEmail', recipientEmail);
       this.logger.log(
         `Processing email request: ${request.type} to ${recipientEmail}`,
       );
@@ -53,7 +51,6 @@ export class EmailService {
   }
 
   private getEmailTemplate(request: EmailRequestDto) {
-    console.log('request', request);
     switch (request.type) {
       case 'create-account':
         return EmailTemplates.createAccount(
@@ -119,8 +116,6 @@ export class EmailService {
   }
 
   private getEmailFromRequest(request: EmailRequestDto): string {
-    console.log('request', request);
-    console.log('request.data.email', request.data.email);
     switch (request.type) {
       case 'create-account':
         return request.data.email;

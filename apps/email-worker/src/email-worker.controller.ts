@@ -15,7 +15,6 @@ export class EmailWorkerController {
   @MessagePattern('email_request')
   async handleEmailRequest(request: EmailRequestDto) {
     try {
-      console.log('request', request);
       await this.rabbitMQService.processEmailRequest(request);
       return { success: true, message: 'Email processed successfully' };
     } catch (error) {

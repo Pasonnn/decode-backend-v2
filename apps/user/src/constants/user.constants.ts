@@ -20,7 +20,7 @@ export const USER_CONSTANTS = {
       IPFS_HASH: {
         MIN_LENGTH: 46, // IPFS CID v0 length
         MAX_LENGTH: 62, // IPFS CID v1 length
-        PATTERN: /^Qm[1-9A-HJ-NP-Za-km-z]{44}$|^bafy[a-z2-7]{55}$/,
+        PATTERN: /^[a-zA-Z0-9]{46,62}$/,
         DEFAULT: 'bafkreibmridohwxgfwdrju5ixnw26awr22keihoegdn76yymilgsqyx4le',
       },
       FALLBACK_URL: {
@@ -108,6 +108,7 @@ export const USER_CONSTANTS = {
     TYPES: {
       USERNAME_CHANGE_VERIFY: 'username-change-verify',
       EMAIL_CHANGE_VERIFY: 'email-change-verify',
+      NEW_EMAIL_CHANGE_VERIFY: 'new-email-change-verify',
     },
   },
 
@@ -236,6 +237,7 @@ export const USER_CONSTANTS = {
       RATE_LIMIT: 'rate_limit',
       USERNAME_CHANGE: 'username_change',
       EMAIL_CHANGE: 'email_change',
+      NEW_EMAIL_CHANGE: 'new_email_change',
       PASSWORD_RESET: 'password_reset',
       LOGIN_ATTEMPT: 'login_attempt',
     },

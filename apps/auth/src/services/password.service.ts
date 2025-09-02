@@ -148,7 +148,6 @@ export class PasswordService {
     ) {
       return verify_email_change_password_response;
     }
-    console.log(verify_email_change_password_response);
     const user_id = verify_email_change_password_response.data._id.toString();
     // Delete verification code from Redis
     const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${email_verification_code}`;
@@ -169,7 +168,6 @@ export class PasswordService {
       user_id,
       new_password_hashed,
     );
-    console.log(password_change_response);
     // Return success response
     return password_change_response;
   }

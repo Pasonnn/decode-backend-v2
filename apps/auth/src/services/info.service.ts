@@ -30,7 +30,6 @@ export class InfoService {
         $or: [{ email: email_or_username }, { username: email_or_username }],
       },
       {
-        password_hashed: 0,
         updatedAt: 0,
         createdAt: 0,
       },
