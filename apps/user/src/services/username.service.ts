@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
@@ -17,18 +17,25 @@ import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
 export class UsernameService {
+  private readonly logger: Logger;
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
     private readonly redisInfrastructure: RedisInfrastructure,
-  ) {}
+  ) {
+    this.logger = new Logger(UsernameService.name);
+  }
 
   async changeUsernameInitiate(input: {
     user_id: string;
   }): Promise<Response<void>> {
     try {
       const { user_id } = input;
-      const user = await this.userModel.findById(user_id);
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
       if (!user) {
         return {
           success: false,
@@ -60,7 +67,7 @@ export class UsernameService {
         message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
-      console.error(`Error changing username initiate: ${error as string}`);
+      this.logger.error(`Error changing username initiate: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -105,7 +112,11 @@ export class UsernameService {
     code: string;
   }): Promise<Response<void>> {
     const { user_id, new_username, code } = input;
-    const user = await this.userModel.findById(user_id);
+    const user = await this.userModel.findById(user_id, {
+      password_hashed: 0,
+      updatedAt: 0,
+      createdAt: 0,
+    });
     if (!user) {
       return {
         success: false,
@@ -174,7 +185,7 @@ export class UsernameService {
         message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
-      console.error(`Error sending email verification: ${error as string}`);
+      this.logger.error(`Error sending email verification: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,

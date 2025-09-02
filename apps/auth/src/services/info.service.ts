@@ -25,9 +25,16 @@ export class InfoService {
     email_or_username: string,
   ): Promise<Response<UserDoc>> {
     // Check if user exists
-    const user = await this.userModel.findOne({
-      $or: [{ email: email_or_username }, { username: email_or_username }],
-    });
+    const user = await this.userModel.findOne(
+      {
+        $or: [{ email: email_or_username }, { username: email_or_username }],
+      },
+      {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      },
+    );
     if (!user) {
       return {
         success: false,
@@ -61,7 +68,11 @@ export class InfoService {
     }
     const user_id = validate_access_token_response.data.user_id;
     // Get user info
-    const user = await this.userModel.findById(user_id);
+    const user = await this.userModel.findById(user_id, {
+      password_hashed: 0,
+      updatedAt: 0,
+      createdAt: 0,
+    });
     if (!user) {
       return {
         success: false,
@@ -79,7 +90,11 @@ export class InfoService {
 
   async getUserInfoByUserId(user_id: string): Promise<Response<UserDoc>> {
     // Check if user exists
-    const user = await this.userModel.findById(user_id);
+    const user = await this.userModel.findById(user_id, {
+      password_hashed: 0,
+      updatedAt: 0,
+      createdAt: 0,
+    });
     if (!user) {
       return {
         success: false,
@@ -100,6 +115,9 @@ export class InfoService {
   ): Promise<Response> {
     const user = await this.userModel.findOne({
       $or: [{ email: email_or_username }, { username: email_or_username }],
+      password_hashed: 0,
+      updatedAt: 0,
+      createdAt: 0,
     });
     if (!user) {
       return {

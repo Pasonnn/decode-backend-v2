@@ -32,7 +32,11 @@ export class EmailService {
   }): Promise<Response<void>> {
     try {
       const { user_id, new_email } = input;
-      const user = await this.userModel.findById(user_id);
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
       if (!user) {
         return {
           success: false,
@@ -48,7 +52,14 @@ export class EmailService {
         };
       }
       // Check if new email already exists
-      const existingUser = await this.userModel.findOne({ email: new_email });
+      const existingUser = await this.userModel.findOne(
+        { email: new_email },
+        {
+          password_hashed: 0,
+          updatedAt: 0,
+          createdAt: 0,
+        },
+      );
       if (existingUser) {
         return {
           success: false,
@@ -116,7 +127,11 @@ export class EmailService {
     code: string;
   }): Promise<Response<void>> {
     const { user_id, new_email, code } = input;
-    const user = await this.userModel.findById(user_id);
+    const user = await this.userModel.findById(user_id, {
+      password_hashed: 0,
+      updatedAt: 0,
+      createdAt: 0,
+    });
     if (!user) {
       return {
         success: false,

@@ -3,7 +3,6 @@ export type UserDoc = {
   user_id?: string;
   email: string;
   username: string;
-  password_hashed: string;
   role: string;
   display_name: string;
   bio: string;

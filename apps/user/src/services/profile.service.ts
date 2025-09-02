@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -14,13 +18,20 @@ import { USER_CONSTANTS } from '../constants/user.constants';
 import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 @Injectable()
 export class ProfileService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  private readonly logger: Logger;
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {
+    this.logger = new Logger(ProfileService.name);
+  }
 
   async getUserProfile(input: { user_id: string }): Promise<Response<UserDoc>> {
     try {
       // Check if user exists
       const { user_id } = input;
-      const user = await this.userModel.findById(user_id);
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
       if (!user) {
         return {
           success: false,
@@ -35,6 +46,7 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
+      this.logger.error(`Error getting user profile: ${error as string}`);
       throw new InternalServerErrorException(error);
     }
   }
@@ -45,7 +57,11 @@ export class ProfileService {
   }): Promise<Response<UserDoc>> {
     try {
       const { user_id, display_name } = input;
-      const user = await this.userModel.findById(user_id);
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
       if (!user) {
         return {
           success: false,
@@ -62,6 +78,7 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
+      this.logger.error(`Error updating user display name: ${error as string}`);
       throw new InternalServerErrorException(error);
     }
   }
@@ -72,7 +89,11 @@ export class ProfileService {
   }): Promise<Response<UserDoc>> {
     try {
       const { user_id, bio } = input;
-      const user = await this.userModel.findById(user_id);
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
       if (!user) {
         return {
           success: false,
@@ -89,6 +110,7 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
+      this.logger.error(`Error updating user bio: ${error as string}`);
       throw new InternalServerErrorException(error);
     }
   }
@@ -101,7 +123,11 @@ export class ProfileService {
     try {
       // Check if user exists
       const { user_id, avatar_ipfs_hash, avatar_fallback_url } = input;
-      const user = await this.userModel.findById(user_id);
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
       if (!user) {
         return {
           success: false,
@@ -119,6 +145,7 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
+      this.logger.error(`Error updating user avatar: ${error as string}`);
       throw new InternalServerErrorException(error);
     }
   }
@@ -129,7 +156,11 @@ export class ProfileService {
   }): Promise<Response<UserDoc>> {
     try {
       const { user_id, role } = input;
-      const user = await this.userModel.findById(user_id);
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
       if (!user) {
         return {
           success: false,
@@ -146,6 +177,7 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
+      this.logger.error(`Error updating user role: ${error as string}`);
       throw new InternalServerErrorException(error);
     }
   }

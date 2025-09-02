@@ -285,6 +285,11 @@ export class LoginService {
     // Get user email
     const user = await this.userModel.findById(
       device_fingerprint_email_verification.user_id,
+      {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      },
     );
     if (!user) {
       return {
@@ -403,7 +408,11 @@ export class LoginService {
   }
 
   private async updateUserLastLogin(user_id: string): Promise<Response> {
-    const user = await this.userModel.findById(user_id);
+    const user = await this.userModel.findById(user_id, {
+      password_hashed: 0,
+      updatedAt: 0,
+      createdAt: 0,
+    });
     if (!user) {
       return {
         success: false,

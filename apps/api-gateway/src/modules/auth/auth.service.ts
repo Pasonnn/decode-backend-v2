@@ -13,8 +13,6 @@ import {
 } from './dto/login.dto';
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { ExistUserByEmailOrUsernameDto } from './dto/info.dto';
-
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);

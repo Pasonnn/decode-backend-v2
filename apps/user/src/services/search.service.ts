@@ -57,7 +57,14 @@ export class SearchService {
   }): Promise<Response<void>> {
     try {
       const { username } = input;
-      const user = await this.userModel.findOne({ username: username });
+      const user = await this.userModel.findOne(
+        { username: username },
+        {
+          password_hashed: 0,
+          updatedAt: 0,
+          createdAt: 0,
+        },
+      );
       if (user) {
         return {
           success: true,
@@ -71,7 +78,9 @@ export class SearchService {
         message: ERROR_MESSAGES.SUCCESS.USERNAME_AVAILABLE,
       };
     } catch (error: unknown) {
-      this.logger.error(`Error searching existing username: ${error as string}`);
+      this.logger.error(
+        `Error searching existing username: ${error as string}`,
+      );
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -83,7 +92,14 @@ export class SearchService {
   async searchExistingEmail(input: { email: string }): Promise<Response<void>> {
     try {
       const { email } = input;
-      const user = await this.userModel.findOne({ email: email });
+      const user = await this.userModel.findOne(
+        { email: email },
+        {
+          password_hashed: 0,
+          updatedAt: 0,
+          createdAt: 0,
+        },
+      );
       if (user) {
         return {
           success: true,

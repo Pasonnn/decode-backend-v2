@@ -108,7 +108,14 @@ export class RegisterService {
     // Get register info from request
     const { username, email, password_hashed } = register_info;
     // Check if user email already exists
-    const existing_email = await this.userModel.findOne({ email: email });
+    const existing_email = await this.userModel.findOne(
+      { email: email },
+      {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      },
+    );
     if (existing_email) {
       return {
         success: false,
@@ -117,9 +124,16 @@ export class RegisterService {
       };
     }
     // Check if user username already exists
-    const existing_username = await this.userModel.findOne({
-      username: username,
-    });
+    const existing_username = await this.userModel.findOne(
+      {
+        username: username,
+      },
+      {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      },
+    );
     if (existing_username) {
       return {
         success: false,
@@ -238,6 +252,9 @@ export class RegisterService {
     // Check if user already exists (by email or username)
     const existing_user = await this.userModel.findOne({
       $or: [{ email: email }, { username: register_info_value.username }],
+      password_hashed: 0,
+      updatedAt: 0,
+      createdAt: 0,
     });
     if (existing_user) {
       return {
