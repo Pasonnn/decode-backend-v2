@@ -124,21 +124,11 @@ export class EmailService {
         message: ERROR_MESSAGES.EMAIL_CHANGE.NEW_EMAIL_ALREADY_EXISTS,
       };
     }
-    // Verify email code
-    const verifyEmailCodeResponse = await this.verifyEmailCode({
-      user_id,
-      code,
-    });
-    if (!verifyEmailCodeResponse.success) {
-      return verifyEmailCodeResponse;
-    }
-    await this.redisInfrastructure.del(
-      `${USER_CONSTANTS.REDIS.KEYS.EMAIL_CHANGE}:${code}`,
-    );
-    // Initiate new email verification
+    // Initiate new email verification and check code
     const newEmailVerifyInitiateResponse = await this.sendNewEmailVerify({
       user_id,
       new_email,
+      code,
     });
     // Return Response
     if (!newEmailVerifyInitiateResponse.success) {
@@ -152,12 +142,13 @@ export class EmailService {
   }
 
   // Call this alone for resend new email verification
-  async sendNewEmailVerify(input: {
+  private async sendNewEmailVerify(input: {
     user_id: string;
     new_email: string;
+    code: string;
   }): Promise<Response<void>> {
     try {
-      const { user_id, new_email } = input;
+      const { user_id, new_email, code } = input;
       // Check if user exists
       const user = await this.userModel.findById(user_id, {
         password_hashed: 0,
@@ -171,6 +162,17 @@ export class EmailService {
           message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
         };
       }
+      // Verify email code
+      const verifyEmailCodeResponse = await this.verifyEmailCode({
+        user_id,
+        code,
+      });
+      if (!verifyEmailCodeResponse.success) {
+        return verifyEmailCodeResponse;
+      }
+      await this.redisInfrastructure.del(
+        `${USER_CONSTANTS.REDIS.KEYS.NEW_EMAIL_CHANGE}:${code}`,
+      );
       // Send new email verification
       const sendNewEmailVerificationResponse =
         await this.sendNewEmailVerification({

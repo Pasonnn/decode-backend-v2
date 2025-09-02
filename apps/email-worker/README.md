@@ -15,6 +15,7 @@ This service handles email sending operations for the Decode backend system. It 
 ### 3. Profile Updates
 - **`username-change-verify`** - Username change verification
 - **`email-change-verify`** - Email change verification
+- **`new-email-change-verify`** - New email address confirmation for email change
 
 ## Usage Examples
 
@@ -48,10 +49,26 @@ const emailChangeRequest: EmailRequestDto = {
 await rabbitMQService.sendEmailRequest(emailChangeRequest);
 ```
 
+### New Email Change Verification
+
+```typescript
+// New email change verification
+const newEmailChangeRequest: EmailRequestDto = {
+  type: 'new-email-change-verify',
+  data: {
+    email: 'newemail@example.com',
+    otpCode: '345678'
+  }
+};
+
+await emailService.sendEmail(newEmailChangeRequest);
+```
+
 ## API Endpoints
 
 - `POST /email-worker/send` - Send email directly
 - `POST /email-worker/queue` - Queue email for processing
+- `POST /email-worker/new-email-change-verify` - Send new email change verification email
 - `GET /email-worker/health` - Health check
 
 ## RabbitMQ Integration

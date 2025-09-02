@@ -193,18 +193,6 @@ export class UserController {
     });
   }
 
-  @Post('email/change/send-new-email-verify')
-  @UseGuards(AuthGuard)
-  async sendNewEmailVerify(
-    @Body() body: ChangeEmailDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<Response<void>> {
-    return await this.emailService.sendNewEmailVerify({
-      user_id: user.userId,
-      new_email: body.new_email,
-    });
-  }
-
   @Post('email/change/new-email-verify')
   @UseGuards(AuthGuard)
   async newEmailVerify(

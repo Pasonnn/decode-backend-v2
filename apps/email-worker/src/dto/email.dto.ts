@@ -50,10 +50,20 @@ export class EmailChangeVerifyEmailDto {
   otpCode: string;
 }
 
+export class NewEmailChangeVerifyEmailDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  otpCode: string;
+}
+
 export type EmailRequestDto =
   | { type: 'create-account'; data: CreateAccountEmailDto }
   | { type: 'welcome-message'; data: WelcomeMessageEmailDto }
   | { type: 'fingerprint-verify'; data: FingerprintVerifyEmailDto }
   | { type: 'forgot-password-verify'; data: ForgotPasswordVerifyEmailDto }
   | { type: 'username-change-verify'; data: UsernameChangeVerifyEmailDto }
-  | { type: 'email-change-verify'; data: EmailChangeVerifyEmailDto };
+  | { type: 'email-change-verify'; data: EmailChangeVerifyEmailDto }
+  | { type: 'new-email-change-verify'; data: NewEmailChangeVerifyEmailDto };

@@ -36,6 +36,30 @@ export class EmailWorkerController {
     return { success: true, message: 'Email queued successfully' };
   }
 
+  @Post('new-email-change-verify')
+  async handleNewEmailChangeVerify(@Body() request: EmailRequestDto) {
+    try {
+      if (request.type !== 'new-email-change-verify') {
+        return {
+          success: false,
+          error: 'Invalid email type. Expected new-email-change-verify',
+        };
+      }
+      
+      await this.emailService.sendEmail(request);
+      return { 
+        success: true, 
+        message: 'New email change verification email sent successfully',
+        email: request.data.email 
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
   @Get('health')
   async healthCheck() {
     const emailConnection = await this.emailService.testConnection();

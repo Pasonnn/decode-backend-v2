@@ -31,11 +31,19 @@ export class SearchService {
     try {
       const users = await this.userModel
         .find({
-          $or: [{ username: username_or_email }, { email: username_or_email }],
+          $or: [
+            { username: { $regex: username_or_email, $options: 'i' } },
+            { email: { $regex: username_or_email, $options: 'i' } },
+          ],
         })
         .skip((page - 1) * limit)
         .limit(limit)
-        .sort({ [sortBy]: sortOrder as 'asc' | 'desc' | 1 | -1 });
+        .sort({ [sortBy]: sortOrder as 'asc' | 'desc' | 1 | -1 })
+        .select({
+          password_hashed: 0,
+          updatedAt: 0,
+          createdAt: 0,
+        });
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
