@@ -38,6 +38,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "ioredis": "^5.7.0",
     "joi": "^18.0.1",
     "mongoose": "^8.17.1",
     "nodemailer": "^7.0.5",
@@ -72,7 +73,8 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "webpack": "^5.101.3"
   },
   "jest": {
     "moduleFileExtensions": [

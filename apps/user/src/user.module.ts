@@ -1,19 +1,49 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { HttpModule } from '@nestjs/axios';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { RedisModule } from '@nestjs-modules/ioredis';
+
+// Controllers Import
 import { UserController } from './user.controller';
+
+// Services Import
 import { ProfileService } from './services/profile.service';
 import { UsernameService } from './services/username.service';
 import { SearchService } from './services/search.service';
 import { EmailService } from './services/email.service';
-import { User, UserSchema } from './schemas/user.schema';
-import { RedisInfrastructure } from 'apps/auth/src/infrastructure/redis.infrastructure';
 
+// Infrastructure Import
+import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
+
+// Schemas Import
+import { User, UserSchema } from './schemas/user.schema';
+
+// Config Import
+import configuration from './config/configuration';
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    ConfigModule.forFeature(configuration),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        uri: config.get<string>('MONGO_URI'),
+      }),
+      inject: [ConfigService],
+    }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    HttpModule,
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        type: 'single',
+        url: config.get<string>('REDIS_URI'), // Use consistent naming
+      }),
+      inject: [ConfigService],
+    }),
     ClientsModule.register([
       {
         name: 'EMAIL_SERVICE',
@@ -30,12 +60,18 @@ import { RedisInfrastructure } from 'apps/auth/src/infrastructure/redis.infrastr
   ],
   controllers: [UserController],
   providers: [
+    // Services
     ProfileService,
     UsernameService,
     SearchService,
     EmailService,
+
+    // Infrastructure
     RedisInfrastructure,
   ],
-  exports: [ProfileService, UsernameService, SearchService, EmailService],
+  exports: [
+    // Export services that might be used by other modules
+    RedisInfrastructure,
+  ],
 })
 export class UserModule {}

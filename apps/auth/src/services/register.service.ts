@@ -18,18 +18,9 @@ import { Response } from '../interfaces/response.interface';
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { ERROR_MESSAGES } from '../constants/error-messages.constants';
 
-// Define interface for register info stored in Redis
-interface RegisterInfoValue {
-  username: string;
-  email: string;
-  password_hashed: string;
-}
-
-// Define interface for email verification code stored in Redis
-interface EmailVerificationValue {
-  email: string;
-  code: string;
-}
+// Interfaces Import
+import { RegisterInfoValue } from '../interfaces/register-info-value.interface';
+import { EmailVerificationValue } from '../interfaces/email-verification-value.interface';
 
 @Injectable()
 export class RegisterService {
