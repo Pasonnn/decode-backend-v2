@@ -7,6 +7,7 @@ import environmentConfig from './config/environment.config';
 // Import your modules here
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 
 @Module({
@@ -21,6 +22,7 @@ import { CacheModule } from './infrastructure/cache/cache.module';
     CacheModule,
     HealthModule,
     AuthModule,
+    UsersModule,
   ],
 })
 export class ApiGatewayModule {}
