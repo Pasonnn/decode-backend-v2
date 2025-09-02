@@ -499,13 +499,13 @@ export class AuthService {
   /**
    * Initiate forgot password process
    */
-  async initiateForgotPassword(username_or_email: string): Promise<Response> {
+  async initiateForgotPassword(email_or_username: string): Promise<Response> {
     try {
       this.logger.log('Initiating forgot password for current user');
 
       const response = await this.authServiceClient.post(
         '/auth/password/forgot/email-verification',
-        { username_or_email },
+        { email_or_username },
       );
 
       if (!response.success) {

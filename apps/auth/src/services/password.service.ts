@@ -45,11 +45,13 @@ export class PasswordService {
     if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
       return getUserInfoResponse;
     }
+    console.log('get_user_info_response', getUserInfoResponse);
     // Check if old password is correct
     const check_password_response = this.checkPassword(
       old_password,
       getUserInfoResponse.data.password_hashed,
     );
+    console.log('check_password_response', check_password_response);
     if (!check_password_response.success) {
       return check_password_response;
     }
@@ -76,11 +78,11 @@ export class PasswordService {
 
   // password/forgot/email-verification
   async emailVerificationChangePassword(
-    username_or_email: string,
+    email_or_username: string,
   ): Promise<Response> {
     // Get user info
     const getUserInfoResponse =
-      await this.infoService.getUserInfoByEmailOrUsername(username_or_email);
+      await this.infoService.getUserInfoByEmailOrUsername(email_or_username);
     if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
       return getUserInfoResponse;
     }

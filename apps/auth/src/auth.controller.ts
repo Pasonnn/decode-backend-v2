@@ -145,7 +145,7 @@ export class AuthController {
   ): Promise<Response> {
     const resend_device_fingerprint_email_verification_response =
       await this.loginService.resendDeviceFingerprintEmailVerification(
-        dto.username_or_email,
+        dto.email_or_username,
         dto.fingerprint_hashed,
       );
     return resend_device_fingerprint_email_verification_response;
@@ -281,7 +281,7 @@ export class AuthController {
   ): Promise<Response> {
     const email_verification_change_password_response =
       await this.passwordService.emailVerificationChangePassword(
-        dto.username_or_email,
+        dto.email_or_username,
       );
     return email_verification_change_password_response;
   }

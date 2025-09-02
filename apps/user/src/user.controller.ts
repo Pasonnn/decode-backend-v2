@@ -210,7 +210,7 @@ export class UserController {
   @UseGuards(AuthGuard)
   async search(@Query() query: SearchUserDto): Promise<Response<UserDoc[]>> {
     return await this.searchService.searchUsers({
-      username_or_email: query.username_or_email || '',
+      email_or_username: query.email_or_username || '',
       page: query.page || USER_CONSTANTS.SEARCH.DEFAULT_PAGE,
       limit: query.limit || USER_CONSTANTS.SEARCH.DEFAULT_LIMIT,
       sortBy: query.sortBy || USER_CONSTANTS.SEARCH.SORT_FIELDS[0],

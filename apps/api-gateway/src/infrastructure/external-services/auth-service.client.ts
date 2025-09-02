@@ -31,7 +31,7 @@ export interface FingerprintEmailVerificationRequest {
 }
 
 export interface ResendDeviceFingerprintEmailVerificationRequest {
-  username_or_email: string;
+  email_or_username: string;
   fingerprint_hashed: string;
 }
 

@@ -62,7 +62,7 @@ export class ResendDeviceFingerprintEmailVerificationDto {
   @IsString()
   @MinLength(1)
   @MaxLength(255)
-  username_or_email: string;
+  email_or_username: string;
 
   @ApiProperty({
     description: 'Device fingerprint hash for security verification',

@@ -181,16 +181,16 @@ export class LoginService {
   }
 
   async resendDeviceFingerprintEmailVerification(
-    username_or_email: string,
+    email_or_username: string,
     fingerprint_hashed: string,
   ): Promise<Response> {
     try {
       this.logger.log(
-        `Resend device fingerprint email verification request received for ${username_or_email}`,
+        `Resend device fingerprint email verification request received for ${email_or_username}`,
       );
       // Get User Data
       const getUserInfoResponse =
-        await this.infoService.getUserInfoByEmailOrUsername(username_or_email);
+        await this.infoService.getUserInfoByEmailOrUsername(email_or_username);
       if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
         return getUserInfoResponse;
       }
@@ -206,7 +206,7 @@ export class LoginService {
       return sendDeviceFingerprintEmailVerificationResponse;
     } catch (error) {
       this.logger.error(
-        `Error resending device fingerprint email verification for ${username_or_email}`,
+        `Error resending device fingerprint email verification for ${email_or_username}`,
         error,
       );
       return {

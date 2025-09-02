@@ -308,7 +308,7 @@ export class AuthController {
     @Body() initiateForgotPasswordDto: InitiateForgotPasswordDto,
   ): Promise<Response> {
     return this.authService.initiateForgotPassword(
-      initiateForgotPasswordDto.username_or_email,
+      initiateForgotPasswordDto.email_or_username,
     );
   }
 

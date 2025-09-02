@@ -36,7 +36,7 @@ export class SearchUserDto {
   @IsString()
   @MinLength(USER_CONSTANTS.SEARCH.MIN_QUERY_LENGTH)
   @MaxLength(USER_CONSTANTS.SEARCH.MAX_QUERY_LENGTH)
-  username_or_email?: string;
+  email_or_username?: string;
 
   @ApiProperty({
     description: 'Page number for pagination',
@@ -144,5 +144,5 @@ export class SearchUsernameOrEmailDto {
   @IsNotEmpty()
   @MinLength(USER_CONSTANTS.SEARCH.MIN_QUERY_LENGTH)
   @MaxLength(USER_CONSTANTS.SEARCH.MAX_QUERY_LENGTH)
-  username_or_email: string;
+  email_or_username: string;
 }

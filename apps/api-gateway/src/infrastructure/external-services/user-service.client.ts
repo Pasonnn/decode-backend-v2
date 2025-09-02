@@ -49,7 +49,7 @@ export interface VerifyNewEmailCodeRequest {
 }
 
 export interface SearchUsersRequest {
-  username_or_email?: string;
+  email_or_username?: string;
   page?: number;
   limit?: number;
   fields?: string[];
@@ -312,8 +312,8 @@ export class UserServiceClient extends BaseHttpClient {
       },
     };
 
-    if (data.username_or_email) {
-      queryParams.append('username_or_email', data.username_or_email);
+    if (data.email_or_username) {
+      queryParams.append('email_or_username', data.email_or_username);
     }
     if (data.page) {
       queryParams.append('page', data.page.toString());

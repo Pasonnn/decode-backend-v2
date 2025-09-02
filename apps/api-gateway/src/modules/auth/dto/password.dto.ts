@@ -92,7 +92,7 @@ export class InitiateForgotPasswordDto {
   })
   @IsNotEmpty()
   @IsString()
-  username_or_email: string;
+  email_or_username: string;
 }
 
 export class VerifyEmailForgotPasswordDto {

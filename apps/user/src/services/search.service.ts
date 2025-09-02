@@ -21,19 +21,19 @@ export class SearchService {
   }
 
   async searchUsers(input: {
-    username_or_email: string;
+    email_or_username: string;
     page: number;
     limit: number;
     sortBy: string;
     sortOrder: string;
   }): Promise<Response<UserDoc[]>> {
-    const { username_or_email, page, limit, sortBy, sortOrder } = input;
+    const { email_or_username, page, limit, sortBy, sortOrder } = input;
     try {
       const users = await this.userModel
         .find({
           $or: [
-            { username: { $regex: username_or_email, $options: 'i' } },
-            { email: { $regex: username_or_email, $options: 'i' } },
+            { username: { $regex: email_or_username, $options: 'i' } },
+            { email: { $regex: email_or_username, $options: 'i' } },
           ],
         })
         .skip((page - 1) * limit)

@@ -32,7 +32,7 @@ export class FingerprintEmailVerificationDto {
 export class ResendDeviceFingerprintEmailVerificationDto {
   @IsNotEmpty()
   @IsString()
-  username_or_email: string;
+  email_or_username: string;
 
   @IsNotEmpty()
   @IsString()

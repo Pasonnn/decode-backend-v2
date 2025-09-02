@@ -90,7 +90,6 @@ export class InfoService {
   async getUserInfoByUserId(user_id: string): Promise<Response<UserDoc>> {
     // Check if user exists
     const user = await this.userModel.findById(user_id, {
-      password_hashed: 0,
       updatedAt: 0,
       createdAt: 0,
     });
