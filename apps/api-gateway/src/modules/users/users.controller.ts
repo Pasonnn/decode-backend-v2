@@ -37,13 +37,11 @@ import {
 // Guards and Decorators
 import { AuthGuard, Public } from '../../common/guards/auth.guard';
 import { Roles, UserRole } from '../../common/decorators/roles.decorator';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 // Interfaces
 import type { Response } from '../../interfaces/response.interface';
 import { UserResponseDto } from './dto/user-response.dto';
 import type { UserDoc } from '../../infrastructure/external-services/user-service.client';
-import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 
 @ApiTags('User Management')
 @Controller('users')
@@ -268,9 +266,7 @@ export class UsersController {
   async changeEmailInitiate(
     @Headers('authorization') authorization: string,
   ): Promise<Response<void>> {
-    return await this.usersService.changeEmailInitiate(
-      authorization,
-    );
+    return await this.usersService.changeEmailInitiate(authorization);
   }
 
   @Post('email/change/verify-email')
@@ -345,10 +341,11 @@ export class UsersController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
-  async search(@Query() query: SearchUserDto,
+  async search(
+    @Query() query: SearchUserDto,
     @Headers('authorization') authorization: string,
   ): Promise<Response<UserDoc[]>> {
-    return await this.usersService.searchUsers(query,authorization);
+    return await this.usersService.searchUsers(query, authorization);
   }
 
   @Get('search/existing-username')
@@ -380,6 +377,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async searchExistingEmail(
     @Query() query: SearchEmailDto,
+    @Headers('authorization') authorization: string,
   ): Promise<Response<void>> {
     return await this.usersService.checkEmailExists(query, authorization);
   }
