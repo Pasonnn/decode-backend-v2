@@ -104,6 +104,22 @@ export class PasswordService {
   // password/forgot/verify-email
   async verifyEmailChangePassword(
     email_verification_code: string,
+  ): Promise<Response> {
+    // Get verification code from Redis
+    const verify_email_verification_code_response =
+      await this.verifyEmailVerificationCode(email_verification_code);
+    if (!verify_email_verification_code_response.success) {
+      return verify_email_verification_code_response;
+    }
+    return {
+      success: true,
+      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      message: ERROR_MESSAGES.SUCCESS.PASSWORD_CODE_VERIFIED,
+    };
+  }
+
+  private async verifyEmailVerificationCode(
+    email_verification_code: string,
   ): Promise<Response<UserDoc>> {
     // Get verification code from Redis
     const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${email_verification_code}`;
@@ -140,15 +156,15 @@ export class PasswordService {
     new_password: string,
   ): Promise<Response> {
     // Verify email verification code
-    const verify_email_change_password_response =
-      await this.verifyEmailChangePassword(email_verification_code);
+    const verify_email_verification_code_response =
+      await this.verifyEmailVerificationCode(email_verification_code);
     if (
-      !verify_email_change_password_response.success ||
-      !verify_email_change_password_response.data
+      !verify_email_verification_code_response.success ||
+      !verify_email_verification_code_response.data
     ) {
-      return verify_email_change_password_response;
+      return verify_email_verification_code_response;
     }
-    const user_id = verify_email_change_password_response.data._id.toString();
+    const user_id = verify_email_verification_code_response.data._id.toString();
     // Delete verification code from Redis
     const verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.PASSWORD_RESET}:${email_verification_code}`;
     await this.redisInfrastructure.del(verification_code_key);
