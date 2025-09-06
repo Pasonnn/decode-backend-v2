@@ -10,10 +10,11 @@ export class CryptoUtils {
   private readonly logger = new Logger(CryptoUtils.name);
   constructor(private readonly redisInfrastructure: RedisInfrastructure) {}
 
-  async generateNonceMessage(
-    address: string,
-    message: string,
-  ): Promise<string> {
+  async generateNonceMessage(input: {
+    address: string;
+    message: string;
+  }): Promise<string> {
+    const { address, message } = input;
     // Create nonce message structure
     const random_nonce = randomUUID();
     const issued_at = Math.floor(Date.now() / 1000);
@@ -37,10 +38,11 @@ export class CryptoUtils {
     return nonce_message;
   }
 
-  async validateNonceMessage(
-    address: string,
-    signature: string,
-  ): Promise<boolean> {
+  async validateNonceMessage(input: {
+    address: string;
+    signature: string;
+  }): Promise<boolean> {
+    const { address, signature } = input;
     try {
       const nonce_message_key = `verify_nonce:${address}`;
       const nonce_message_value = (await this.redisInfrastructure.get(

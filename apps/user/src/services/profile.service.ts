@@ -15,7 +15,7 @@ import { User } from '../schemas/user.schema';
 
 // Constants Import
 import { USER_CONSTANTS } from '../constants/user.constants';
-import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { MESSAGES } from '../constants/messages.constants';
 @Injectable()
 export class ProfileService {
   private readonly logger: Logger;
@@ -36,13 +36,13 @@ export class ProfileService {
         return {
           success: false,
           statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
-          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+          message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.PROFILE_FETCHED,
+        message: MESSAGES.SUCCESS.PROFILE_FETCHED,
         data: user as UserDoc,
       };
     } catch (error) {
@@ -66,7 +66,7 @@ export class ProfileService {
         return {
           success: false,
           statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
-          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+          message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
       user.display_name = display_name;
@@ -74,7 +74,7 @@ export class ProfileService {
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.PROFILE_UPDATED,
+        message: MESSAGES.SUCCESS.PROFILE_UPDATED,
         data: user as UserDoc,
       };
     } catch (error) {
@@ -98,7 +98,7 @@ export class ProfileService {
         return {
           success: false,
           statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
-          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+          message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
       user.bio = bio;
@@ -106,7 +106,7 @@ export class ProfileService {
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.PROFILE_UPDATED,
+        message: MESSAGES.SUCCESS.PROFILE_UPDATED,
         data: user as UserDoc,
       };
     } catch (error) {
@@ -132,7 +132,7 @@ export class ProfileService {
         return {
           success: false,
           statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
-          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+          message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
       user.avatar_ipfs_hash = avatar_ipfs_hash;
@@ -141,7 +141,7 @@ export class ProfileService {
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.PROFILE_PICTURE_UPLOADED,
+        message: MESSAGES.SUCCESS.PROFILE_PICTURE_UPLOADED,
         data: user as UserDoc,
       };
     } catch (error) {
@@ -165,7 +165,7 @@ export class ProfileService {
         return {
           success: false,
           statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
-          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+          message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
       user.role = role;
@@ -173,7 +173,7 @@ export class ProfileService {
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.PROFILE_UPDATED,
+        message: MESSAGES.SUCCESS.PROFILE_UPDATED,
         data: user as UserDoc,
       };
     } catch (error) {

@@ -11,7 +11,7 @@ import { User } from '../schemas/user.schema';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
-import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { MESSAGES } from '../constants/error-messages.constants';
 import { SessionService } from './session.service';
 
 @Injectable()
@@ -38,13 +38,13 @@ export class InfoService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USER_INFO_FETCHED,
+      message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
       data: user as UserDoc,
     };
   }
@@ -62,7 +62,7 @@ export class InfoService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USER_INFO.INVALID_ACCESS_TOKEN,
+        message: MESSAGES.USER_INFO.INVALID_ACCESS_TOKEN,
       };
     }
     const user_id = validate_access_token_response.data.user_id;
@@ -76,13 +76,13 @@ export class InfoService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USER_INFO_FETCHED,
+      message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
       data: user as UserDoc,
     };
   }
@@ -97,13 +97,13 @@ export class InfoService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USER_INFO_FETCHED,
+      message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
       data: user as UserDoc,
     };
   }
@@ -121,13 +121,13 @@ export class InfoService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USER_FOUND,
+      message: MESSAGES.SUCCESS.USER_FOUND,
     };
   }
 }

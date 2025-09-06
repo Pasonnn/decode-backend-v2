@@ -13,7 +13,7 @@ import { User } from '../schemas/user.schema';
 
 // Constants Import
 import { USER_CONSTANTS } from '../constants/user.constants';
-import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { MESSAGES } from '../constants/messages.constants';
 
 @Injectable()
 export class UsernameService {
@@ -40,7 +40,7 @@ export class UsernameService {
         return {
           success: false,
           statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
-          message: ERROR_MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+          message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
       if (
@@ -51,7 +51,7 @@ export class UsernameService {
         return {
           success: false,
           statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-          message: ERROR_MESSAGES.USERNAME.USERNAME_CHANGE_COOLDOWN_ACTIVE,
+          message: MESSAGES.USERNAME.USERNAME_CHANGE_COOLDOWN_ACTIVE,
         };
       }
       const sendEmailVerificationResponse = await this.sendEmailVerification({
@@ -64,14 +64,14 @@ export class UsernameService {
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
+        message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
       this.logger.error(`Error changing username initiate: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SEARCH.SEARCH_FAILED,
+        message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
   }
@@ -89,20 +89,20 @@ export class UsernameService {
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USERNAME.USERNAME_CHANGE_CODE_INVALID,
+        message: MESSAGES.USERNAME.USERNAME_CHANGE_CODE_INVALID,
       };
     }
     if (verification_code_value.user_id !== user_id) {
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.FORBIDDEN,
-        message: ERROR_MESSAGES.USERNAME.USERNAME_CHANGE_CODE_INVALID,
+        message: MESSAGES.USERNAME.USERNAME_CHANGE_CODE_INVALID,
       };
     }
     return {
       success: true,
       statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USERNAME_CHANGE_CODE_VERIFIED,
+      message: MESSAGES.SUCCESS.USERNAME_CHANGE_CODE_VERIFIED,
     };
   }
 
@@ -121,14 +121,14 @@ export class UsernameService {
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
-        message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     if (user.username === new_username) {
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USERNAME.USERNAME_ALREADY_EXISTS,
+        message: MESSAGES.USERNAME.USERNAME_ALREADY_EXISTS,
       };
     }
     const verifyUsernameCodeResponse = await this.verifyUsernameCode({
@@ -148,7 +148,7 @@ export class UsernameService {
     return {
       success: true,
       statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USERNAME_CHANGED,
+      message: MESSAGES.SUCCESS.USERNAME_CHANGED,
     };
   }
 
@@ -182,14 +182,14 @@ export class UsernameService {
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
+        message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
       this.logger.error(`Error sending email verification: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SEARCH.SEARCH_FAILED,
+        message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
   }

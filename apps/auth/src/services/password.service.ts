@@ -19,7 +19,7 @@ import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
-import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { MESSAGES } from '../constants/error-messages.constants';
 // Interfaces
 import { PasswordVerificationValue } from '../interfaces/password-verification-value.interface';
 
@@ -97,7 +97,7 @@ export class PasswordService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.PASSWORD_RESET_SENT,
+      message: MESSAGES.SUCCESS.PASSWORD_RESET_SENT,
     };
   }
 
@@ -114,7 +114,7 @@ export class PasswordService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.PASSWORD_CODE_VERIFIED,
+      message: MESSAGES.SUCCESS.PASSWORD_CODE_VERIFIED,
     };
   }
 
@@ -130,7 +130,7 @@ export class PasswordService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.PASSWORD.PASSWORD_RESET_CODE_INVALID,
+        message: MESSAGES.PASSWORD.PASSWORD_RESET_CODE_INVALID,
       };
     }
 
@@ -145,7 +145,7 @@ export class PasswordService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.PASSWORD_CODE_VERIFIED,
+      message: MESSAGES.SUCCESS.PASSWORD_CODE_VERIFIED,
       data: getUserInfoResponse.data,
     };
   }
@@ -198,13 +198,13 @@ export class PasswordService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.PASSWORD.INVALID_PASSWORD,
+        message: MESSAGES.PASSWORD.INVALID_PASSWORD,
       };
     }
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.PASSWORD_CHANGED,
+      message: MESSAGES.SUCCESS.PASSWORD_CHANGED,
     };
   }
 
@@ -218,7 +218,7 @@ export class PasswordService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.PASSWORD.WEAK_PASSWORD,
+        message: MESSAGES.PASSWORD.WEAK_PASSWORD,
       };
     }
     // Hash password
@@ -227,7 +227,7 @@ export class PasswordService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.PASSWORD_CHANGED,
+      message: MESSAGES.SUCCESS.PASSWORD_CHANGED,
       data: {
         password_hashed: password_hashed,
       },
@@ -247,13 +247,13 @@ export class PasswordService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.PASSWORD.PASSWORD_CHANGE_FAILED,
+        message: MESSAGES.PASSWORD.PASSWORD_CHANGE_FAILED,
       };
     }
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.PASSWORD_CHANGED,
+      message: MESSAGES.SUCCESS.PASSWORD_CHANGED,
     };
   }
 
@@ -288,7 +288,7 @@ export class PasswordService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
+      message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }
 }

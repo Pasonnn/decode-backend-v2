@@ -11,7 +11,7 @@ import { User } from '../schemas/user.schema';
 
 // Constants Import
 import { USER_CONSTANTS } from '../constants/user.constants';
-import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { MESSAGES } from '../constants/messages.constants';
 
 @Injectable()
 export class SearchService {
@@ -47,7 +47,7 @@ export class SearchService {
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.SEARCH_SUCCESSFUL,
+        message: MESSAGES.SUCCESS.SEARCH_SUCCESSFUL,
         data: users as UserDoc[],
       };
     } catch (error: unknown) {
@@ -55,7 +55,7 @@ export class SearchService {
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SEARCH.SEARCH_FAILED,
+        message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
   }
@@ -77,13 +77,13 @@ export class SearchService {
         return {
           success: true,
           statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-          message: ERROR_MESSAGES.SUCCESS.USERNAME_ALREADY_EXISTS,
+          message: MESSAGES.SUCCESS.USERNAME_ALREADY_EXISTS,
         };
       }
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.USERNAME_AVAILABLE,
+        message: MESSAGES.SUCCESS.USERNAME_AVAILABLE,
       };
     } catch (error: unknown) {
       this.logger.error(
@@ -92,7 +92,7 @@ export class SearchService {
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SEARCH.SEARCH_FAILED,
+        message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
   }
@@ -112,20 +112,20 @@ export class SearchService {
         return {
           success: true,
           statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-          message: ERROR_MESSAGES.SUCCESS.EMAIL_ALREADY_EXISTS,
+          message: MESSAGES.SUCCESS.EMAIL_ALREADY_EXISTS,
         };
       }
       return {
         success: true,
         statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.EMAIL_AVAILABLE,
+        message: MESSAGES.SUCCESS.EMAIL_AVAILABLE,
       };
     } catch (error: unknown) {
       this.logger.error(`Error searching existing email: ${error as string}`);
       return {
         success: false,
         statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SEARCH.SEARCH_FAILED,
+        message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
   }

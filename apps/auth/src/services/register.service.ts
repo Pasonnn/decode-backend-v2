@@ -16,7 +16,7 @@ import { Response } from '../interfaces/response.interface';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
-import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { MESSAGES } from '../constants/error-messages.constants';
 
 // Interfaces Import
 import { RegisterInfoValue } from '../interfaces/register-info-value.interface';
@@ -96,7 +96,7 @@ export class RegisterService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USER_CREATED,
+      message: MESSAGES.SUCCESS.USER_CREATED,
     };
   }
 
@@ -120,7 +120,7 @@ export class RegisterService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.REGISTRATION.EMAIL_EXISTS,
+        message: MESSAGES.REGISTRATION.EMAIL_EXISTS,
       };
     }
     // Check if user username already exists
@@ -138,7 +138,7 @@ export class RegisterService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.REGISTRATION.USERNAME_EXISTS,
+        message: MESSAGES.REGISTRATION.USERNAME_EXISTS,
       };
     }
     // Store register info in Redis
@@ -158,7 +158,7 @@ export class RegisterService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.REGISTRATION_SUCCESSFUL,
+      message: MESSAGES.SUCCESS.REGISTRATION_SUCCESSFUL,
     };
   }
 
@@ -176,7 +176,7 @@ export class RegisterService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.NOT_FOUND,
-        message: ERROR_MESSAGES.REGISTRATION.REGISTER_INFO_NOT_FOUND,
+        message: MESSAGES.REGISTRATION.REGISTER_INFO_NOT_FOUND,
       };
     }
     // Store email verification code with email in Redis
@@ -202,7 +202,7 @@ export class RegisterService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
+      message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }
 
@@ -218,7 +218,7 @@ export class RegisterService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
+        message: MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
       };
     }
 
@@ -228,7 +228,7 @@ export class RegisterService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SUCCESSFUL,
+      message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SUCCESSFUL,
       data: {
         email: email_verification_code_value.email,
       },
@@ -245,7 +245,7 @@ export class RegisterService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.REGISTRATION.REGISTER_INFO_INVALID,
+        message: MESSAGES.REGISTRATION.REGISTER_INFO_INVALID,
       };
     }
 
@@ -260,7 +260,7 @@ export class RegisterService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.CONFLICT,
-        message: ERROR_MESSAGES.REGISTRATION.EMAIL_EXISTS,
+        message: MESSAGES.REGISTRATION.EMAIL_EXISTS,
       };
     }
     // Delete register info from Redis
@@ -280,7 +280,7 @@ export class RegisterService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USER_CREATED,
+      message: MESSAGES.SUCCESS.USER_CREATED,
       data: user,
     };
   }
@@ -297,7 +297,7 @@ export class RegisterService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
+      message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }
 }

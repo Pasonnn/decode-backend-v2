@@ -1,4 +1,4 @@
-export const ERROR_MESSAGES = {
+export const MESSAGES = {
   // Authentication & Login Errors
   AUTH: {
     INVALID_CREDENTIALS: 'Invalid email/username or password',

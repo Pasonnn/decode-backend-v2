@@ -300,7 +300,7 @@ export const USER_CONSTANTS = {
   },
 
   // Error Messages
-  ERROR_MESSAGES: {
+  MESSAGES: {
     USER_NOT_FOUND: 'User not found',
     USERNAME_ALREADY_EXISTS: 'Username already exists',
     EMAIL_ALREADY_EXISTS: 'Email already exists',

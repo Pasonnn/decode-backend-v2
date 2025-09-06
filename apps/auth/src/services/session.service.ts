@@ -24,7 +24,7 @@ import { Logger } from '@nestjs/common';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
-import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
 export class SessionService {
@@ -68,7 +68,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.SESSION_CREATED,
+        message: MESSAGES.SUCCESS.SESSION_CREATED,
         data: {
           ...session.toObject(),
           access_token,
@@ -82,7 +82,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.SESSION_CREATION_ERROR,
+        message: MESSAGES.SESSION.SESSION_CREATION_ERROR,
       };
     }
   }
@@ -119,7 +119,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.SESSION_REFRESHED,
+        message: MESSAGES.SUCCESS.SESSION_REFRESHED,
         data: {
           session_token: new_session_token,
           access_token,
@@ -130,7 +130,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.SESSION_REFRESH_ERROR,
+        message: MESSAGES.SESSION.SESSION_REFRESH_ERROR,
       };
     }
   }
@@ -147,7 +147,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.ALL_SESSIONS_REVOKED,
+        message: MESSAGES.SUCCESS.ALL_SESSIONS_REVOKED,
       };
     } catch (error) {
       this.logger.error(
@@ -157,7 +157,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.ALL_SESSIONS_REVOKING_ERROR,
+        message: MESSAGES.SESSION.ALL_SESSIONS_REVOKING_ERROR,
       };
     }
   }
@@ -178,7 +178,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.USER_ACTIVE_SESSIONS_FETCHED,
+        message: MESSAGES.SUCCESS.USER_ACTIVE_SESSIONS_FETCHED,
         data: sessions.map((session) =>
           session.toObject(),
         ) as unknown as SessionDoc[],
@@ -191,7 +191,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.USER_ACTIVE_SESSIONS_FETCHING_ERROR,
+        message: MESSAGES.SESSION.USER_ACTIVE_SESSIONS_FETCHING_ERROR,
       };
     }
   }
@@ -213,7 +213,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.EXPIRED_SESSIONS_CLEANED_UP,
+        message: MESSAGES.SUCCESS.EXPIRED_SESSIONS_CLEANED_UP,
       };
     } catch (error) {
       this.logger.error(
@@ -223,7 +223,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.EXPIRED_SESSIONS_CLEANING_ERROR,
+        message: MESSAGES.SESSION.EXPIRED_SESSIONS_CLEANING_ERROR,
       };
     }
   }
@@ -244,7 +244,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.LOGOUT_ERROR,
+        message: MESSAGES.SESSION.LOGOUT_ERROR,
       };
     }
   }
@@ -271,7 +271,7 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.SESSION_NOT_FOUND,
+          message: MESSAGES.SESSION.SESSION_NOT_FOUND,
         };
       }
       // Check if session is expired
@@ -279,7 +279,7 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.SESSION_EXPIRED,
+          message: MESSAGES.SESSION.SESSION_EXPIRED,
         };
       }
       // Check if session is revoked
@@ -287,7 +287,7 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.SESSION_REVOKED,
+          message: MESSAGES.SESSION.SESSION_REVOKED,
         };
       }
       // Check if session is valid
@@ -295,14 +295,14 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.SESSION_EXPIRED,
+          message: MESSAGES.SESSION.SESSION_EXPIRED,
         };
       }
       // Return response
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.ACCESS_TOKEN_VALIDATED,
+        message: MESSAGES.SUCCESS.ACCESS_TOKEN_VALIDATED,
         data: validate_access_token_response.data,
       };
     } catch (error) {
@@ -310,7 +310,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.ACCESS_TOKEN_VALIDATION_ERROR,
+        message: MESSAGES.SESSION.ACCESS_TOKEN_VALIDATION_ERROR,
       };
     }
   }
@@ -325,7 +325,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.SSO_TOKEN_CREATED,
+        message: MESSAGES.SUCCESS.SSO_TOKEN_CREATED,
         data: sso_token,
       };
     } catch (error) {
@@ -333,7 +333,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.SSO_TOKEN_CREATION_ERROR,
+        message: MESSAGES.SESSION.SSO_TOKEN_CREATION_ERROR,
       };
     }
   }
@@ -348,7 +348,7 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.SSO_TOKEN_INVALID,
+          message: MESSAGES.SESSION.SSO_TOKEN_INVALID,
         };
       }
       const user_id = sso_token_response;
@@ -360,7 +360,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.SSO_TOKEN_VALIDATED,
+        message: MESSAGES.SUCCESS.SSO_TOKEN_VALIDATED,
         data: {
           session_token,
           user_id,
@@ -371,7 +371,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.SSO_TOKEN_VALIDATION_ERROR,
+        message: MESSAGES.SESSION.SSO_TOKEN_VALIDATION_ERROR,
       };
     }
   }
@@ -385,7 +385,7 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.INVALID_SESSION_TOKEN,
+          message: MESSAGES.SESSION.INVALID_SESSION_TOKEN,
         };
       }
       // Validate session token
@@ -396,7 +396,7 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.INVALID_SESSION_TOKEN,
+          message: MESSAGES.SESSION.INVALID_SESSION_TOKEN,
         };
       }
       // Check if session is expired
@@ -404,7 +404,7 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.SESSION_EXPIRED,
+          message: MESSAGES.SESSION.SESSION_EXPIRED,
         };
       }
       // Check if session is revoked
@@ -412,13 +412,13 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: ERROR_MESSAGES.SESSION.SESSION_REVOKED,
+          message: MESSAGES.SESSION.SESSION_REVOKED,
         };
       }
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.SESSION_VALID,
+        message: MESSAGES.SUCCESS.SESSION_VALID,
         data: session as unknown as JwtPayload,
       };
     } catch (error) {
@@ -426,7 +426,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.SESSION_VALIDATION_ERROR,
+        message: MESSAGES.SESSION.SESSION_VALIDATION_ERROR,
       };
     }
   }
@@ -452,7 +452,7 @@ export class SessionService {
         return {
           success: false,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-          message: ERROR_MESSAGES.SESSION.SESSION_NOT_FOUND,
+          message: MESSAGES.SESSION.SESSION_NOT_FOUND,
         };
       }
       this.logger.log(
@@ -462,7 +462,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.SESSION_REVOKED,
+        message: MESSAGES.SUCCESS.SESSION_REVOKED,
         data: revoked_session as unknown as SessionDoc,
       };
     } catch (error) {
@@ -470,7 +470,7 @@ export class SessionService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.SESSION.SESSION_REVOKING_ERROR,
+        message: MESSAGES.SESSION.SESSION_REVOKING_ERROR,
       };
     }
   }

@@ -23,7 +23,7 @@ import { PasswordService } from './password.service';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
-import { ERROR_MESSAGES } from '../constants/error-messages.constants';
+import { MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
 export class LoginService {
@@ -101,7 +101,7 @@ export class LoginService {
         return {
           success: true,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-          message: ERROR_MESSAGES.AUTH.DEVICE_FINGERPRINT_NOT_TRUSTED,
+          message: MESSAGES.AUTH.DEVICE_FINGERPRINT_NOT_TRUSTED,
         };
       } else {
         // Device fingerprint trusted
@@ -128,7 +128,7 @@ export class LoginService {
         return {
           success: true,
           statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-          message: ERROR_MESSAGES.SUCCESS.LOGIN_SUCCESSFUL,
+          message: MESSAGES.SUCCESS.LOGIN_SUCCESSFUL,
           data: createSessionResponse.data,
         };
       }
@@ -137,7 +137,7 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.AUTH.LOGIN_ERROR,
+        message: MESSAGES.AUTH.LOGIN_ERROR,
       };
     }
   }
@@ -165,7 +165,7 @@ export class LoginService {
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
+        message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
       };
     } catch (error) {
       this.logger.error(
@@ -175,7 +175,7 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
+        message: MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
       };
     }
   }
@@ -212,7 +212,7 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: ERROR_MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
+        message: MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
       };
     }
   }
@@ -229,13 +229,13 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
+      message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
       data: device_fingerprint as DeviceFingerprintDoc,
     };
   }
@@ -258,7 +258,7 @@ export class LoginService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
+      message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
       data: device_fingerprint as DeviceFingerprintDoc,
     };
   }
@@ -279,7 +279,7 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
     // Get user email
@@ -295,7 +295,7 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     // Send email verification code to user
@@ -322,7 +322,7 @@ export class LoginService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
+      message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }
 
@@ -354,7 +354,7 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
+        message: MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
       };
     }
 
@@ -370,7 +370,7 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
     // Update device fingerprint to trusted
@@ -383,7 +383,7 @@ export class LoginService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
+      message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
       data: device_fingerprint,
     };
   }
@@ -402,7 +402,7 @@ export class LoginService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.SESSION_CREATED,
+      message: MESSAGES.SUCCESS.SESSION_CREATED,
       data: create_session_response.data,
     };
   }
@@ -417,7 +417,7 @@ export class LoginService {
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: ERROR_MESSAGES.USER_INFO.USER_NOT_FOUND,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     user.last_login = new Date();
@@ -425,7 +425,7 @@ export class LoginService {
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: ERROR_MESSAGES.SUCCESS.USER_UPDATED,
+      message: MESSAGES.SUCCESS.USER_UPDATED,
     };
   }
 }
