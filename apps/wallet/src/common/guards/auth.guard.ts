@@ -10,7 +10,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
-import { AxiosError, AxiosResponse } from 'axios';
+import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { Request } from 'express';
 
@@ -124,7 +124,7 @@ export class AuthGuard implements CanActivate {
     }
     try {
       // Call auth service to validate token
-      const response: AxiosResponse<AuthServiceResponse> = await firstValueFrom(
+      const response = await firstValueFrom(
         this.httpService.post<AuthServiceResponse>(
           `${this.authServiceUrl}/auth/info/by-access-token`,
           { access_token: token },

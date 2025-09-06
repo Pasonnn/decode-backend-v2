@@ -11,6 +11,10 @@ import { Response } from '../interfaces/response.interface';
 // Utils
 import { CryptoUtils } from '../utils/crypto.utils';
 
+// Constants
+import { WALLET_CONSTANTS } from '../constants/wallet.constants';
+import { MESSAGES } from '../constants/messages.constants';
+
 @Injectable()
 export class LinkService {
   private readonly logger = new Logger(LinkService.name);
@@ -31,15 +35,12 @@ export class LinkService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Wallet already linked',
+          message: MESSAGES.WALLET_LINK.WALLET_ALREADY_LINKED,
         };
       }
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
         address,
-        message: `Welcome to Decode Network! To link your wallet to your account (${user_id}), please sign this message with your wallet. 
-        This cryptographic signature proves you control your wallet without revealing any sensitive information. 
-        By signing this message, you are requesting access to your wallet. 
-        This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.`,
+        message: WALLET_CONSTANTS.CHALLENGE.NONCE.MESSAGE_TEMPLATE.LINK,
       });
       if (!nonceMessage) {
         return {
@@ -60,7 +61,7 @@ export class LinkService {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to generate link challenge',
+        message: MESSAGES.CHALLENGE.CHALLENGE_GENERATION_FAILED,
         error: error as string,
       };
     }
@@ -92,13 +93,13 @@ export class LinkService {
       return {
         success: true,
         statusCode: 200,
-        message: 'Link challenge validated successfully',
+        message: MESSAGES.SUCCESS.LINK_CHALLENGE_VALIDATED,
       };
     } catch (error) {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to validate link challenge',
+        message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
         error: error as string,
       };
     }
@@ -115,7 +116,7 @@ export class LinkService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Primary wallet cannot be unlinked',
+          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_CANNOT_UNLINK,
         };
       }
       await this.walletModel.deleteOne({
@@ -125,13 +126,13 @@ export class LinkService {
       return {
         success: true,
         statusCode: 200,
-        message: 'Wallet unlinked successfully',
+        message: MESSAGES.SUCCESS.WALLET_UNLINKED,
       };
     } catch (error) {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to unlink wallet',
+        message: MESSAGES.WALLET_LINK.WALLET_UNLINKING_FAILED,
         error: error as string,
       };
     }
@@ -147,20 +148,20 @@ export class LinkService {
         return {
           success: false,
           statusCode: 400,
-          message: 'No wallets found',
+          message: MESSAGES.DATABASE.WALLET_NOT_FOUND,
         };
       }
       return {
         success: true,
         statusCode: 200,
-        message: 'Wallets fetched successfully',
+        message: MESSAGES.SUCCESS.WALLETS_FETCHED,
         data: wallets,
       };
     } catch (error) {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to get wallets',
+        message: MESSAGES.DATABASE.QUERY_FAILED,
         error: error as string,
       };
     }
@@ -177,7 +178,7 @@ export class LinkService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Wallet already linked',
+          message: MESSAGES.WALLET_LINK.WALLET_ALREADY_LINKED,
         };
       }
       const newWallet = await this.walletModel.create({
@@ -187,14 +188,14 @@ export class LinkService {
       return {
         success: true,
         statusCode: 200,
-        message: 'Wallet linked successfully',
+        message: MESSAGES.SUCCESS.WALLET_LINKED,
         data: newWallet,
       };
     } catch (error) {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to link wallet',
+        message: MESSAGES.WALLET_LINK.WALLET_LINKING_FAILED,
         error: error as string,
       };
     }

@@ -11,6 +11,7 @@ import { WalletDoc } from '../interfaces/wallet-doc.interface';
 
 // Utils
 import { CryptoUtils } from '../utils/crypto.utils';
+import { MESSAGES } from '../constants/messages.constants';
 
 @Injectable()
 export class PrimaryService {
@@ -34,7 +35,7 @@ export class PrimaryService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Wallet not found',
+          message: MESSAGES.DATABASE.WALLET_NOT_FOUND,
         };
       }
       const isPrimaryWallet = await this.isPrimaryWallet({
@@ -44,7 +45,7 @@ export class PrimaryService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Wallet is already primary',
+          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_EXISTS,
         };
       }
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
@@ -58,13 +59,13 @@ export class PrimaryService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Failed to generate primary wallet challenge',
+          message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_GENERATION_FAILED,
         };
       }
       return {
         success: true,
         statusCode: 200,
-        message: 'Primary wallet challenge generated successfully',
+        message: MESSAGES.SUCCESS.PRIMARY_CHALLENGE_GENERATED,
         data: {
           nonceMessage: nonceMessage,
         },
@@ -73,7 +74,7 @@ export class PrimaryService {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to generate primary wallet challenge',
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_GENERATION_FAILED,
         error: error as string,
       };
     }
@@ -94,7 +95,7 @@ export class PrimaryService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Invalid primary wallet challenge',
+          message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_VALIDATION_FAILED,
         };
       }
       const setPrimaryWallet = await this.setPrimaryWallet({
@@ -107,13 +108,13 @@ export class PrimaryService {
       return {
         success: true,
         statusCode: 200,
-        message: 'Primary wallet challenge validated successfully',
+        message: MESSAGES.SUCCESS.PRIMARY_CHALLENGE_VALIDATED,
       };
     } catch (error) {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to validate primary wallet challenge',
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_VALIDATION_FAILED,
         error: error as string,
       };
     }
@@ -132,7 +133,7 @@ export class PrimaryService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Wallet is not primary',
+          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_SET,
         };
       }
       const unsetPrimaryWallet = await this.walletModel.findOneAndUpdate(
@@ -146,19 +147,19 @@ export class PrimaryService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Failed to unset primary wallet',
+          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_UNSET_FAILED,
         };
       }
       return {
         success: true,
         statusCode: 200,
-        message: 'Primary wallet unset successfully',
+        message: MESSAGES.SUCCESS.PRIMARY_WALLET_UNSET,
       };
     } catch (error) {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to unset primary wallet',
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_UNSET_FAILED,
         error: error as string,
       };
     }
@@ -181,20 +182,20 @@ export class PrimaryService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Wallet not found',
+          message: MESSAGES.DATABASE.WALLET_NOT_FOUND,
         };
       }
       return {
         success: true,
         statusCode: 200,
-        message: 'Primary wallet set successfully',
+        message: MESSAGES.SUCCESS.PRIMARY_WALLET_SET,
         data: wallet as WalletDoc,
       };
     } catch (error) {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to set primary wallet',
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_SET_FAILED,
         error: error as string,
       };
     }

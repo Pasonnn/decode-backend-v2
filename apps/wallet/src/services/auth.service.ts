@@ -6,6 +6,10 @@ import { Response } from '../interfaces/response.interface';
 // Utils
 import { CryptoUtils } from '../utils/crypto.utils';
 
+// Constants
+import { WALLET_CONSTANTS } from '../constants/wallet.constants';
+import { MESSAGES } from '../constants/messages.constants';
+
 @Injectable()
 export class AuthService {
   constructor(private readonly cryptoUtils: CryptoUtils) {}
@@ -15,22 +19,19 @@ export class AuthService {
       const { address } = input;
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
         address,
-        message: `Welcome to Decode Wallet! To ensure the security of your wallet and verify your identity, please sign this message with your wallet. 
-            This cryptographic signature proves you control your wallet without revealing any sensitive information. 
-            By signing this message, you are requesting access to your wallet. 
-            This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.`,
+        message: WALLET_CONSTANTS.CHALLENGE.NONCE.MESSAGE_TEMPLATE.LOGIN,
       });
       if (!nonceMessage) {
         return {
           success: false,
           statusCode: 400,
-          message: 'Failed to generate login challenge',
+          message: MESSAGES.CHALLENGE.NONCE_MESSAGE_GENERATION_FAILED,
         };
       }
       return {
         success: true,
         statusCode: 200,
-        message: 'Login challenge generated successfully',
+        message: MESSAGES.SUCCESS.CHALLENGE_GENERATED,
         data: {
           nonceMessage: nonceMessage,
         },
@@ -39,7 +40,7 @@ export class AuthService {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to generate login challenge',
+        message: MESSAGES.CHALLENGE.NONCE_MESSAGE_GENERATION_FAILED,
         error: error as string,
       };
     }
@@ -59,19 +60,19 @@ export class AuthService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Invalid login challenge',
+          message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
         };
       }
       return {
         success: true,
         statusCode: 200,
-        message: 'Login challenge validated successfully',
+        message: MESSAGES.SUCCESS.CHALLENGE_VALIDATED,
       };
     } catch (error) {
       return {
         success: false,
         statusCode: 500,
-        message: 'Failed to validate login challenge',
+        message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
         error: error as string,
       };
     }
