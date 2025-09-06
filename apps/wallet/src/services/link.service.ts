@@ -23,12 +23,9 @@ export class LinkService {
     @InjectModel(Wallet.name) private walletModel: Model<Wallet>,
   ) {}
 
-  async generateLinkChallenge(input: {
-    address: string;
-    user_id: string;
-  }): Promise<Response> {
+  async generateLinkChallenge(input: { address: string }): Promise<Response> {
     try {
-      const { address, user_id } = input;
+      const { address } = input;
       // Check if wallet is already linked
       const existingWallet = await this.walletModel.findOne({ address });
       if (existingWallet) {

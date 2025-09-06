@@ -204,6 +204,7 @@ export const MESSAGES = {
     PRIMARY_CHALLENGE_VALIDATED:
       'Primary wallet challenge validated successfully',
     PRIMARY_WALLET_CHANGED: 'Primary wallet changed successfully',
+    PRIMARY_WALLET_FETCHED: 'Primary wallet fetched successfully',
 
     // Wallet Management Success
     WALLET_CREATED: 'Wallet created successfully',
