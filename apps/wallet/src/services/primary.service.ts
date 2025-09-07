@@ -30,6 +30,7 @@ export class PrimaryService {
       const wallet = await this.walletModel.findOne({
         user_id: new Types.ObjectId(user_id),
         address: wallet_address,
+        is_primary: true,
       });
       if (!wallet) {
         return {
@@ -160,6 +161,36 @@ export class PrimaryService {
         success: false,
         statusCode: 500,
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_UNSET_FAILED,
+        error: error as string,
+      };
+    }
+  }
+
+  async getPrimaryWallet(input: { user_id: string }): Promise<Response> {
+    try {
+      const { user_id } = input;
+      const primaryWallet = await this.walletModel.findOne({
+        user_id: new Types.ObjectId(user_id),
+        is_primary: true,
+      });
+      if (!primaryWallet) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_FOUND,
+        };
+      }
+      return {
+        success: true,
+        statusCode: 200,
+        message: MESSAGES.SUCCESS.PRIMARY_WALLET_FETCHED,
+        data: primaryWallet as WalletDoc,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        statusCode: 500,
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_FOUND,
         error: error as string,
       };
     }
