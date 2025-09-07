@@ -18,9 +18,6 @@ class LinkChallengeValidationDto {
 class UnlinkWalletDto {
   @IsNotEmpty()
   @IsString()
-  user_id: string;
-  @IsNotEmpty()
-  @IsString()
   address: string;
 }
 

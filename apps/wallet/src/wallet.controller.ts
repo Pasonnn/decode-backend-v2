@@ -6,7 +6,23 @@ import {
   Delete,
   Body,
   UseGuards,
+  Param,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
+// DTOs Import
+import { LoginChallengeDto, LoginChallengeValidationDto } from './dto/auth.dto';
+import {
+  LinkChallengeDto,
+  LinkChallengeValidationDto,
+  UnlinkWalletDto,
+} from './dto/link.dto';
+import {
+  PrimaryWalletChallengeDto,
+  PrimaryWalletChallengeValidationDto,
+  UnsetPrimaryWalletDto,
+} from './dto/primary.dto';
+
 // Services Import
 import { LinkService } from './services/link.service';
 import { AuthService } from './services/auth.service';
@@ -19,75 +35,6 @@ import type { AuthenticatedUser } from './interfaces/authenticated-user.interfac
 // Guard
 import { AuthGuard } from './common/guards/auth.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
-
-// DTO here (temporary)
-import { IsNotEmpty, IsString } from 'class-validator';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-class LoginChallengeDto {
-  @IsNotEmpty()
-  @IsString()
-  address: string;
-}
-
-class LoginChallengeValidationDto {
-  @IsNotEmpty()
-  @IsString()
-  address: string;
-  @IsNotEmpty()
-  @IsString()
-  signature: string;
-}
-
-class LinkChallengeDto {
-  @IsNotEmpty()
-  @IsString()
-  address: string;
-}
-
-class LinkChallengeValidationDto {
-  @IsNotEmpty()
-  @IsString()
-  address: string;
-  @IsNotEmpty()
-  @IsString()
-  signature: string;
-}
-
-class UnlinkWalletDto {
-  @IsNotEmpty()
-  @IsString()
-  user_id: string;
-  @IsNotEmpty()
-  @IsString()
-  address: string;
-}
-
-class PrimaryWalletChallengeDto {
-  @IsNotEmpty()
-  @IsString()
-  user_id: string;
-  @IsNotEmpty()
-  @IsString()
-  wallet_address: string;
-}
-
-class PrimaryWalletChallengeValidationDto {
-  @IsNotEmpty()
-  @IsString()
-  address: string;
-  @IsNotEmpty()
-  @IsString()
-  signature: string;
-}
-
-class UnsetPrimaryWalletDto {
-  @IsNotEmpty()
-  @IsString()
-  user_id: string;
-  @IsNotEmpty()
-  @IsString()
-  wallet_address: string;
-}
 
 @ApiTags('Wallet Management')
 @Controller('wallets')
@@ -133,6 +80,18 @@ export class WalletController {
     });
   }
 
+  @Get('link')
+  async getWallets(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+    return this.linkService.getWallets({ user_id: user.userId });
+  }
+
+  @Get('link/:user_id')
+  async getWalletsByUserId(
+    @Param('user_id') user_id: string,
+  ): Promise<Response> {
+    return this.linkService.getWallets({ user_id });
+  }
+
   @Delete('link')
   async unlinkWallet(
     @Body() dto: UnlinkWalletDto,
@@ -144,16 +103,15 @@ export class WalletController {
     });
   }
 
-  @Get('link')
-  async getWallets(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
-    return this.linkService.getWallets({ user_id: user.userId });
-  }
-
   @Post('primary/challenge')
   async generatePrimaryWalletChallenge(
     @Body() dto: PrimaryWalletChallengeDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
-    return this.primaryService.generatePrimaryWalletChallenge(dto);
+    return this.primaryService.generatePrimaryWalletChallenge({
+      user_id: user.userId,
+      address: dto.address,
+    });
   }
 
   @Post('primary/validation')
@@ -175,7 +133,7 @@ export class WalletController {
   ): Promise<Response> {
     return this.primaryService.unsetPrimaryWallet({
       user_id: user.userId,
-      wallet_address: dto.wallet_address,
+      address: dto.address,
     });
   }
 

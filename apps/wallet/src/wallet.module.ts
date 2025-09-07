@@ -12,6 +12,9 @@ import { LinkService } from './services/link.service';
 import { AuthService } from './services/auth.service';
 import { PrimaryService } from './services/primary.service';
 
+// Utils Import
+import { CryptoUtils } from './utils/crypto.utils';
+
 // Infrastructure Import
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
 
@@ -54,6 +57,7 @@ import configuration from './config/configuration';
 
     // Infrastructure
     RedisInfrastructure,
+    CryptoUtils,
   ],
   exports: [
     // Export services that might be used by other modules

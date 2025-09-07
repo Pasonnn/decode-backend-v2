@@ -27,7 +27,7 @@ export class LinkService {
     try {
       const { address } = input;
       // Check if wallet is already linked
-      const existingWallet = await this.walletModel.findOne({ address });
+      const existingWallet = await this.walletExists({ address });
       if (existingWallet) {
         return {
           success: false,
@@ -79,7 +79,7 @@ export class LinkService {
         return {
           success: false,
           statusCode: 400,
-          message: 'Invalid link challenge',
+          message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
         };
       }
       // Link wallet
@@ -108,18 +108,28 @@ export class LinkService {
   }): Promise<Response> {
     try {
       const { user_id, address } = input;
-      const isPrimaryWallet = await this.isPrimaryWallet({ address });
-      if (isPrimaryWallet) {
+      const validUnlinkWallet = await this.validUnlinkWallet({
+        address,
+        user_id,
+      });
+      if (!validUnlinkWallet) {
         return {
           success: false,
           statusCode: 400,
-          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_CANNOT_UNLINK,
+          message: MESSAGES.WALLET_LINK.WALLET_NOT_LINKED,
         };
       }
-      await this.walletModel.deleteOne({
+      const deletedWallet = await this.walletModel.deleteOne({
         address,
         user_id: new Types.ObjectId(user_id),
       });
+      if (!deletedWallet) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: MESSAGES.WALLET_LINK.WALLET_UNLINKING_FAILED,
+        };
+      }
       return {
         success: true,
         statusCode: 200,
@@ -170,7 +180,7 @@ export class LinkService {
   }): Promise<Response> {
     try {
       const { user_id, address } = input;
-      const existingWallet = await this.walletModel.findOne({ address });
+      const existingWallet = await this.walletExists({ address });
       if (existingWallet) {
         return {
           success: false,
@@ -213,5 +223,32 @@ export class LinkService {
       this.logger.error(error as string);
       return false;
     }
+  }
+
+  private async validUnlinkWallet(input: {
+    address: string;
+    user_id: string;
+  }): Promise<boolean> {
+    const { address, user_id } = input;
+    const wallet = await this.walletModel.findOne({
+      address,
+      user_id: new Types.ObjectId(user_id),
+    });
+    if (!wallet) {
+      return false;
+    }
+    if (wallet.is_primary) {
+      return false;
+    }
+    if (wallet.user_id.toString() !== user_id) {
+      return false;
+    }
+    return true;
+  }
+
+  private async walletExists(input: { address: string }): Promise<boolean> {
+    const { address } = input;
+    const wallet = await this.walletModel.findOne({ address });
+    return wallet ? true : false;
   }
 }

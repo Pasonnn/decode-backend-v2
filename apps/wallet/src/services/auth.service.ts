@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 // Interfaces
 import { Response } from '../interfaces/response.interface';
+
+// Schemas
+import { Wallet } from '../schemas/wallet.schema';
 
 // Utils
 import { CryptoUtils } from '../utils/crypto.utils';
@@ -12,11 +17,22 @@ import { MESSAGES } from '../constants/messages.constants';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly cryptoUtils: CryptoUtils) {}
+  constructor(
+    private readonly cryptoUtils: CryptoUtils,
+    @InjectModel(Wallet.name) private walletModel: Model<Wallet>,
+  ) {}
 
   async generateLoginChallenge(input: { address: string }): Promise<Response> {
     try {
       const { address } = input;
+      const walletExists = await this.walletExists({ address });
+      if (!walletExists) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: MESSAGES.AUTH.WALLET_NOT_FOUND,
+        };
+      }
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
         address,
         message: WALLET_CONSTANTS.CHALLENGE.NONCE.MESSAGE_TEMPLATE.LOGIN,
@@ -76,5 +92,13 @@ export class AuthService {
         error: error as string,
       };
     }
+  }
+
+  private async walletExists(input: { address: string }): Promise<boolean> {
+    const { address } = input;
+    const wallet = await this.walletModel.findOne({ address });
+    console.log(wallet);
+    console.log(wallet ? 'true' : 'false');
+    return wallet ? true : false;
   }
 }

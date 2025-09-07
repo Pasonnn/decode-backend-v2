@@ -3,10 +3,7 @@ import { IsNotEmpty, IsString } from 'class-validator';
 class PrimaryWalletChallengeDto {
   @IsNotEmpty()
   @IsString()
-  user_id: string;
-  @IsNotEmpty()
-  @IsString()
-  wallet_address: string;
+  address: string;
 }
 
 class PrimaryWalletChallengeValidationDto {
@@ -21,10 +18,7 @@ class PrimaryWalletChallengeValidationDto {
 class UnsetPrimaryWalletDto {
   @IsNotEmpty()
   @IsString()
-  user_id: string;
-  @IsNotEmpty()
-  @IsString()
-  wallet_address: string;
+  address: string;
 }
 
 export {

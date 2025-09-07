@@ -23,35 +23,24 @@ export class PrimaryService {
 
   async generatePrimaryWalletChallenge(input: {
     user_id: string;
-    wallet_address: string;
+    address: string;
   }): Promise<Response> {
     try {
-      const { user_id, wallet_address } = input;
-      const wallet = await this.walletModel.findOne({
-        user_id: new Types.ObjectId(user_id),
-        address: wallet_address,
-        is_primary: true,
+      const { user_id, address } = input;
+      const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
+        address,
+        user_id,
       });
-      if (!wallet) {
+      if (!check_valid_primary_wallet.success) {
         return {
           success: false,
           statusCode: 400,
-          message: MESSAGES.DATABASE.WALLET_NOT_FOUND,
-        };
-      }
-      const isPrimaryWallet = await this.isPrimaryWallet({
-        address: wallet_address,
-      });
-      if (isPrimaryWallet) {
-        return {
-          success: false,
-          statusCode: 400,
-          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_EXISTS,
+          message: check_valid_primary_wallet.message,
         };
       }
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
-        address: wallet_address,
-        message: `Welcome to Decode Network! To set your wallet (${wallet_address.slice(0, 6)}...${wallet_address.slice(-4)}) as primary, please sign this message with your wallet. 
+        address: address,
+        message: `Welcome to Decode Network! To set your wallet (${address.slice(0, 6)}...${address.slice(-4)}) as primary, please sign this message with your wallet. 
           This cryptographic signature proves you control your wallet without revealing any sensitive information. 
           By signing this message, you are requesting access to your wallet. 
           This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.`,
@@ -88,6 +77,18 @@ export class PrimaryService {
   }): Promise<Response> {
     try {
       const { address, signature, user_id } = input;
+      console.log('signature', signature);
+      const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
+        address,
+        user_id,
+      });
+      if (!check_valid_primary_wallet.success) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: check_valid_primary_wallet.message,
+        };
+      }
       const signatureIsValid = await this.cryptoUtils.validateNonceMessage({
         address,
         signature,
@@ -101,7 +102,7 @@ export class PrimaryService {
       }
       const setPrimaryWallet = await this.setPrimaryWallet({
         user_id,
-        wallet_address: address,
+        address: address,
       });
       if (!setPrimaryWallet.success) {
         return setPrimaryWallet;
@@ -123,24 +124,25 @@ export class PrimaryService {
 
   async unsetPrimaryWallet(input: {
     user_id: string;
-    wallet_address: string;
+    address: string;
   }): Promise<Response> {
     try {
-      const { user_id, wallet_address } = input;
-      const isPrimaryWallet = await this.isPrimaryWallet({
-        address: wallet_address,
+      const { user_id, address } = input;
+      const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
+        address,
+        user_id,
       });
-      if (!isPrimaryWallet) {
+      if (!check_valid_primary_wallet.success) {
         return {
           success: false,
           statusCode: 400,
-          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_SET,
+          message: check_valid_primary_wallet.message,
         };
       }
       const unsetPrimaryWallet = await this.walletModel.findOneAndUpdate(
         {
           user_id: new Types.ObjectId(user_id),
-          address: wallet_address,
+          address: address,
         },
         { is_primary: false },
       );
@@ -198,29 +200,40 @@ export class PrimaryService {
 
   private async setPrimaryWallet(input: {
     user_id: string;
-    wallet_address: string;
+    address: string;
   }): Promise<Response> {
     try {
-      const { user_id, wallet_address } = input;
-      const wallet = await this.walletModel.findOneAndUpdate(
-        {
-          user_id: new Types.ObjectId(user_id),
-          address: wallet_address,
-        },
-        { is_primary: true },
-      );
-      if (!wallet) {
+      const { user_id, address } = input;
+      const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
+        address,
+        user_id,
+      });
+      if (!check_valid_primary_wallet.success) {
         return {
           success: false,
           statusCode: 400,
-          message: MESSAGES.DATABASE.WALLET_NOT_FOUND,
+          message: check_valid_primary_wallet.message,
+        };
+      }
+      const set_primary_wallet = await this.walletModel.findOneAndUpdate(
+        {
+          address: address,
+          user_id: new Types.ObjectId(user_id),
+        },
+        { is_primary: true },
+      );
+      if (!set_primary_wallet) {
+        return {
+          success: false,
+          statusCode: 400,
+          message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_SET_FAILED,
         };
       }
       return {
         success: true,
         statusCode: 200,
         message: MESSAGES.SUCCESS.PRIMARY_WALLET_SET,
-        data: wallet as WalletDoc,
+        data: set_primary_wallet as WalletDoc,
       };
     } catch (error) {
       return {
@@ -232,14 +245,63 @@ export class PrimaryService {
     }
   }
 
-  private async isPrimaryWallet(input: { address: string }): Promise<boolean> {
+  private async checkValidPrimaryWallet(input: {
+    address: string;
+    user_id: string;
+  }): Promise<Response<WalletDoc>> {
+    const { address, user_id } = input;
+    console.log('address', address);
+    console.log('user_id', user_id);
+    const wallet = await this.getWallet({ address });
+    const is_user_wallet = this.isUserWallet({ wallet, user_id });
+    if (!is_user_wallet) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: MESSAGES.WALLET_LINK.WALLET_NOT_LINKED,
+      };
+    }
+    const is_primary_wallet = this.isPrimaryWallet({ wallet });
+    if (!is_primary_wallet) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_SET,
+      };
+    }
+    return {
+      success: true,
+      statusCode: 200,
+      message: MESSAGES.SUCCESS.PRIMARY_WALLET_VALID,
+      data: wallet,
+    };
+  }
+  private async getWallet(input: { address: string }): Promise<WalletDoc> {
+    const { address } = input;
+    const wallet = await this.walletModel.findOne({ address });
+    return wallet as WalletDoc;
+  }
+
+  private isPrimaryWallet(input: { wallet: WalletDoc }): boolean {
     try {
-      const { address } = input;
-      const primaryWallet = await this.walletModel.findOne({
-        address,
-        is_primary: true,
-      });
-      if (primaryWallet) {
+      const { wallet } = input;
+      if (wallet.is_primary) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      this.logger.error(error as string);
+      return false;
+    }
+  }
+
+  private isUserWallet(input: { wallet: WalletDoc; user_id: string }): boolean {
+    try {
+      const { wallet, user_id } = input;
+      if (!wallet) {
+        return false;
+      }
+      if (wallet.user_id.toString() === user_id) {
         return true;
       }
       return false;
