@@ -376,7 +376,7 @@ export class AuthController {
     @Body() dto: ExistUserByEmailOrUsernameDto,
   ): Promise<Response> {
     const exist_user_by_email_or_username_response =
-      await this.infoService.existUserByEmailOrUsername(dto.email_or_username);
+      await this.infoService.existUserByEmailOrUsername(dto);
     return exist_user_by_email_or_username_response;
   }
 }

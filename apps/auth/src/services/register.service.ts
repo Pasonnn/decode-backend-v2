@@ -250,12 +250,16 @@ export class RegisterService {
     }
 
     // Check if user already exists (by email or username)
-    const existing_user = await this.userModel.findOne({
-      $or: [{ email: email }, { username: register_info_value.username }],
-      password_hashed: 0,
-      updatedAt: 0,
-      createdAt: 0,
-    });
+    const existing_user = await this.userModel.findOne(
+      {
+        $or: [{ email: email }, { username: register_info_value.username }],
+      },
+      {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      },
+    );
     if (existing_user) {
       return {
         success: false,

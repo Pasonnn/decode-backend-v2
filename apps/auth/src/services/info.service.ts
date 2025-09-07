@@ -108,15 +108,20 @@ export class InfoService {
     };
   }
 
-  async existUserByEmailOrUsername(
-    email_or_username: string,
-  ): Promise<Response> {
-    const user = await this.userModel.findOne({
-      $or: [{ email: email_or_username }, { username: email_or_username }],
-      password_hashed: 0,
-      updatedAt: 0,
-      createdAt: 0,
-    });
+  async existUserByEmailOrUsername(input: {
+    email_or_username: string;
+  }): Promise<Response> {
+    const { email_or_username } = input;
+    const user = await this.userModel.findOne(
+      {
+        $or: [{ email: email_or_username }, { username: email_or_username }],
+      },
+      {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      },
+    );
     if (!user) {
       return {
         success: false,
