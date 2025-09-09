@@ -105,10 +105,11 @@ export class LoginService {
       } else {
         // Device fingerprint trusted
         this.logger.log(`Device fingerprint trusted for ${email_or_username}`);
-        const createSessionResponse = await this.sessionService.createSession(
-          getUserInfoResponse.data._id,
-          checkDeviceFingerprintResponse.data._id,
-        );
+        const createSessionResponse = await this.sessionService.createSession({
+          user_id: getUserInfoResponse.data._id,
+          device_fingerprint_id: checkDeviceFingerprintResponse.data._id,
+          app: 'decode',
+        });
         if (!createSessionResponse.success || !createSessionResponse.data) {
           this.logger.error(`Cannot create session for ${email_or_username}`);
           return createSessionResponse;

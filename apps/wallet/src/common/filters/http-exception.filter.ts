@@ -78,10 +78,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error = 'Unknown error occurred';
     }
 
-    // Log the error
+    // Log the error (concise)
     this.logger.error(
-      `HTTP ${request.method} ${request.url} - ${status}: ${message}`,
-      exception instanceof Error ? exception.stack : String(exception),
+      `${request.method} ${request.url} - ${status}: ${message}`,
     );
 
     // Create consistent error response

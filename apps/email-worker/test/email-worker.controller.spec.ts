@@ -49,7 +49,9 @@ describe('EmailWorkerController', () => {
         },
       };
 
-      jest.spyOn(rabbitMQService, 'processEmailRequest').mockResolvedValue(undefined);
+      const processEmailRequestSpy = jest
+        .spyOn(rabbitMQService, 'processEmailRequest')
+        .mockResolvedValue(undefined);
 
       const result = await controller.handleEmailRequest(mockRequest);
 
@@ -57,7 +59,7 @@ describe('EmailWorkerController', () => {
         success: true,
         message: 'Email processed successfully',
       });
-      expect(rabbitMQService.processEmailRequest).toHaveBeenCalledWith(mockRequest);
+      expect(processEmailRequestSpy).toHaveBeenCalledWith(mockRequest);
     });
 
     it('should handle errors in email request processing', async () => {
@@ -70,7 +72,9 @@ describe('EmailWorkerController', () => {
       };
 
       const error = new Error('Processing failed');
-      jest.spyOn(rabbitMQService, 'processEmailRequest').mockRejectedValue(error);
+      jest
+        .spyOn(rabbitMQService, 'processEmailRequest')
+        .mockRejectedValue(error);
 
       const result = await controller.handleEmailRequest(mockRequest);
 
@@ -91,7 +95,9 @@ describe('EmailWorkerController', () => {
         },
       };
 
-      jest.spyOn(emailService, 'sendEmail').mockResolvedValue(true);
+      const sendEmailSpy = jest
+        .spyOn(emailService, 'sendEmail')
+        .mockResolvedValue(true);
 
       const result = await controller.handleNewEmailChangeVerify(mockRequest);
 
@@ -100,7 +106,7 @@ describe('EmailWorkerController', () => {
         message: 'New email change verification email sent successfully',
         email: 'newemail@example.com',
       });
-      expect(emailService.sendEmail).toHaveBeenCalledWith(mockRequest);
+      expect(sendEmailSpy).toHaveBeenCalledWith(mockRequest);
     });
 
     it('should reject invalid email type', async () => {
@@ -112,13 +118,15 @@ describe('EmailWorkerController', () => {
         },
       };
 
+      const sendEmailSpy = jest.spyOn(emailService, 'sendEmail');
+
       const result = await controller.handleNewEmailChangeVerify(mockRequest);
 
       expect(result).toEqual({
         success: false,
         error: 'Invalid email type. Expected new-email-change-verify',
       });
-      expect(emailService.sendEmail).not.toHaveBeenCalled();
+      expect(sendEmailSpy).not.toHaveBeenCalled();
     });
 
     it('should handle errors in email sending', async () => {
@@ -152,11 +160,13 @@ describe('EmailWorkerController', () => {
         },
       };
 
-      jest.spyOn(emailService, 'sendEmail').mockResolvedValue(true);
+      const sendEmailSpy = jest
+        .spyOn(emailService, 'sendEmail')
+        .mockResolvedValue(true);
 
-      const result = await controller.sendEmail(mockRequest);
+      await controller.sendEmail(mockRequest);
 
-      expect(emailService.sendEmail).toHaveBeenCalledWith(mockRequest);
+      expect(sendEmailSpy).toHaveBeenCalledWith(mockRequest);
     });
   });
 
@@ -170,7 +180,9 @@ describe('EmailWorkerController', () => {
         },
       };
 
-      jest.spyOn(rabbitMQService, 'sendEmailRequest').mockResolvedValue(undefined);
+      const sendEmailRequestSpy = jest
+        .spyOn(rabbitMQService, 'sendEmailRequest')
+        .mockResolvedValue(undefined);
 
       const result = await controller.queueEmail(mockRequest);
 
@@ -178,7 +190,7 @@ describe('EmailWorkerController', () => {
         success: true,
         message: 'Email queued successfully',
       });
-      expect(rabbitMQService.sendEmailRequest).toHaveBeenCalledWith(mockRequest);
+      expect(sendEmailRequestSpy).toHaveBeenCalledWith(mockRequest);
     });
   });
 

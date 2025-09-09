@@ -33,7 +33,13 @@ export class ValidateAccessDto {
 }
 
 export class CreateSsoTokenDto {
-  // user_id will be extracted from the authenticated user's token
+  @IsNotEmpty()
+  @IsString()
+  app: string;
+
+  @IsNotEmpty()
+  @IsString()
+  fingerprint_hashed: string;
 }
 
 export class ValidateSsoTokenDto {

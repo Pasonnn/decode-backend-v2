@@ -17,6 +17,7 @@ import {
   LogoutDto,
   ValidateAccessDto,
   ValidateSsoTokenDto,
+  CreateSsoTokenDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
@@ -41,6 +42,7 @@ import { SessionService } from './services/session.service';
 import { PasswordService } from './services/password.service';
 import { InfoService } from './services/info.service';
 import { DeviceFingerprintService } from './services/device-fingerprint.service';
+import { SsoService } from './services/sso.service';
 
 // Guards Import
 import { AuthGuard, Public } from './common/guards/auth.guard';
@@ -58,6 +60,7 @@ export class AuthController {
     private readonly passwordService: PasswordService,
     private readonly infoService: InfoService,
     private readonly deviceFingerprintService: DeviceFingerprintService,
+    private readonly ssoService: SsoService,
   ) {}
 
   /**
@@ -166,7 +169,7 @@ export class AuthController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     const get_device_fingerprint_response =
-      await this.deviceFingerprintService.getDeviceFingerprint({
+      await this.deviceFingerprintService.getDeviceFingerprints({
         user_id: user.userId,
       });
     return get_device_fingerprint_response;
@@ -247,14 +250,17 @@ export class AuthController {
    * @param dto - User ID for SSO token generation {user_id: string}
    * @returns Response containing SSO token for service integration
    */
-  @Post('session/sso')
+  @Post('sso/create')
   @UseGuards(AuthGuard)
   async createSsoToken(
     @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateSsoTokenDto,
   ): Promise<Response> {
-    const create_sso_token_response = await this.sessionService.createSsoToken(
-      user.userId,
-    );
+    const create_sso_token_response = await this.ssoService.createSsoToken({
+      user_id: user.userId,
+      app: dto.app,
+      fingerprint_hashed: dto.fingerprint_hashed,
+    });
     return create_sso_token_response;
   }
 
@@ -263,11 +269,12 @@ export class AuthController {
    * @param dto - SSO token to be validated {sso_token: string}
    * @returns Response containing SSO token validity and user context
    */
-  @Post('session/sso/validate')
+  @Post('sso/validate')
   @Public()
   async validateSsoToken(@Body() dto: ValidateSsoTokenDto): Promise<Response> {
-    const validate_sso_token_response =
-      await this.sessionService.validateSsoToken(dto.sso_token);
+    const validate_sso_token_response = await this.ssoService.validateSsoToken({
+      sso_token: dto.sso_token,
+    });
     return validate_sso_token_response;
   }
 

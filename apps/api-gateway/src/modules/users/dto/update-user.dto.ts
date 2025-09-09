@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, MinLength, MaxLength, Matches, IsUrl } from 'class-validator';
+import {
+  IsString,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsUrl,
+} from 'class-validator';
 
 export class UpdateUserDisplayNameDto {
   @ApiProperty({
@@ -13,7 +19,8 @@ export class UpdateUserDisplayNameDto {
   @MinLength(2)
   @MaxLength(50)
   @Matches(/^[a-zA-Z0-9\s\-_]+$/, {
-    message: 'Display name can only contain letters, numbers, spaces, hyphens, and underscores',
+    message:
+      'Display name can only contain letters, numbers, spaces, hyphens, and underscores',
   })
   display_name: string;
 }
@@ -49,7 +56,8 @@ export class UpdateUserAvatarDto {
 
   @ApiProperty({
     description: 'Fallback URL for the avatar image',
-    example: 'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png',
+    example:
+      'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png',
     maxLength: 500,
     pattern: '^https?://.+',
   })

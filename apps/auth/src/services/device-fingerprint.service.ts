@@ -38,7 +38,7 @@ export class DeviceFingerprintService {
     this.logger = new Logger(DeviceFingerprintService.name);
   }
 
-  async getDeviceFingerprint(input: {
+  async getDeviceFingerprints(input: {
     user_id: string;
   }): Promise<Response<DeviceFingerprintDoc[]>> {
     const { user_id } = input;
@@ -56,8 +56,34 @@ export class DeviceFingerprintService {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_FETCHED,
-      data: device_fingerprint as DeviceFingerprintDoc[],
+      data: device_fingerprint as unknown as DeviceFingerprintDoc[],
     } as Response<DeviceFingerprintDoc[]>;
+  }
+
+  async getDeviceFingerprint(input: {
+    fingerprint_hashed: string;
+    user_id: string;
+  }): Promise<Response<DeviceFingerprintDoc>> {
+    const { fingerprint_hashed, user_id } = input;
+    const device_fingerprint = await this.deviceFingerprintModel.findOne({
+      $and: [
+        { fingerprint_hashed },
+        { user_id: new Types.ObjectId(user_id) },
+      ],
+    });
+    if (!device_fingerprint) {
+      return {
+        success: false,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+      };
+    }
+    return {
+      success: true,
+      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_FETCHED,
+      data: device_fingerprint as unknown as DeviceFingerprintDoc,
+    };
   }
 
   async revokeDeviceFingerprint(input: {
@@ -207,7 +233,7 @@ export class DeviceFingerprintService {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
-      data: device_fingerprint as DeviceFingerprintDoc,
+      data: device_fingerprint as unknown as DeviceFingerprintDoc,
     };
   }
 
@@ -235,7 +261,7 @@ export class DeviceFingerprintService {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
-      data: device_fingerprint as DeviceFingerprintDoc,
+      data: device_fingerprint as unknown as DeviceFingerprintDoc,
     };
   }
 
@@ -363,7 +389,7 @@ export class DeviceFingerprintService {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
-      data: device_fingerprint,
+      data: device_fingerprint as unknown as DeviceFingerprintDoc,
     };
   }
 }

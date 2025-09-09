@@ -22,7 +22,7 @@ export const AUTH_CONSTANTS = {
     FINGERPRINT_VERIFICATION_EXPIRES_IN: 5 * 60, // 5 minutes
     PASSWORD_RESET_EXPIRES_IN: 5 * 60, // 5 minutes
     CHANGE_PASSWORD_VERIFICATION_EXPIRES_IN: 5 * 60, // 5 minutes
-
+    SSO_TOKEN_EXPIRES_IN: 60, // 1 minute
     // Key prefixes
     KEYS: {
       REGISTER_INFO: 'register_info',

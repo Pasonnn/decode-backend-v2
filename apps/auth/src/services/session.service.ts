@@ -2,7 +2,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
 
 // Schemas Import
 import { Session } from '../schemas/session.schema';
@@ -38,10 +37,12 @@ export class SessionService {
     this.logger = new Logger(SessionService.name);
   }
 
-  async createSession(
-    user_id: string,
-    device_fingerprint_id: string,
-  ): Promise<Response<SessionDoc>> {
+  async createSession(input: {
+    user_id: string;
+    device_fingerprint_id: string;
+    app: string;
+  }): Promise<Response<SessionDoc>> {
+    const { user_id, device_fingerprint_id, app } = input;
     try {
       // Generate session token
       const session_token = this.sessionStrategy.createRefreshToken(user_id);
@@ -50,6 +51,7 @@ export class SessionService {
         user_id: new Types.ObjectId(user_id),
         device_fingerprint_id: new Types.ObjectId(device_fingerprint_id),
         session_token: session_token,
+        app,
         expires_at: new Date(
           Date.now() + AUTH_CONSTANTS.SESSION.EXPIRES_IN_HOURS * 60 * 60 * 1000,
         ),
@@ -139,7 +141,7 @@ export class SessionService {
     device_fingerprint_id: string,
   ): Promise<Response> {
     try {
-      const sessions = await this.sessionModel.updateMany(
+      await this.sessionModel.updateMany(
         { device_fingerprint_id: new Types.ObjectId(device_fingerprint_id) },
         { $set: { revoked_at: new Date(), is_active: false } },
       );
@@ -315,67 +317,6 @@ export class SessionService {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SESSION.ACCESS_TOKEN_VALIDATION_ERROR,
-      };
-    }
-  }
-
-  async createSsoToken(user_id: string): Promise<Response> {
-    try {
-      // Create sso token
-      const sso_token = uuidv4().slice(0, 6);
-      // Store sso token in redis
-      await this.redisInfrastructure.set(`sso:${sso_token}`, user_id, 60);
-      // Return response
-      return {
-        success: true,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: MESSAGES.SUCCESS.SSO_TOKEN_CREATED,
-        data: sso_token,
-      };
-    } catch (error) {
-      this.logger.error(`Error creating SSO token for user ${user_id}`, error);
-      return {
-        success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: MESSAGES.SESSION.SSO_TOKEN_CREATION_ERROR,
-      };
-    }
-  }
-
-  async validateSsoToken(sso_token: string): Promise<Response> {
-    try {
-      // Validate sso token
-      const sso_token_response = (await this.redisInfrastructure.get(
-        `sso:${sso_token}`,
-      )) as string;
-      if (!sso_token_response) {
-        return {
-          success: false,
-          statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
-          message: MESSAGES.SESSION.SSO_TOKEN_INVALID,
-        };
-      }
-      const user_id = sso_token_response;
-      // Generate session token
-      const session_token = this.sessionStrategy.createRefreshToken(user_id);
-      // Delete sso token from redis
-      await this.redisInfrastructure.del(`sso:${sso_token}`);
-      // Return response
-      return {
-        success: true,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: MESSAGES.SUCCESS.SSO_TOKEN_VALIDATED,
-        data: {
-          session_token,
-          user_id,
-        },
-      };
-    } catch (error) {
-      this.logger.error(`Error validating SSO token for ${sso_token}`, error);
-      return {
-        success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: MESSAGES.SESSION.SSO_TOKEN_VALIDATION_ERROR,
       };
     }
   }

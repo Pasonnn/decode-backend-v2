@@ -12,9 +12,6 @@ export class DeviceFingerprint extends Document {
   @Prop({ required: false })
   browser: string;
 
-  @Prop({ required: true, default: 'Decode' })
-  app: string;
-
   @Prop({ required: true, index: true })
   fingerprint_hashed: string;
 

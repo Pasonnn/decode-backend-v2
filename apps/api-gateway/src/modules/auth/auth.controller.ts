@@ -31,6 +31,7 @@ import {
   LogoutDto,
   ValidateAccessDto,
   ValidateSsoTokenDto,
+  CreateSsoTokenDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
@@ -38,7 +39,7 @@ import {
   VerifyEmailForgotPasswordDto,
   ChangeForgotPasswordDto,
 } from './dto/password.dto';
-import { 
+import {
   ExistUserByEmailOrUsernameDto,
   InfoByAccessTokenDto,
   InfoByUserIdDto,
@@ -205,13 +206,13 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
-  @Get('session/active')
+  @Post('session/active')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   async getActiveSessions(
-    @Headers('authorization') authorization: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
-    return this.authService.getActiveSessions(authorization);
+    return this.authService.getActiveSessions(user.userId);
   }
 
   @ApiOperation({ summary: 'Revoke all sessions' })
@@ -253,30 +254,30 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'SSO token created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
-  @Post('session/sso')
+  @Post('sso/create')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   async createSsoToken(
-    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateSsoTokenDto,
     @Headers('authorization') authorization: string,
   ): Promise<Response> {
-    return this.authService.createSsoToken(user.userId, authorization);
+    return this.authService.createSsoToken(
+      dto.app,
+      dto.fingerprint_hashed,
+      authorization,
+    );
   }
 
   @ApiOperation({ summary: 'Validate SSO token' })
   @ApiResponse({ status: 200, description: 'SSO token validated successfully' })
   @ApiResponse({ status: 401, description: 'Invalid SSO token' })
-  @Post('session/sso/validate')
+  @Post('sso/validate')
   @Public()
   @HttpCode(HttpStatus.OK)
   async validateSsoToken(
     @Body() validateSsoTokenDto: ValidateSsoTokenDto,
-    @Headers('authorization') authorization: string,
   ): Promise<Response> {
-    return this.authService.validateSsoToken(
-      validateSsoTokenDto.sso_token,
-      authorization,
-    );
+    return this.authService.validateSsoToken(validateSsoTokenDto.sso_token);
   }
 
   @ApiOperation({ summary: 'Change password' })

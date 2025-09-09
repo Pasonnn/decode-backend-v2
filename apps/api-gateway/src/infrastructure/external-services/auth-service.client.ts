@@ -60,13 +60,13 @@ export interface ValidateAccessRequest {
 }
 
 export interface CreateSsoTokenRequest {
-  user_id: string;
+  app: string;
+  fingerprint_hashed: string;
   authorization: string;
 }
 
 export interface ValidateSsoTokenRequest {
   sso_token: string;
-  authorization: string;
 }
 
 export interface ChangePasswordRequest {
@@ -220,16 +220,14 @@ export class AuthServiceClient extends BaseHttpClient {
         Authorization: data.authorization,
       },
     };
-    return this.post('/auth/session/sso', data, config);
+    return this.post('/auth/sso/create', {
+      app: data.app,
+      fingerprint_hashed: data.fingerprint_hashed,
+    }, config);
   }
 
   async validateSsoToken(data: ValidateSsoTokenRequest): Promise<Response> {
-    const config = {
-      headers: {
-        Authorization: data.authorization,
-      },
-    };
-    return this.post('/auth/session/sso/validate', data, config);
+    return this.post('/auth/sso/validate', data);
   }
 
   // Password Management Endpoints
@@ -312,7 +310,9 @@ export class AuthServiceClient extends BaseHttpClient {
   }
 
   // Device Fingerprint Endpoints
-  async getDeviceFingerprint(data: GetDeviceFingerprintRequest): Promise<Response> {
+  async getDeviceFingerprint(
+    data: GetDeviceFingerprintRequest,
+  ): Promise<Response> {
     const config = {
       headers: {
         Authorization: data.authorization,
@@ -321,15 +321,21 @@ export class AuthServiceClient extends BaseHttpClient {
     return this.get('/auth/fingerprints', config);
   }
 
-  async revokeDeviceFingerprint(data: RevokeDeviceFingerprintRequest): Promise<Response> {
+  async revokeDeviceFingerprint(
+    data: RevokeDeviceFingerprintRequest,
+  ): Promise<Response> {
     const config = {
       headers: {
         Authorization: data.authorization,
       },
     };
-    return this.post('/auth/fingerprints/revoke', {
-      device_fingerprint_id: data.device_fingerprint_id,
-    }, config);
+    return this.post(
+      '/auth/fingerprints/revoke',
+      {
+        device_fingerprint_id: data.device_fingerprint_id,
+      },
+      config,
+    );
   }
 
   // Legacy method for backward compatibility

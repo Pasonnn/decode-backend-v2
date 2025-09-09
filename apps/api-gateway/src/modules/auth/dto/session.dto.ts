@@ -40,7 +40,21 @@ export class ValidateAccessDto {
 }
 
 export class CreateSsoTokenDto {
-  // user_id will be extracted from the authenticated user's token
+  @ApiProperty({
+    description: 'Application identifier for SSO token',
+    example: 'web-app',
+  })
+  @IsNotEmpty()
+  @IsString()
+  app: string;
+
+  @ApiProperty({
+    description: 'Device fingerprint hash for SSO token',
+    example: 'abc123def456...',
+  })
+  @IsNotEmpty()
+  @IsString()
+  fingerprint_hashed: string;
 }
 
 export class ValidateSsoTokenDto {

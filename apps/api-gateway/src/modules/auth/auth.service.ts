@@ -312,20 +312,14 @@ export class AuthService {
   /**
    * Get active sessions for a user
    */
-  async getActiveSessions(authorization: string): Promise<Response> {
+  async getActiveSessions(userId: string): Promise<Response> {
     try {
-      this.logger.log('Getting active sessions for current user');
+      this.logger.log(`Getting active sessions for user: ${userId}`);
 
-      const config = {
-        headers: {
-          Authorization: authorization,
-        },
-      };
-      const response = await this.authServiceClient.post(
-        '/auth/session/active',
-        {},
-        config,
-      );
+      const response = await this.authServiceClient.getActiveSessions({
+        user_id: userId,
+        authorization: '', // Not needed for this endpoint
+      });
 
       if (!response.success) {
         throw new BadRequestException(
@@ -412,14 +406,16 @@ export class AuthService {
    * Create SSO token
    */
   async createSsoToken(
-    userId: string,
+    app: string,
+    fingerprintHashed: string,
     authorization: string,
   ): Promise<Response> {
     try {
-      this.logger.log(`Creating SSO token for user: ${userId}`);
+      this.logger.log('Creating SSO token');
 
       const response = await this.authServiceClient.createSsoToken({
-        user_id: userId,
+        app,
+        fingerprint_hashed: fingerprintHashed,
         authorization,
       });
 
@@ -429,11 +425,11 @@ export class AuthService {
         );
       }
 
-      this.logger.log(`Successfully created SSO token for user: ${userId}`);
+      this.logger.log('Successfully created SSO token');
       return response;
     } catch (error) {
       this.logger.error(
-        `Failed to create SSO token for user ${userId}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create SSO token: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -442,16 +438,12 @@ export class AuthService {
   /**
    * Validate SSO token
    */
-  async validateSsoToken(
-    ssoToken: string,
-    authorization: string,
-  ): Promise<Response> {
+  async validateSsoToken(ssoToken: string): Promise<Response> {
     try {
       this.logger.log('Validating SSO token');
 
       const response = await this.authServiceClient.validateSsoToken({
         sso_token: ssoToken,
-        authorization,
       });
 
       if (!response.success) {
@@ -646,7 +638,9 @@ export class AuthService {
         );
       }
 
-      this.logger.log(`Successfully revoked device fingerprint: ${deviceFingerprintId}`);
+      this.logger.log(
+        `Successfully revoked device fingerprint: ${deviceFingerprintId}`,
+      );
       return response;
     } catch (error) {
       this.logger.error(
@@ -728,7 +722,9 @@ export class AuthService {
     authorization: string,
   ): Promise<Response> {
     try {
-      this.logger.log(`Getting user info by email or username: ${emailOrUsername}`);
+      this.logger.log(
+        `Getting user info by email or username: ${emailOrUsername}`,
+      );
 
       const response = await this.authServiceClient.infoByEmailOrUsername({
         email_or_username: emailOrUsername,
@@ -741,7 +737,9 @@ export class AuthService {
         );
       }
 
-      this.logger.log(`Successfully retrieved user info by email or username: ${emailOrUsername}`);
+      this.logger.log(
+        `Successfully retrieved user info by email or username: ${emailOrUsername}`,
+      );
       return response;
     } catch (error) {
       this.logger.error(

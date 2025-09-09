@@ -45,12 +45,11 @@ export class EmailWorkerController {
           error: 'Invalid email type. Expected new-email-change-verify',
         };
       }
-      
       await this.emailService.sendEmail(request);
-      return { 
-        success: true, 
+      return {
+        success: true,
         message: 'New email change verification email sent successfully',
-        email: request.data.email 
+        email: request.data.email,
       };
     } catch (error) {
       return {

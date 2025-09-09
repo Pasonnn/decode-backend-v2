@@ -1,6 +1,6 @@
 /**
  * Example: New Email Change Verification
- * 
+ *
  * This example demonstrates how to use the new email change verification endpoint
  * to send a confirmation email to a user's new email address.
  */
@@ -19,16 +19,23 @@ const newEmailChangeRequest: EmailRequestDto = {
 // Example usage with fetch API
 async function sendNewEmailChangeVerification() {
   try {
-    const response = await fetch('http://localhost:3000/email-worker/new-email-change-verify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      'http://localhost:3000/email-worker/new-email-change-verify',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newEmailChangeRequest),
       },
-      body: JSON.stringify(newEmailChangeRequest),
-    });
+    );
 
-    const result = await response.json();
-    
+    const result = (await response.json()) as {
+      success: boolean;
+      message: string;
+      email: string;
+      error?: string;
+    };
     if (result.success) {
       console.log('✅ Email sent successfully:', result.message);
       console.log('📧 Sent to:', result.email);
@@ -51,8 +58,12 @@ async function queueNewEmailChangeVerification() {
       body: JSON.stringify(newEmailChangeRequest),
     });
 
-    const result = await response.json();
-    
+    const result = (await response.json()) as {
+      success: boolean;
+      message: string;
+      email: string;
+      error?: string;
+    };
     if (result.success) {
       console.log('✅ Email queued successfully:', result.message);
     } else {
@@ -74,8 +85,12 @@ async function sendDirectNewEmailChangeVerification() {
       body: JSON.stringify(newEmailChangeRequest),
     });
 
-    const result = await response.json();
-    
+    const result = (await response.json()) as {
+      success: boolean;
+      message: string;
+      email: string;
+      error?: string;
+    };
     if (result.success) {
       console.log('✅ Email sent directly:', result.message);
     } else {
@@ -96,7 +111,7 @@ export {
 
 // Example usage in a user service
 export class UserEmailService {
-  async sendNewEmailChangeVerification(newEmail: string, otpCode: string) {
+  sendNewEmailChangeVerification(newEmail: string, otpCode: string) {
     const request: EmailRequestDto = {
       type: 'new-email-change-verify',
       data: {
@@ -107,10 +122,10 @@ export class UserEmailService {
 
     // You can use any of the three methods above
     // For microservice architecture, use the queue method
-    return await this.queueEmail(request);
+    return this.queueEmail(request);
   }
 
-  private async queueEmail(request: EmailRequestDto) {
+  private queueEmail(request: EmailRequestDto) {
     // Implementation would depend on your microservice setup
     // This is just an example
     console.log('Queueing email request:', request);

@@ -53,7 +53,8 @@ export class UserResponseDto {
 
   @ApiProperty({
     description: 'Fallback URL for avatar',
-    example: 'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png',
+    example:
+      'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png',
   })
   avatar_fallback_url: string;
 

@@ -12,6 +12,9 @@ export class Session extends Document {
   @Prop({ required: true })
   session_token: string;
 
+  @Prop({ default: 'Decode' })
+  app: string;
+
   @Prop({ required: true, default: Date.now() + 1000 * 60 * 60 * 24 * 30 })
   expires_at: Date;
 
