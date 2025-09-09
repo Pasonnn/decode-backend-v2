@@ -20,6 +20,23 @@ export class AuthService {
   constructor(private readonly authServiceClient: AuthServiceClient) {}
 
   /**
+   * Health check endpoint to verify service availability
+   */
+  async checkHealth(): Promise<Response> {
+    try {
+      this.logger.log('Checking auth service health');
+      const response = await this.authServiceClient.checkHealth();
+      this.logger.log('Auth service health check successful');
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Auth service health check failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Authenticate user with email/username and password
    */
   async login(loginDto: LoginDto): Promise<Response> {
@@ -572,6 +589,163 @@ export class AuthService {
     } catch (error) {
       this.logger.error(
         `Failed to change password for forgot password: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  // Device Fingerprint Management Methods
+
+  /**
+   * Get device fingerprints for current user
+   */
+  async getDeviceFingerprints(authorization: string): Promise<Response> {
+    try {
+      this.logger.log('Getting device fingerprints for current user');
+
+      const response = await this.authServiceClient.getDeviceFingerprint({
+        user_id: '', // Will be extracted from token in auth service
+        authorization,
+      });
+
+      if (!response.success) {
+        throw new BadRequestException(
+          response.message || 'Failed to get device fingerprints',
+        );
+      }
+
+      this.logger.log('Successfully retrieved device fingerprints');
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get device fingerprints: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Revoke device fingerprint
+   */
+  async revokeDeviceFingerprint(
+    deviceFingerprintId: string,
+    authorization: string,
+  ): Promise<Response> {
+    try {
+      this.logger.log(`Revoking device fingerprint: ${deviceFingerprintId}`);
+
+      const response = await this.authServiceClient.revokeDeviceFingerprint({
+        device_fingerprint_id: deviceFingerprintId,
+        user_id: '', // Will be extracted from token in auth service
+        authorization,
+      });
+
+      if (!response.success) {
+        throw new BadRequestException(
+          response.message || 'Failed to revoke device fingerprint',
+        );
+      }
+
+      this.logger.log(`Successfully revoked device fingerprint: ${deviceFingerprintId}`);
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to revoke device fingerprint: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  // Additional Info Methods
+
+  /**
+   * Get user info by access token
+   */
+  async getUserInfoByAccessToken(
+    accessToken: string,
+    authorization: string,
+  ): Promise<Response> {
+    try {
+      this.logger.log('Getting user info by access token');
+
+      const response = await this.authServiceClient.infoByAccessToken({
+        access_token: accessToken,
+        authorization,
+      });
+
+      if (!response.success) {
+        throw new BadRequestException(
+          response.message || 'Failed to get user info',
+        );
+      }
+
+      this.logger.log('Successfully retrieved user info by access token');
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get user info by access token: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get user info by user ID
+   */
+  async getUserInfoByUserId(
+    userId: string,
+    authorization: string,
+  ): Promise<Response> {
+    try {
+      this.logger.log(`Getting user info by user ID: ${userId}`);
+
+      const response = await this.authServiceClient.infoByUserId({
+        user_id: userId,
+        authorization,
+      });
+
+      if (!response.success) {
+        throw new BadRequestException(
+          response.message || 'Failed to get user info',
+        );
+      }
+
+      this.logger.log(`Successfully retrieved user info by user ID: ${userId}`);
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get user info by user ID: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get user info by email or username
+   */
+  async getUserInfoByEmailOrUsername(
+    emailOrUsername: string,
+    authorization: string,
+  ): Promise<Response> {
+    try {
+      this.logger.log(`Getting user info by email or username: ${emailOrUsername}`);
+
+      const response = await this.authServiceClient.infoByEmailOrUsername({
+        email_or_username: emailOrUsername,
+        authorization,
+      });
+
+      if (!response.success) {
+        throw new BadRequestException(
+          response.message || 'Failed to get user info',
+        );
+      }
+
+      this.logger.log(`Successfully retrieved user info by email or username: ${emailOrUsername}`);
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get user info by email or username: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }

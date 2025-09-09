@@ -38,7 +38,13 @@ import {
   VerifyEmailForgotPasswordDto,
   ChangeForgotPasswordDto,
 } from './dto/password.dto';
-import { ExistUserByEmailOrUsernameDto } from './dto/info.dto';
+import { 
+  ExistUserByEmailOrUsernameDto,
+  InfoByAccessTokenDto,
+  InfoByUserIdDto,
+  InfoByEmailOrUsernameDto,
+} from './dto/info.dto';
+import { RevokeDeviceFingerprintDto } from './dto/device-fingerprint.dto';
 import { Response } from '../../interfaces/response.interface';
 import { AuthGuard, Public } from '../../common/guards/auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -347,5 +353,115 @@ export class AuthController {
     @Body() dto: ExistUserByEmailOrUsernameDto,
   ): Promise<Response> {
     return this.authService.existUserByEmailOrUsername(dto.email_or_username);
+  }
+
+  // Device Fingerprint Endpoints
+
+  @ApiOperation({ summary: 'Get device fingerprints' })
+  @ApiResponse({
+    status: 200,
+    description: 'Device fingerprints retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth('JWT-auth')
+  @Get('fingerprints')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getDeviceFingerprints(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.getDeviceFingerprints(authorization);
+  }
+
+  @ApiOperation({ summary: 'Revoke device fingerprint' })
+  @ApiResponse({
+    status: 200,
+    description: 'Device fingerprint revoked successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 400, description: 'Invalid device fingerprint ID' })
+  @ApiBearerAuth('JWT-auth')
+  @Post('fingerprints/revoke')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async revokeDeviceFingerprint(
+    @Body() dto: RevokeDeviceFingerprintDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.revokeDeviceFingerprint(
+      dto.device_fingerprint_id,
+      authorization,
+    );
+  }
+
+  // Additional Info Endpoints
+
+  @ApiOperation({ summary: 'Get user info by access token' })
+  @ApiResponse({
+    status: 200,
+    description: 'User info retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Invalid access token' })
+  @Post('info/by-access-token')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async getUserInfoByAccessToken(
+    @Body() dto: InfoByAccessTokenDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.getUserInfoByAccessToken(
+      dto.access_token,
+      authorization,
+    );
+  }
+
+  @ApiOperation({ summary: 'Get user info by user ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'User info retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiBearerAuth('JWT-auth')
+  @Post('info/by-user-id')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getUserInfoByUserId(
+    @Body() dto: InfoByUserIdDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.getUserInfoByUserId(dto.user_id, authorization);
+  }
+
+  @ApiOperation({ summary: 'Get user info by email or username' })
+  @ApiResponse({
+    status: 200,
+    description: 'User info retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiBearerAuth('JWT-auth')
+  @Post('info/by-email-or-username')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getUserInfoByEmailOrUsername(
+    @Body() dto: InfoByEmailOrUsernameDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.getUserInfoByEmailOrUsername(
+      dto.email_or_username,
+      authorization,
+    );
+  }
+
+  // Health Check Endpoint
+
+  @ApiOperation({ summary: 'Health check' })
+  @ApiResponse({ status: 200, description: 'Service is healthy' })
+  @Get('healthz')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async checkHealth(): Promise<Response> {
+    return this.authService.checkHealth();
   }
 }

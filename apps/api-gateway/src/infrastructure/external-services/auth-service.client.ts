@@ -111,6 +111,17 @@ export interface ExistUserByEmailOrUsernameRequest {
   email_or_username: string;
 }
 
+export interface GetDeviceFingerprintRequest {
+  user_id: string;
+  authorization: string;
+}
+
+export interface RevokeDeviceFingerprintRequest {
+  device_fingerprint_id: string;
+  user_id: string;
+  authorization: string;
+}
+
 @Injectable()
 export class AuthServiceClient extends BaseHttpClient {
   constructor(
@@ -298,6 +309,27 @@ export class AuthServiceClient extends BaseHttpClient {
     data: ExistUserByEmailOrUsernameRequest,
   ): Promise<Response> {
     return this.post('/auth/info/exist-by-email-or-username', data);
+  }
+
+  // Device Fingerprint Endpoints
+  async getDeviceFingerprint(data: GetDeviceFingerprintRequest): Promise<Response> {
+    const config = {
+      headers: {
+        Authorization: data.authorization,
+      },
+    };
+    return this.get('/auth/fingerprints', config);
+  }
+
+  async revokeDeviceFingerprint(data: RevokeDeviceFingerprintRequest): Promise<Response> {
+    const config = {
+      headers: {
+        Authorization: data.authorization,
+      },
+    };
+    return this.post('/auth/fingerprints/revoke', {
+      device_fingerprint_id: data.device_fingerprint_id,
+    }, config);
   }
 
   // Legacy method for backward compatibility
