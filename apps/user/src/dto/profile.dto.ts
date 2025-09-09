@@ -50,13 +50,13 @@ export class UpdateUserBioDto {
   @ApiProperty({
     description: 'New bio for the user',
     example: 'Software engineer passionate about technology and innovation',
-    minLength: USER_CONSTANTS.PROFILE.BIOGRAPHY.MIN_LENGTH,
-    maxLength: USER_CONSTANTS.PROFILE.BIOGRAPHY.MAX_LENGTH,
+    minLength: USER_CONSTANTS.PROFILE.BIO.MIN_LENGTH,
+    maxLength: USER_CONSTANTS.PROFILE.BIO.MAX_LENGTH,
   })
   @IsString()
   @IsNotEmpty()
-  @MinLength(USER_CONSTANTS.PROFILE.BIOGRAPHY.MIN_LENGTH)
-  @MaxLength(USER_CONSTANTS.PROFILE.BIOGRAPHY.MAX_LENGTH)
+  @MinLength(USER_CONSTANTS.PROFILE.BIO.MIN_LENGTH)
+  @MaxLength(USER_CONSTANTS.PROFILE.BIO.MAX_LENGTH)
   bio: string;
 }
 

@@ -276,7 +276,7 @@ export class RegisterService {
       display_name: register_info_value.username,
       password_hashed: register_info_value.password_hashed,
       role: AUTH_CONSTANTS.USER.DEFAULT_ROLE,
-      bio: AUTH_CONSTANTS.USER.DEFAULT_BIOGRAPHY,
+      bio: AUTH_CONSTANTS.USER.DEFAULT_BIO,
       avatar_ipfs_hash: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_IPFS_HASH,
       avatar_fallback_url: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_FALLBACK_URL,
     });

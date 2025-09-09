@@ -8,8 +8,8 @@ export const USER_CONSTANTS = {
       PATTERN: /^[a-zA-Z0-9\s\-_]+$/,
     },
 
-    // Biography Validation
-    BIOGRAPHY: {
+    // Bio Validation
+    BIO: {
       MIN_LENGTH: 1,
       MAX_LENGTH: 500,
       DEFAULT: 'Hi, i am a new Decode User',
@@ -253,7 +253,7 @@ export const USER_CONSTANTS = {
       MAX_LENGTH: 50,
       PATTERN: /^[a-zA-Z0-9\s\-_]+$/,
     },
-    BIOGRAPHY: {
+    BIO: {
       MIN_LENGTH: 1,
       MAX_LENGTH: 500,
     },

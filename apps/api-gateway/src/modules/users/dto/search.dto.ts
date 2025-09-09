@@ -10,7 +10,7 @@ export enum SortOrder {
 export enum SearchField {
   USERNAME = 'username',
   DISPLAY_NAME = 'display_name',
-  BIOGRAPHY = 'bio',
+  BIO = 'bio',
 }
 
 export class SearchUserDto {

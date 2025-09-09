@@ -72,7 +72,7 @@ export const AUTH_CONSTANTS = {
       MODERATOR: 'moderator',
     },
     DEFAULT_ROLE: 'user',
-    DEFAULT_BIOGRAPHY: 'Hi, i am a new Decode User',
+    DEFAULT_BIO: 'Hi, i am a new Decode User',
     DEFAULT_AVATAR_IPFS_HASH:
       'bafkreibmridohwxgfwdrju5ixnw26awr22keihoegdn76yymilgsqyx4le',
     DEFAULT_AVATAR_FALLBACK_URL:
