@@ -37,6 +37,15 @@
         "tsConfigPath": "apps/email-worker/tsconfig.app.json"
       }
     },
+    "relationship": {
+      "type": "application",
+      "root": "apps/relationship",
+      "entryFile": "main",
+      "sourceRoot": "apps/relationship/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/relationship/tsconfig.app.json"
+      }
+    },
     "user": {
       "type": "application",
       "root": "apps/user",
