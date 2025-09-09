@@ -160,7 +160,7 @@ export class AuthController {
     return resend_device_fingerprint_email_verification_response;
   }
 
-  @Post('fingerprints')
+  @Get('fingerprints')
   @UseGuards(AuthGuard)
   async getDeviceFingerprint(
     @CurrentUser() user: AuthenticatedUser,
@@ -176,10 +176,13 @@ export class AuthController {
   @UseGuards(AuthGuard)
   async revokeDeviceFingerprint(
     @Body() dto: RevokeDeviceFingerprintDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
+    console.log(dto);
     const revoke_device_fingerprint_response =
       await this.deviceFingerprintService.revokeDeviceFingerprint({
         device_fingerprint_id: dto.device_fingerprint_id,
+        user_id: user.userId,
       });
     return revoke_device_fingerprint_response;
   }

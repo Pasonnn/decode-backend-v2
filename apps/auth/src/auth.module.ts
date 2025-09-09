@@ -105,6 +105,7 @@ import jwtConfig from './config/jwt.config';
     PasswordService,
     InfoService,
     DeviceFingerprintService,
+
     // Strategies
     JwtStrategy,
     SessionStrategy,

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,21 +29,21 @@ export class DeviceFingerprintService {
   constructor(
     @InjectModel(DeviceFingerprint.name)
     private deviceFingerprintModel: Model<DeviceFingerprint>,
+    @InjectModel(User.name) private userModel: Model<User>,
     private readonly redisInfrastructure: RedisInfrastructure,
     private readonly infoService: InfoService,
-    private readonly userModel: Model<User>,
-    private readonly emailService: ClientProxy,
     private readonly sessionService: SessionService,
+    @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
   ) {
     this.logger = new Logger(DeviceFingerprintService.name);
   }
 
   async getDeviceFingerprint(input: {
     user_id: string;
-  }): Promise<Response<DeviceFingerprintDoc>> {
+  }): Promise<Response<DeviceFingerprintDoc[]>> {
     const { user_id } = input;
-    const device_fingerprint = await this.deviceFingerprintModel.findOne({
-      $and: [{ user_id: user_id }, { is_trusted: true }],
+    const device_fingerprint = await this.deviceFingerprintModel.find({
+      $and: [{ user_id: new Types.ObjectId(user_id) }, { is_trusted: true }],
     });
     if (!device_fingerprint) {
       return {
@@ -56,34 +56,58 @@ export class DeviceFingerprintService {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_FETCHED,
-      data: device_fingerprint as DeviceFingerprintDoc,
-    };
+      data: device_fingerprint as DeviceFingerprintDoc[],
+    } as Response<DeviceFingerprintDoc[]>;
   }
 
   async revokeDeviceFingerprint(input: {
     device_fingerprint_id: string;
+    user_id: string;
   }): Promise<Response> {
-    const { device_fingerprint_id } = input;
-    const device_fingerprint =
-      await this.deviceFingerprintModel.findByIdAndUpdate(
-        device_fingerprint_id,
-        { is_trusted: false },
+    const { device_fingerprint_id, user_id } = input;
+    try {
+      const device_fingerprint = (await this.deviceFingerprintModel.findOne({
+        $and: [
+          { _id: new Types.ObjectId(device_fingerprint_id) },
+          { user_id: new Types.ObjectId(user_id) },
+          { is_trusted: true },
+        ],
+      })) as DeviceFingerprintDoc;
+      if (!device_fingerprint) {
+        return {
+          success: false,
+          statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+          message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+        };
+      }
+      // await this.deviceFingerprintModel.updateOne(
+      //   { _id: device_fingerprint._id },
+      //   { $set: { is_trusted: false } },
+      // );
+      const revoke_session_response =
+        await this.sessionService.revokeSessionByDeviceFingerprintId(
+          device_fingerprint._id.toString(),
+        );
+      console.log(revoke_session_response);
+      if (!revoke_session_response.success) {
+        return revoke_session_response;
+      }
+      return {
+        success: true,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+        message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_REVOKED,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error revoking device fingerprint for ${device_fingerprint_id}`,
+        error,
       );
-    if (!device_fingerprint) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
-        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.DEVICE_FINGERPRINT.REVOKING_FAILED,
       };
     }
-    await this.sessionService.revokeSessionByDeviceFingerprintId(
-      device_fingerprint_id,
-    );
-    return {
-      success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-      message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_REVOKED,
-    };
   }
 
   async verifyDeviceFingerprintEmailVerification(input: {

@@ -139,8 +139,8 @@ export class SessionService {
     device_fingerprint_id: string,
   ): Promise<Response> {
     try {
-      await this.sessionModel.updateMany(
-        { device_fingerprint_id: device_fingerprint_id },
+      const sessions = await this.sessionModel.updateMany(
+        { device_fingerprint_id: new Types.ObjectId(device_fingerprint_id) },
         { $set: { revoked_at: new Date(), is_active: false } },
       );
       this.logger.log(

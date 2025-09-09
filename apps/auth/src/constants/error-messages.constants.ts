@@ -102,6 +102,7 @@ export const MESSAGES = {
     EMAIL_VERIFICATION_FAILED:
       'Failed to send device fingerprint email verification',
     MAX_DEVICES_REACHED: 'Maximum number of devices reached',
+    REVOKING_FAILED: 'Failed to revoke device fingerprint',
   },
 
   // User Info Errors
