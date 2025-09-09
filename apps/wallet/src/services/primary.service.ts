@@ -250,8 +250,14 @@ export class PrimaryService {
     user_id: string;
   }): Promise<Response<WalletDoc>> {
     const { address, user_id } = input;
-    console.log('address', address);
-    console.log('user_id', user_id);
+    const is_user_primary_wallet = await this.userPrimaryWallet({ user_id });
+    if (is_user_primary_wallet) {
+      return {
+        success: false,
+        statusCode: 400,
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_EXISTS,
+      };
+    }
     const wallet = await this.getWallet({ address });
     const is_user_wallet = this.isUserWallet({ wallet, user_id });
     if (!is_user_wallet) {
@@ -302,6 +308,25 @@ export class PrimaryService {
         return false;
       }
       if (wallet.user_id.toString() === user_id) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      this.logger.error(error as string);
+      return false;
+    }
+  }
+
+  private async userPrimaryWallet(input: {
+    user_id: string;
+  }): Promise<boolean> {
+    const { user_id } = input;
+    try {
+      const primaryWallet = await this.walletModel.findOne({
+        user_id: new Types.ObjectId(user_id),
+        is_primary: true,
+      });
+      if (primaryWallet) {
         return true;
       }
       return false;
