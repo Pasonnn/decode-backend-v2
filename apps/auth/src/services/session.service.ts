@@ -135,29 +135,31 @@ export class SessionService {
     }
   }
 
-  async revokeAllSessions(user_id: string): Promise<Response> {
+  async revokeSessionByDeviceFingerprintId(
+    device_fingerprint_id: string,
+  ): Promise<Response> {
     try {
-      // Revoke all sessions
       await this.sessionModel.updateMany(
-        { user_id: new Types.ObjectId(user_id) },
+        { device_fingerprint_id: device_fingerprint_id },
         { $set: { revoked_at: new Date(), is_active: false } },
       );
-      this.logger.log(`All sessions revoked for user ${user_id}`);
-      // Return response
+      this.logger.log(
+        `Sessions revoked by device fingerprint ${device_fingerprint_id}`,
+      );
       return {
         success: true,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: MESSAGES.SUCCESS.ALL_SESSIONS_REVOKED,
+        message: MESSAGES.SUCCESS.SESSIONS_REVOKED,
       };
     } catch (error) {
       this.logger.error(
-        `Error revoking all sessions for user ${user_id}`,
+        `Error revoking sessions for device fingerprint ${device_fingerprint_id}`,
         error,
       );
       return {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: MESSAGES.SESSION.ALL_SESSIONS_REVOKING_ERROR,
+        message: MESSAGES.SESSION.SESSION_REVOKING_ERROR,
       };
     }
   }
@@ -230,8 +232,10 @@ export class SessionService {
 
   async logout(session_token: string): Promise<Response> {
     try {
-      const revoke_session_response = await this.revokeSession(session_token);
-      if (!revoke_session_response.success || !revoke_session_response.data) {
+      const revoke_session_response = await this.revokeSession({
+        session_token: session_token,
+      });
+      if (!revoke_session_response.success) {
         return revoke_session_response;
       }
       return {
@@ -431,7 +435,10 @@ export class SessionService {
     }
   }
 
-  private async revokeSession(session_token: string): Promise<Response> {
+  private async revokeSession(input: {
+    session_token: string;
+  }): Promise<Response> {
+    const { session_token } = input;
     try {
       // Validate session token
       const validate_session_response =

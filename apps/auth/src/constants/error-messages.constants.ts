@@ -53,6 +53,7 @@ export const MESSAGES = {
     SESSION_CREATION_ERROR: 'Error creating session',
     SESSION_REFRESH_ERROR: 'Error refreshing session',
     ALL_SESSIONS_REVOKING_ERROR: 'Error revoking all sessions',
+    SESSIONS_REVOKING_ERROR: 'Error revoking sessions',
     USER_ACTIVE_SESSIONS_FETCHING_ERROR: 'Error getting user active sessions',
     EXPIRED_SESSIONS_CLEANING_ERROR: 'Error cleaning up expired sessions',
     LOGOUT_ERROR: 'Error logging out',
@@ -176,6 +177,7 @@ export const MESSAGES = {
     SESSION_CREATED: 'Session created',
     SESSION_REFRESHED: 'Session refreshed',
     SESSION_REVOKED: 'Session revoked',
+    SESSIONS_REVOKED: 'Sessions revoked',
     ALL_SESSIONS_REVOKED: 'All sessions revoked',
     USER_ACTIVE_SESSIONS_FETCHED: 'User active sessions fetched',
     EXPIRED_SESSIONS_CLEANED_UP: 'Expired sessions cleaned up',
@@ -189,5 +191,7 @@ export const MESSAGES = {
     USER_INFO_FETCHED: 'User information fetched successfully',
     USER_UPDATED: 'User updated successfully',
     USER_FOUND: 'User found',
+    DEVICE_FINGERPRINT_FETCHED: 'Device fingerprint fetched',
+    DEVICE_FINGERPRINT_REVOKED: 'Device fingerprint revoked',
   },
 };

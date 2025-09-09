@@ -17,6 +17,7 @@ import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 
 // Services Import
 import { InfoService } from './info.service';
+import { SessionService } from './session.service';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
@@ -32,8 +33,57 @@ export class DeviceFingerprintService {
     private readonly infoService: InfoService,
     private readonly userModel: Model<User>,
     private readonly emailService: ClientProxy,
+    private readonly sessionService: SessionService,
   ) {
     this.logger = new Logger(DeviceFingerprintService.name);
+  }
+
+  async getDeviceFingerprint(input: {
+    user_id: string;
+  }): Promise<Response<DeviceFingerprintDoc>> {
+    const { user_id } = input;
+    const device_fingerprint = await this.deviceFingerprintModel.findOne({
+      $and: [{ user_id: user_id }, { is_trusted: true }],
+    });
+    if (!device_fingerprint) {
+      return {
+        success: false,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+      };
+    }
+    return {
+      success: true,
+      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_FETCHED,
+      data: device_fingerprint as DeviceFingerprintDoc,
+    };
+  }
+
+  async revokeDeviceFingerprint(input: {
+    device_fingerprint_id: string;
+  }): Promise<Response> {
+    const { device_fingerprint_id } = input;
+    const device_fingerprint =
+      await this.deviceFingerprintModel.findByIdAndUpdate(
+        device_fingerprint_id,
+        { is_trusted: false },
+      );
+    if (!device_fingerprint) {
+      return {
+        success: false,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+      };
+    }
+    await this.sessionService.revokeSessionByDeviceFingerprintId(
+      device_fingerprint_id,
+    );
+    return {
+      success: true,
+      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_REVOKED,
+    };
   }
 
   async verifyDeviceFingerprintEmailVerification(input: {
@@ -137,10 +187,13 @@ export class DeviceFingerprintService {
     };
   }
 
-  async createDeviceFingerprint(
-    user_id: string,
-    fingerprint_hashed: string,
-  ): Promise<Response<DeviceFingerprintDoc>> {
+  async createDeviceFingerprint(input: {
+    user_id: string;
+    fingerprint_hashed: string;
+    browser: string;
+    device: string;
+  }): Promise<Response<DeviceFingerprintDoc>> {
+    const { user_id, fingerprint_hashed, browser, device } = input;
     // Check if device fingerprint already exists
     let device_fingerprint = await this.deviceFingerprintModel.findOne({
       $and: [{ user_id: user_id }, { fingerprint_hashed: fingerprint_hashed }],
@@ -149,6 +202,8 @@ export class DeviceFingerprintService {
       device_fingerprint = await this.deviceFingerprintModel.create({
         user_id: user_id,
         fingerprint_hashed: fingerprint_hashed,
+        browser: browser,
+        device: device,
         is_trusted: AUTH_CONSTANTS.DEVICE_FINGERPRINT.TRUSTED_BY_DEFAULT,
       });
     }
@@ -213,10 +268,10 @@ export class DeviceFingerprintService {
       AUTH_CONSTANTS.REDIS.FINGERPRINT_VERIFICATION_EXPIRES_IN,
     );
     // Send email verification code to user
-    this.deviceFingerprintEmailVerification(
-      user.email,
+    this.deviceFingerprintEmailVerification({
+      email: user.email,
       email_verification_code,
-    );
+    });
     return {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
@@ -224,10 +279,11 @@ export class DeviceFingerprintService {
     };
   }
 
-  deviceFingerprintEmailVerification(
-    email: string,
-    email_verification_code: string,
-  ): void {
+  deviceFingerprintEmailVerification(input: {
+    email: string;
+    email_verification_code: string;
+  }): void {
+    const { email, email_verification_code } = input;
     // Send welcome email to user
     this.emailService.emit('email_request', {
       type: AUTH_CONSTANTS.EMAIL.TYPES.FINGERPRINT_VERIFY,

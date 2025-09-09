@@ -16,6 +16,7 @@ import { LoginService } from './services/login.service';
 import { SessionService } from './services/session.service';
 import { PasswordService } from './services/password.service';
 import { InfoService } from './services/info.service';
+import { DeviceFingerprintService } from './services/device-fingerprint.service';
 
 // Strategies and Infrastructure Import
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -103,7 +104,7 @@ import jwtConfig from './config/jwt.config';
     SessionService,
     PasswordService,
     InfoService,
-
+    DeviceFingerprintService,
     // Strategies
     JwtStrategy,
     SessionStrategy,

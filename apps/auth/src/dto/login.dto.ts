@@ -19,6 +19,14 @@ export class LoginDto {
   @MinLength(AUTH_CONSTANTS.VALIDATION.FINGERPRINT_HASH.MIN_LENGTH)
   @MaxLength(AUTH_CONSTANTS.VALIDATION.FINGERPRINT_HASH.MAX_LENGTH)
   fingerprint_hashed: string;
+
+  @IsNotEmpty()
+  @IsString()
+  browser: string;
+
+  @IsNotEmpty()
+  @IsString()
+  device: string;
 }
 
 export class FingerprintEmailVerificationDto {

@@ -36,8 +36,11 @@ export class LoginService {
     email_or_username: string;
     password: string;
     fingerprint_hashed: string;
+    browser: string;
+    device: string;
   }): Promise<Response> {
-    const { email_or_username, password, fingerprint_hashed } = input;
+    const { email_or_username, password, fingerprint_hashed, browser, device } =
+      input;
     try {
       this.logger.log(`Login request received for ${email_or_username}`);
       const getUserInfoResponse =
@@ -66,10 +69,12 @@ export class LoginService {
           `Device fingerprint not trusted for ${email_or_username}`,
         );
         const createDeviceFingerprintResponse =
-          await this.deviceFingerprintService.createDeviceFingerprint(
-            getUserInfoResponse.data._id,
+          await this.deviceFingerprintService.createDeviceFingerprint({
+            user_id: getUserInfoResponse.data._id,
             fingerprint_hashed,
-          );
+            browser,
+            device,
+          });
         if (!createDeviceFingerprintResponse.success) {
           this.logger.error(
             `Cannot create device fingerprint for ${email_or_username}`,
@@ -132,45 +137,6 @@ export class LoginService {
         success: false,
         statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
         message: MESSAGES.AUTH.LOGIN_ERROR,
-      };
-    }
-  }
-
-  async verifyDeviceFingerprintEmailVerification(input: {
-    email_verification_code: string;
-  }): Promise<Response> {
-    const { email_verification_code } = input;
-    try {
-      this.logger.log(
-        `Verify device fingerprint email verification request received for ${email_verification_code}`,
-      );
-      const validateDeviceFingerprintEmailVerificationResponse =
-        await this.deviceFingerprintService.validateDeviceFingerprintEmailVerification(
-          { email_verification_code },
-        );
-      if (
-        !validateDeviceFingerprintEmailVerificationResponse.success ||
-        !validateDeviceFingerprintEmailVerificationResponse.data
-      ) {
-        return validateDeviceFingerprintEmailVerificationResponse;
-      }
-      this.logger.log(
-        `Device fingerprint verification successful for ${email_verification_code}`,
-      );
-      return {
-        success: true,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
-        message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error verifying device fingerprint email verification for ${email_verification_code}`,
-        error,
-      );
-      return {
-        success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
       };
     }
   }

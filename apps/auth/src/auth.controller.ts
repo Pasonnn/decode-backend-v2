@@ -29,6 +29,7 @@ import {
   InfoByEmailOrUsernameDto,
   ExistUserByEmailOrUsernameDto,
 } from './dto/info.dto';
+import type { RevokeDeviceFingerprintDto } from './interfaces/device-fingerprint.interface';
 
 // Interfaces Import
 import { Response } from './interfaces/response.interface';
@@ -39,6 +40,7 @@ import { LoginService } from './services/login.service';
 import { SessionService } from './services/session.service';
 import { PasswordService } from './services/password.service';
 import { InfoService } from './services/info.service';
+import { DeviceFingerprintService } from './services/device-fingerprint.service';
 
 // Guards Import
 import { AuthGuard, Public } from './common/guards/auth.guard';
@@ -55,6 +57,7 @@ export class AuthController {
     private readonly sessionService: SessionService,
     private readonly passwordService: PasswordService,
     private readonly infoService: InfoService,
+    private readonly deviceFingerprintService: DeviceFingerprintService,
   ) {}
 
   /**
@@ -113,11 +116,13 @@ export class AuthController {
   @Post('login')
   @Public()
   async login(@Body() dto: LoginDto): Promise<Response> {
-    const login_response = await this.loginService.login(
-      dto.email_or_username,
-      dto.password,
-      dto.fingerprint_hashed,
-    );
+    const login_response = await this.loginService.login({
+      email_or_username: dto.email_or_username,
+      password: dto.password,
+      fingerprint_hashed: dto.fingerprint_hashed,
+      browser: dto.browser,
+      device: dto.device,
+    });
     return login_response;
   }
 
@@ -132,8 +137,10 @@ export class AuthController {
     @Body() dto: FingerprintEmailVerificationDto,
   ): Promise<Response> {
     const verify_device_fingerprint_email_verification_response =
-      await this.loginService.verifyDeviceFingerprintEmailVerification(
-        dto.code,
+      await this.deviceFingerprintService.verifyDeviceFingerprintEmailVerification(
+        {
+          email_verification_code: dto.code,
+        },
       );
     return verify_device_fingerprint_email_verification_response;
   }
@@ -144,11 +151,37 @@ export class AuthController {
     @Body() dto: ResendDeviceFingerprintEmailVerificationDto,
   ): Promise<Response> {
     const resend_device_fingerprint_email_verification_response =
-      await this.loginService.resendDeviceFingerprintEmailVerification(
-        dto.email_or_username,
-        dto.fingerprint_hashed,
+      await this.deviceFingerprintService.resendDeviceFingerprintEmailVerification(
+        {
+          email_or_username: dto.email_or_username,
+          fingerprint_hashed: dto.fingerprint_hashed,
+        },
       );
     return resend_device_fingerprint_email_verification_response;
+  }
+
+  @Post('fingerprints')
+  @UseGuards(AuthGuard)
+  async getDeviceFingerprint(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    const get_device_fingerprint_response =
+      await this.deviceFingerprintService.getDeviceFingerprint({
+        user_id: user.userId,
+      });
+    return get_device_fingerprint_response;
+  }
+
+  @Post('fingerprints/revoke')
+  @UseGuards(AuthGuard)
+  async revokeDeviceFingerprint(
+    @Body() dto: RevokeDeviceFingerprintDto,
+  ): Promise<Response> {
+    const revoke_device_fingerprint_response =
+      await this.deviceFingerprintService.revokeDeviceFingerprint({
+        device_fingerprint_id: dto.device_fingerprint_id,
+      });
+    return revoke_device_fingerprint_response;
   }
 
   /**
@@ -190,21 +223,6 @@ export class AuthController {
   async logout(@Body() dto: LogoutDto): Promise<Response> {
     const logout_response = await this.sessionService.logout(dto.session_token);
     return logout_response;
-  }
-
-  /**
-   * Revokes all active sessions for a user across all devices
-   * @param dto - User ID whose sessions should be revoked {user_id: string}
-   * @returns Response confirming all sessions have been terminated
-   */
-  @Post('session/revoke-all')
-  @UseGuards(AuthGuard)
-  async revokeAllSessions(
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<Response> {
-    const revoke_all_sessions_response =
-      await this.sessionService.revokeAllSessions(user.userId);
-    return revoke_all_sessions_response;
   }
 
   /**
