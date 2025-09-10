@@ -66,10 +66,7 @@ export class DeviceFingerprintService {
   }): Promise<Response<DeviceFingerprintDoc>> {
     const { fingerprint_hashed, user_id } = input;
     const device_fingerprint = await this.deviceFingerprintModel.findOne({
-      $and: [
-        { fingerprint_hashed },
-        { user_id: new Types.ObjectId(user_id) },
-      ],
+      $and: [{ fingerprint_hashed }, { user_id: new Types.ObjectId(user_id) }],
     });
     if (!device_fingerprint) {
       return {

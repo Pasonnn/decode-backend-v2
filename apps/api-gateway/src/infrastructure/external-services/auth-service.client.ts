@@ -220,10 +220,14 @@ export class AuthServiceClient extends BaseHttpClient {
         Authorization: data.authorization,
       },
     };
-    return this.post('/auth/sso/create', {
-      app: data.app,
-      fingerprint_hashed: data.fingerprint_hashed,
-    }, config);
+    return this.post(
+      '/auth/sso/create',
+      {
+        app: data.app,
+        fingerprint_hashed: data.fingerprint_hashed,
+      },
+      config,
+    );
   }
 
   async validateSsoToken(data: ValidateSsoTokenRequest): Promise<Response> {
