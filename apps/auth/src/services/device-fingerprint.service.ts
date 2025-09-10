@@ -40,11 +40,17 @@ export class DeviceFingerprintService {
 
   async getDeviceFingerprints(input: {
     user_id: string;
-  }): Promise<Response<DeviceFingerprintDoc[]>> {
+  }): Promise<Response<DeviceFingerprintDoc<SessionDoc>[]>> {
     const { user_id } = input;
     const device_fingerprint = await this.deviceFingerprintModel.find({
       $and: [{ user_id: new Types.ObjectId(user_id) }, { is_trusted: true }],
     });
+    const sessions = await this.sessionService.getUserActiveSessions(user_id);
+    // 
+    const device_fingerprint_with_sessions = device_fingerprint.map((device_fingerprint) => ({ 
+      ...device_fingerprint.toObject(),
+      sessions: sessions.data.map((session) => session.toObject()),
+    }));
     if (!device_fingerprint) {
       return {
         success: false,
@@ -56,7 +62,7 @@ export class DeviceFingerprintService {
       success: true,
       statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_FETCHED,
-      data: device_fingerprint as unknown as DeviceFingerprintDoc[],
+      data: device_fingerprint as unknown as DeviceFingerprintDoc<SessionDoc>[],
     } as Response<DeviceFingerprintDoc[]>;
   }
 
