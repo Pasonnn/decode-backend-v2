@@ -256,6 +256,38 @@ export class AuthService {
   }
 
   /**
+   * Revoke specific session
+   */
+  async revokeSession(sessionId: string, authorization: string): Promise<Response> {
+    try {
+      this.logger.log(`Revoking session: ${sessionId}`);
+
+      const config = {
+        headers: {
+          Authorization: authorization,
+        },
+      };
+      const response = await this.authServiceClient.post(
+        '/auth/session/revoke',
+        { session_id: sessionId },
+        config,
+      );
+
+      if (!response.success) {
+        throw new BadRequestException(response.message || 'Session revocation failed');
+      }
+
+      this.logger.log(`Successfully revoked session: ${sessionId}`);
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to revoke session ${sessionId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Validate access token
    */
   async validateToken(

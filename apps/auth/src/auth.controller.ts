@@ -18,6 +18,7 @@ import {
   ValidateAccessDto,
   ValidateSsoTokenDto,
   CreateSsoTokenDto,
+  RevokeSessionDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
@@ -229,6 +230,14 @@ export class AuthController {
   async logout(@Body() dto: LogoutDto): Promise<Response> {
     const logout_response = await this.sessionService.logout(dto.session_token);
     return logout_response;
+  }
+
+  @Post('session/revoke')
+  @UseGuards(AuthGuard)
+  async revokeSession(@Body() dto: RevokeSessionDto): Promise<Response> {
+    const revoke_session_response =
+      await this.sessionService.revokeSessionBySessionId(dto.session_id);
+    return revoke_session_response;
   }
 
   /**

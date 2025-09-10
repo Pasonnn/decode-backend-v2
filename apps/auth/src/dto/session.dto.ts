@@ -16,6 +16,12 @@ export class LogoutDto {
   session_token: string;
 }
 
+export class RevokeSessionDto {
+  @IsNotEmpty()
+  @IsString()
+  session_id: string;
+}
+
 export class RevokeAllSessionsDto {
   // user_id will be extracted from the authenticated user's token
 }

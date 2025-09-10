@@ -135,6 +135,31 @@ export class SessionService {
     }
   }
 
+  async revokeSessionBySessionId(session_id: string): Promise<Response> {
+    try {
+      await this.sessionModel.updateOne(
+        { _id: new Types.ObjectId(session_id) },
+        { $set: { revoked_at: new Date(), is_active: false } },
+      );
+      this.logger.log(`Session revoked for session ${session_id}`);
+      return {
+        success: true,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+        message: MESSAGES.SUCCESS.SESSION_REVOKED,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error revoking session for session ${session_id}`,
+        error,
+      );
+      return {
+        success: false,
+        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.SESSION.SESSION_REVOKING_ERROR,
+      };
+    }
+  }
+
   async revokeSessionByDeviceFingerprintId(
     device_fingerprint_id: string,
   ): Promise<Response> {

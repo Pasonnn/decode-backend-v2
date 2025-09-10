@@ -32,6 +32,7 @@ import {
   ValidateAccessDto,
   ValidateSsoTokenDto,
   CreateSsoTokenDto,
+  RevokeSessionDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
@@ -165,6 +166,24 @@ export class AuthController {
     @Headers('authorization') authorization: string,
   ): Promise<Response> {
     return this.authService.logout(logoutDto.session_token, authorization);
+  }
+
+  @ApiOperation({ summary: 'Revoke specific session' })
+  @ApiResponse({
+    status: 200,
+    description: 'Session revoked successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 400, description: 'Invalid session ID' })
+  @ApiBearerAuth('JWT-auth')
+  @Post('session/revoke')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async revokeSession(
+    @Body() dto: RevokeSessionDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.revokeSession(dto.session_id, authorization);
   }
   @ApiOperation({ summary: 'Get current user info' })
   @ApiResponse({ status: 200, description: 'User info retrieved successfully' })
