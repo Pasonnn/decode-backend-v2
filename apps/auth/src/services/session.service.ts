@@ -14,7 +14,6 @@ import { Response } from '../interfaces/response.interface';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 // Infrastructure and Strategies Import
-import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { SessionStrategy } from '../strategies/session.strategy';
 
@@ -31,7 +30,6 @@ export class SessionService {
   constructor(
     private readonly jwtStrategy: JwtStrategy,
     @InjectModel(Session.name) private sessionModel: Model<Session>,
-    private readonly redisInfrastructure: RedisInfrastructure,
     private readonly sessionStrategy: SessionStrategy,
   ) {
     this.logger = new Logger(SessionService.name);
