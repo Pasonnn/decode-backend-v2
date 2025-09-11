@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
@@ -31,7 +31,7 @@ export class LinkService {
       if (existingWallet) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.WALLET_LINK.WALLET_ALREADY_LINKED,
         };
       }
@@ -42,13 +42,13 @@ export class LinkService {
       if (!nonceMessage) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: 'Failed to generate link challenge',
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: 'Link challenge generated successfully',
         data: {
           nonceMessage: nonceMessage,
@@ -57,7 +57,7 @@ export class LinkService {
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.CHALLENGE.CHALLENGE_GENERATION_FAILED,
         error: error as string,
       };
@@ -78,7 +78,7 @@ export class LinkService {
       if (!signatureIsValid) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
         };
       }
@@ -89,13 +89,13 @@ export class LinkService {
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.LINK_CHALLENGE_VALIDATED,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
         error: error as string,
       };
@@ -115,7 +115,7 @@ export class LinkService {
       if (!validUnlinkWallet) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.WALLET_LINK.WALLET_NOT_LINKED,
         };
       }
@@ -126,19 +126,19 @@ export class LinkService {
       if (!deletedWallet) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.WALLET_LINK.WALLET_UNLINKING_FAILED,
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.WALLET_UNLINKED,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.WALLET_LINK.WALLET_UNLINKING_FAILED,
         error: error as string,
       };
@@ -154,20 +154,20 @@ export class LinkService {
       if (!wallets) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.DATABASE.WALLET_NOT_FOUND,
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.WALLETS_FETCHED,
         data: wallets,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.DATABASE.QUERY_FAILED,
         error: error as string,
       };
@@ -184,7 +184,7 @@ export class LinkService {
       if (existingWallet) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.WALLET_LINK.WALLET_ALREADY_LINKED,
         };
       }
@@ -194,14 +194,14 @@ export class LinkService {
       });
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.WALLET_LINKED,
         data: newWallet,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.WALLET_LINK.WALLET_LINKING_FAILED,
         error: error as string,
       };

@@ -258,7 +258,10 @@ export class AuthService {
   /**
    * Revoke specific session
    */
-  async revokeSession(sessionId: string, authorization: string): Promise<Response> {
+  async revokeSession(
+    sessionId: string,
+    authorization: string,
+  ): Promise<Response> {
     try {
       this.logger.log(`Revoking session: ${sessionId}`);
 
@@ -274,7 +277,9 @@ export class AuthService {
       );
 
       if (!response.success) {
-        throw new BadRequestException(response.message || 'Session revocation failed');
+        throw new BadRequestException(
+          response.message || 'Session revocation failed',
+        );
       }
 
       this.logger.log(`Successfully revoked session: ${sessionId}`);

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
@@ -34,7 +34,7 @@ export class PrimaryService {
       if (!check_valid_primary_wallet.success) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: check_valid_primary_wallet.message,
         };
       }
@@ -48,13 +48,13 @@ export class PrimaryService {
       if (!nonceMessage) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_GENERATION_FAILED,
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PRIMARY_CHALLENGE_GENERATED,
         data: {
           nonceMessage: nonceMessage,
@@ -63,7 +63,7 @@ export class PrimaryService {
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_GENERATION_FAILED,
         error: error as string,
       };
@@ -85,7 +85,7 @@ export class PrimaryService {
       if (!check_valid_primary_wallet.success) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: check_valid_primary_wallet.message,
         };
       }
@@ -96,7 +96,7 @@ export class PrimaryService {
       if (!signatureIsValid) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_VALIDATION_FAILED,
         };
       }
@@ -109,13 +109,13 @@ export class PrimaryService {
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PRIMARY_CHALLENGE_VALIDATED,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_VALIDATION_FAILED,
         error: error as string,
       };
@@ -135,7 +135,7 @@ export class PrimaryService {
       if (!check_valid_primary_wallet.success) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: check_valid_primary_wallet.message,
         };
       }
@@ -149,19 +149,19 @@ export class PrimaryService {
       if (!unsetPrimaryWallet) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_UNSET_FAILED,
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PRIMARY_WALLET_UNSET,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_UNSET_FAILED,
         error: error as string,
       };
@@ -178,20 +178,20 @@ export class PrimaryService {
       if (!primaryWallet) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_FOUND,
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PRIMARY_WALLET_FETCHED,
         data: primaryWallet as WalletDoc,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_FOUND,
         error: error as string,
       };
@@ -211,7 +211,7 @@ export class PrimaryService {
       if (!check_valid_primary_wallet.success) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: check_valid_primary_wallet.message,
         };
       }
@@ -225,20 +225,20 @@ export class PrimaryService {
       if (!set_primary_wallet) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_SET_FAILED,
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PRIMARY_WALLET_SET,
         data: set_primary_wallet as WalletDoc,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_SET_FAILED,
         error: error as string,
       };
@@ -254,7 +254,7 @@ export class PrimaryService {
     if (is_user_primary_wallet) {
       return {
         success: false,
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_EXISTS,
       };
     }
@@ -263,7 +263,7 @@ export class PrimaryService {
     if (!is_user_wallet) {
       return {
         success: false,
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.WALLET_LINK.WALLET_NOT_LINKED,
       };
     }
@@ -271,13 +271,13 @@ export class PrimaryService {
     if (!is_primary_wallet) {
       return {
         success: false,
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_SET,
       };
     }
     return {
       success: true,
-      statusCode: 200,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.PRIMARY_WALLET_VALID,
       data: wallet,
     };

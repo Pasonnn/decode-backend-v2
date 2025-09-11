@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -49,7 +49,7 @@ export class DeviceFingerprintService {
     if (!device_fingerprints) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
@@ -59,7 +59,7 @@ export class DeviceFingerprintService {
     if (!sessions) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.SESSION.USER_ACTIVE_SESSIONS_FETCHING_ERROR,
       };
     }
@@ -81,7 +81,7 @@ export class DeviceFingerprintService {
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_FETCHED,
       data: device_fingerprints_with_sessions as unknown as DeviceFingerprintDoc<SessionDoc>[],
     } as Response<DeviceFingerprintDoc<SessionDoc>[]>;
@@ -98,13 +98,13 @@ export class DeviceFingerprintService {
     if (!device_fingerprint) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_FETCHED,
       data: device_fingerprint as unknown as DeviceFingerprintDoc,
     };
@@ -126,7 +126,7 @@ export class DeviceFingerprintService {
       if (!device_fingerprint) {
         return {
           success: false,
-          statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
         };
       }
@@ -143,7 +143,7 @@ export class DeviceFingerprintService {
       }
       return {
         success: true,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_REVOKED,
       };
     } catch (error) {
@@ -153,7 +153,7 @@ export class DeviceFingerprintService {
       );
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.DEVICE_FINGERPRINT.REVOKING_FAILED,
       };
     }
@@ -182,7 +182,7 @@ export class DeviceFingerprintService {
       );
       return {
         success: true,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
       };
     } catch (error) {
@@ -192,7 +192,7 @@ export class DeviceFingerprintService {
       );
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
       };
     }
@@ -230,7 +230,7 @@ export class DeviceFingerprintService {
       );
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.DEVICE_FINGERPRINT.VERIFICATION_FAILED,
       };
     }
@@ -248,13 +248,13 @@ export class DeviceFingerprintService {
     if (!device_fingerprint || device_fingerprint.is_trusted === false) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
       data: device_fingerprint as unknown as DeviceFingerprintDoc,
     };
@@ -282,7 +282,7 @@ export class DeviceFingerprintService {
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
       data: device_fingerprint as unknown as DeviceFingerprintDoc,
     };
@@ -304,7 +304,7 @@ export class DeviceFingerprintService {
     if (!device_fingerprint_email_verification) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
@@ -320,7 +320,7 @@ export class DeviceFingerprintService {
     if (!user) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
@@ -347,7 +347,7 @@ export class DeviceFingerprintService {
     });
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }
@@ -381,7 +381,7 @@ export class DeviceFingerprintService {
     if (!device_fingerprint_data) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
       };
     }
@@ -397,7 +397,7 @@ export class DeviceFingerprintService {
     if (!device_fingerprint) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
@@ -410,7 +410,7 @@ export class DeviceFingerprintService {
     );
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
       data: device_fingerprint as unknown as DeviceFingerprintDoc,
     };

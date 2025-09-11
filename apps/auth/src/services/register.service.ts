@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -95,7 +95,7 @@ export class RegisterService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_CREATED,
     };
   }
@@ -119,7 +119,7 @@ export class RegisterService {
     if (existing_email) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.REGISTRATION.EMAIL_EXISTS,
       };
     }
@@ -137,7 +137,7 @@ export class RegisterService {
     if (existing_username) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.REGISTRATION.USERNAME_EXISTS,
       };
     }
@@ -157,7 +157,7 @@ export class RegisterService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.REGISTRATION_SUCCESSFUL,
     };
   }
@@ -175,7 +175,7 @@ export class RegisterService {
     if (!register_info_value) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.NOT_FOUND,
+        statusCode: HttpStatus.NOT_FOUND,
         message: MESSAGES.REGISTRATION.REGISTER_INFO_NOT_FOUND,
       };
     }
@@ -201,7 +201,7 @@ export class RegisterService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }
@@ -217,7 +217,7 @@ export class RegisterService {
     if (!email_verification_code_value) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.EMAIL_VERIFICATION.INVALID_CODE,
       };
     }
@@ -227,7 +227,7 @@ export class RegisterService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SUCCESSFUL,
       data: {
         email: email_verification_code_value.email,
@@ -244,7 +244,7 @@ export class RegisterService {
     if (!register_info_value) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.REGISTRATION.REGISTER_INFO_INVALID,
       };
     }
@@ -263,7 +263,7 @@ export class RegisterService {
     if (existing_user) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.CONFLICT,
+        statusCode: HttpStatus.CONFLICT,
         message: MESSAGES.REGISTRATION.EMAIL_EXISTS,
       };
     }
@@ -283,7 +283,7 @@ export class RegisterService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_CREATED,
       data: user,
     };
@@ -300,7 +300,7 @@ export class RegisterService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }

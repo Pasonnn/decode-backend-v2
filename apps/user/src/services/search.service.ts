@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -10,7 +10,6 @@ import { Response } from '../interfaces/response.interface';
 import { User } from '../schemas/user.schema';
 
 // Constants Import
-import { USER_CONSTANTS } from '../constants/user.constants';
 import { MESSAGES } from '../constants/messages.constants';
 
 @Injectable()
@@ -46,7 +45,7 @@ export class SearchService {
         });
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.SEARCH_SUCCESSFUL,
         data: users as UserDoc[],
       };
@@ -54,7 +53,7 @@ export class SearchService {
       this.logger.error(`Error searching users: ${error as string}`);
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
@@ -76,13 +75,13 @@ export class SearchService {
       if (user) {
         return {
           success: true,
-          statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+          statusCode: HttpStatus.OK,
           message: MESSAGES.SUCCESS.USERNAME_ALREADY_EXISTS,
         };
       }
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.USERNAME_AVAILABLE,
       };
     } catch (error: unknown) {
@@ -91,7 +90,7 @@ export class SearchService {
       );
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
@@ -111,20 +110,20 @@ export class SearchService {
       if (user) {
         return {
           success: true,
-          statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+          statusCode: HttpStatus.OK,
           message: MESSAGES.SUCCESS.EMAIL_ALREADY_EXISTS,
         };
       }
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_AVAILABLE,
       };
     } catch (error: unknown) {
       this.logger.error(`Error searching existing email: ${error as string}`);
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }

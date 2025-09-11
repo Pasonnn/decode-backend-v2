@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
@@ -39,7 +39,7 @@ export class UsernameService {
       if (!user) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          statusCode: HttpStatus.NOT_FOUND,
           message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
@@ -50,7 +50,7 @@ export class UsernameService {
       ) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.USERNAME.USERNAME_CHANGE_COOLDOWN_ACTIVE,
         };
       }
@@ -63,14 +63,14 @@ export class UsernameService {
       }
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
       this.logger.error(`Error changing username initiate: ${error as string}`);
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
@@ -88,20 +88,20 @@ export class UsernameService {
     if (!verification_code_value) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USERNAME.USERNAME_CHANGE_CODE_INVALID,
       };
     }
     if (verification_code_value.user_id !== user_id) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.FORBIDDEN,
+        statusCode: HttpStatus.FORBIDDEN,
         message: MESSAGES.USERNAME.USERNAME_CHANGE_CODE_INVALID,
       };
     }
     return {
       success: true,
-      statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USERNAME_CHANGE_CODE_VERIFIED,
     };
   }
@@ -120,14 +120,14 @@ export class UsernameService {
     if (!user) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+        statusCode: HttpStatus.NOT_FOUND,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     if (user.username === new_username) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USERNAME.USERNAME_ALREADY_EXISTS,
       };
     }
@@ -147,7 +147,7 @@ export class UsernameService {
     });
     return {
       success: true,
-      statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USERNAME_CHANGED,
     };
   }
@@ -181,14 +181,14 @@ export class UsernameService {
       });
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
       this.logger.error(`Error sending email verification: ${error as string}`);
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }

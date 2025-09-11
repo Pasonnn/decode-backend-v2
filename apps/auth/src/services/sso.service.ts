@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { DeviceFingerprintDoc } from '../interfaces/device-fingerprint-doc.interface';
 import { Response } from '../interfaces/response.interface';
@@ -59,7 +59,7 @@ export class SsoService {
       // Return response
       return {
         success: true,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.SSO_TOKEN_CREATED,
         data: sso_token,
       };
@@ -67,7 +67,7 @@ export class SsoService {
       this.logger.error(`Error creating SSO token for user ${user_id}`, error);
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SESSION.SSO_TOKEN_CREATION_ERROR,
       };
     }
@@ -86,7 +86,7 @@ export class SsoService {
       if (!sso_value) {
         return {
           success: false,
-          statusCode: AUTH_CONSTANTS.STATUS_CODES.UNAUTHORIZED,
+          statusCode: HttpStatus.UNAUTHORIZED,
           message: MESSAGES.SESSION.SSO_TOKEN_INVALID,
         };
       }
@@ -107,7 +107,7 @@ export class SsoService {
       // Return response
       return {
         success: true,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.SSO_TOKEN_VALIDATED,
         data: create_session_response.data,
       };
@@ -115,7 +115,7 @@ export class SsoService {
       this.logger.error(`Error validating SSO token for ${sso_token}`, error);
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SESSION.SSO_TOKEN_VALIDATION_ERROR,
       };
     }
