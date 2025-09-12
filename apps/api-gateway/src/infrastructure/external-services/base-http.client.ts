@@ -84,12 +84,9 @@ export abstract class BaseHttpClient {
       `HTTP ${method} ${this.baseURL}${url} failed: ${error instanceof Error ? error.message : String(error)}`,
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    // Preserve AxiosError to maintain status codes and response data
     if (error?.response) {
-      throw new Error(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        `Service error: ${error?.response?.data?.message || (error instanceof Error ? error.message : String(error))}`,
-      );
+      throw error; // Re-throw the original AxiosError
     }
 
     throw new Error(
