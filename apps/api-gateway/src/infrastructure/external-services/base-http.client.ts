@@ -85,6 +85,7 @@ export abstract class BaseHttpClient {
     );
 
     // Preserve AxiosError to maintain status codes and response data
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (error?.response) {
       throw error; // Re-throw the original AxiosError
     }
