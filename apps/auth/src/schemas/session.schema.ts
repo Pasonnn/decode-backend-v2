@@ -23,6 +23,9 @@ export class Session extends Document {
 
   @Prop({ required: false })
   revoked_at: Date;
+
+  @Prop({ required: false, default: new Date() })
+  last_used_at: Date;
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);

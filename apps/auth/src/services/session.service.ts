@@ -110,7 +110,12 @@ export class SessionService {
       // Update session on database
       await this.sessionModel.updateOne(
         { session_token: session_token },
-        { $set: { session_token: new_session_token } },
+        {
+          $set: {
+            session_token: new_session_token,
+            last_used_at: new Date(),
+          },
+        },
       );
       this.logger.log(
         `Session refreshed for user ${validate_session_response.data.user_id.toString()}`,
