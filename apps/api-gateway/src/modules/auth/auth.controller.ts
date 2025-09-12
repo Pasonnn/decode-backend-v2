@@ -7,7 +7,6 @@ import {
   UseGuards,
   Get,
   Headers,
-  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -213,8 +212,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async getActiveSessions(
     @CurrentUser() user: AuthenticatedUser,
+    @Headers('authorization') authorization: string,
   ): Promise<Response> {
-    return this.authService.getActiveSessions(user.userId);
+    return this.authService.getActiveSessions(user.userId, authorization);
   }
 
   @ApiOperation({ summary: 'Revoke all sessions' })

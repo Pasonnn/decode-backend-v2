@@ -349,13 +349,16 @@ export class AuthService {
   /**
    * Get active sessions for a user
    */
-  async getActiveSessions(userId: string): Promise<Response> {
+  async getActiveSessions(
+    userId: string,
+    authorization: string,
+  ): Promise<Response> {
     try {
       this.logger.log(`Getting active sessions for user: ${userId}`);
 
       const response = await this.authServiceClient.getActiveSessions({
         user_id: userId,
-        authorization: '', // Not needed for this endpoint
+        authorization: authorization,
       });
 
       if (!response.success) {
