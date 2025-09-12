@@ -120,13 +120,17 @@ export class SessionService {
       this.logger.log(
         `Session refreshed for user ${validate_session_response.data.user_id.toString()}`,
       );
+      // Find the session data again
+      const session = await this.sessionModel.findOne({
+        session_token: new_session_token,
+      });
       // Return session
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.SESSION_REFRESHED,
         data: {
-          session_token: new_session_token,
+          session: session as unknown as SessionDoc,
           access_token,
         } as unknown as SessionDoc,
       };
