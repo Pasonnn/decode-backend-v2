@@ -201,23 +201,6 @@ export class AuthController {
     });
   }
 
-  @ApiOperation({ summary: 'Validate access token' })
-  @ApiResponse({ status: 200, description: 'Token is valid' })
-  @ApiResponse({ status: 401, description: 'Invalid or missing token' })
-  @Get('validate')
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  async validateToken(
-    @Headers('authorization') authorization?: string,
-  ): Promise<Response> {
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Bearer token is required');
-    }
-
-    const token = authorization.substring(7);
-    return this.authService.validateToken(token, authorization);
-  }
-
   @ApiOperation({ summary: 'Get active sessions' })
   @ApiResponse({
     status: 200,
@@ -225,7 +208,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
-  @Post('session/active')
+  @Get('session/active')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   async getActiveSessions(
