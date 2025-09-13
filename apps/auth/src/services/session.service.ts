@@ -45,7 +45,7 @@ export class SessionService {
       // Generate session token
       const session_token = this.sessionStrategy.createRefreshToken(user_id);
       // Create session
-      const session = await this.sessionModel.create({
+      await this.sessionModel.create({
         user_id: new Types.ObjectId(user_id),
         device_fingerprint_id: new Types.ObjectId(device_fingerprint_id),
         session_token: session_token,
@@ -56,9 +56,20 @@ export class SessionService {
         is_active: true,
       });
 
+      const session = await this.sessionModel.findOne({
+        session_token: session_token,
+      });
+      if (!session) {
+        return {
+          success: false,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: MESSAGES.SESSION.SESSION_CREATION_ERROR,
+        };
+      }
       this.logger.log(
         `Session created for user ${user_id} with device fingerprint ${device_fingerprint_id}`,
       );
+
       // Generate access token
       const access_token = this.jwtStrategy.createAccessToken(
         user_id,
