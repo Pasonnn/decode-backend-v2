@@ -50,6 +50,7 @@
     "ioredis": "^5.7.0",
     "joi": "^18.0.1",
     "mongoose": "^8.17.1",
+    "neo4j-driver": "^5.28.1",
     "nodemailer": "^7.0.5",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
