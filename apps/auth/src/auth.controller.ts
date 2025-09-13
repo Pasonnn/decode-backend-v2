@@ -182,7 +182,6 @@ export class AuthController {
     @Body() dto: RevokeDeviceFingerprintDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
-    console.log(dto);
     const revoke_device_fingerprint_response =
       await this.deviceFingerprintService.revokeDeviceFingerprint({
         device_fingerprint_id: dto.device_fingerprint_id,

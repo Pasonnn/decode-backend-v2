@@ -97,8 +97,6 @@ export class AuthService {
   private async walletExists(input: { address: string }): Promise<boolean> {
     const { address } = input;
     const wallet = await this.walletModel.findOne({ address });
-    console.log(wallet);
-    console.log(wallet ? 'true' : 'false');
     return wallet ? true : false;
   }
 }
