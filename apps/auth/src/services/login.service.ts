@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -15,7 +15,6 @@ import { PasswordService } from './password.service';
 import { DeviceFingerprintService } from './device-fingerprint.service';
 
 // Constants Import
-import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { MESSAGES } from '../constants/error-messages.constants';
 
 @Injectable()
@@ -99,7 +98,7 @@ export class LoginService {
         );
         return {
           success: true,
-          statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.AUTH.DEVICE_FINGERPRINT_NOT_TRUSTED,
         };
       } else {
@@ -127,7 +126,7 @@ export class LoginService {
         this.logger.log(`User last login updated for ${email_or_username}`);
         return {
           success: true,
-          statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+          statusCode: HttpStatus.OK,
           message: MESSAGES.SUCCESS.LOGIN_SUCCESSFUL,
           data: createSessionResponse.data,
         };
@@ -136,7 +135,7 @@ export class LoginService {
       this.logger.error(`Error logging in for ${email_or_username}`, error);
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.AUTH.LOGIN_ERROR,
       };
     }
@@ -154,7 +153,7 @@ export class LoginService {
     if (!user) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
@@ -162,7 +161,7 @@ export class LoginService {
     await user.save();
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_UPDATED,
     };
   }

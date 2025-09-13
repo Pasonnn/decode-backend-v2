@@ -35,6 +35,30 @@ export class LoginDto {
   @MinLength(32)
   @MaxLength(64)
   fingerprint_hashed: string;
+
+  @ApiProperty({
+    description: 'Browser for security verification',
+    example: 'Chrome',
+    minLength: 1,
+    maxLength: 255,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  browser: string;
+
+  @ApiProperty({
+    description: 'Device for security verification',
+    example: 'iPhone',
+    minLength: 1,
+    maxLength: 255,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  device: string;
 }
 
 export class FingerprintEmailVerificationDto {

@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  HttpStatus,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -14,7 +15,6 @@ import { Response } from '../interfaces/response.interface';
 import { User } from '../schemas/user.schema';
 
 // Constants Import
-import { USER_CONSTANTS } from '../constants/user.constants';
 import { MESSAGES } from '../constants/messages.constants';
 @Injectable()
 export class ProfileService {
@@ -35,13 +35,13 @@ export class ProfileService {
       if (!user) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          statusCode: HttpStatus.NOT_FOUND,
           message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PROFILE_FETCHED,
         data: user as UserDoc,
       };
@@ -65,7 +65,7 @@ export class ProfileService {
       if (!user) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          statusCode: HttpStatus.NOT_FOUND,
           message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
@@ -73,7 +73,7 @@ export class ProfileService {
       await user.save();
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PROFILE_UPDATED,
         data: user as UserDoc,
       };
@@ -97,7 +97,7 @@ export class ProfileService {
       if (!user) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          statusCode: HttpStatus.NOT_FOUND,
           message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
@@ -105,7 +105,7 @@ export class ProfileService {
       await user.save();
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PROFILE_UPDATED,
         data: user as UserDoc,
       };
@@ -131,7 +131,7 @@ export class ProfileService {
       if (!user) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          statusCode: HttpStatus.NOT_FOUND,
           message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
@@ -140,7 +140,7 @@ export class ProfileService {
       await user.save();
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PROFILE_PICTURE_UPLOADED,
         data: user as UserDoc,
       };
@@ -164,7 +164,7 @@ export class ProfileService {
       if (!user) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          statusCode: HttpStatus.NOT_FOUND,
           message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
@@ -172,7 +172,7 @@ export class ProfileService {
       await user.save();
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PROFILE_UPDATED,
         data: user as UserDoc,
       };

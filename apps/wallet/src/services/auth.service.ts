@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
@@ -29,7 +29,7 @@ export class AuthService {
       if (!walletExists) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.AUTH.WALLET_NOT_FOUND,
         };
       }
@@ -40,13 +40,13 @@ export class AuthService {
       if (!nonceMessage) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.CHALLENGE.NONCE_MESSAGE_GENERATION_FAILED,
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.CHALLENGE_GENERATED,
         data: {
           nonceMessage: nonceMessage,
@@ -55,7 +55,7 @@ export class AuthService {
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.CHALLENGE.NONCE_MESSAGE_GENERATION_FAILED,
         error: error as string,
       };
@@ -75,19 +75,19 @@ export class AuthService {
       if (!signatureIsValid) {
         return {
           success: false,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
         };
       }
       return {
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.CHALLENGE_VALIDATED,
       };
     } catch (error) {
       return {
         success: false,
-        statusCode: 500,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
         error: error as string,
       };
@@ -97,8 +97,6 @@ export class AuthService {
   private async walletExists(input: { address: string }): Promise<boolean> {
     const { address } = input;
     const wallet = await this.walletModel.findOne({ address });
-    console.log(wallet);
-    console.log(wallet ? 'true' : 'false');
     return wallet ? true : false;
   }
 }

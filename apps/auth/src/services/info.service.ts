@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 
 // Interfaces
 import { UserDoc } from '../interfaces/user-doc.interface';
@@ -10,7 +10,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../schemas/user.schema';
 
 // Constants Import
-import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { MESSAGES } from '../constants/error-messages.constants';
 import { SessionService } from './session.service';
 
@@ -37,13 +36,13 @@ export class InfoService {
     if (!user) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
       data: user as UserDoc,
     };
@@ -61,7 +60,7 @@ export class InfoService {
     ) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.INVALID_ACCESS_TOKEN,
       };
     }
@@ -75,13 +74,13 @@ export class InfoService {
     if (!user) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
       data: user as UserDoc,
     };
@@ -96,13 +95,13 @@ export class InfoService {
     if (!user) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
       data: user as UserDoc,
     };
@@ -125,13 +124,13 @@ export class InfoService {
     if (!user) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_FOUND,
     };
   }

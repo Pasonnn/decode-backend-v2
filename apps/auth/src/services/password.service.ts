@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, HttpStatus } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { ClientProxy } from '@nestjs/microservices';
 
@@ -96,7 +96,7 @@ export class PasswordService {
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.PASSWORD_RESET_SENT,
     };
   }
@@ -113,7 +113,7 @@ export class PasswordService {
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.PASSWORD_CODE_VERIFIED,
     };
   }
@@ -129,7 +129,7 @@ export class PasswordService {
     if (!verification_code_value) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.PASSWORD.PASSWORD_RESET_CODE_INVALID,
       };
     }
@@ -144,7 +144,7 @@ export class PasswordService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.PASSWORD_CODE_VERIFIED,
       data: getUserInfoResponse.data,
     };
@@ -197,13 +197,13 @@ export class PasswordService {
     if (!is_password_correct) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.PASSWORD.INVALID_PASSWORD,
       };
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.PASSWORD_CHANGED,
     };
   }
@@ -217,7 +217,7 @@ export class PasswordService {
     if (!password_strength.isValid) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.PASSWORD.WEAK_PASSWORD,
       };
     }
@@ -226,7 +226,7 @@ export class PasswordService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.PASSWORD_CHANGED,
       data: {
         password_hashed: password_hashed,
@@ -246,13 +246,13 @@ export class PasswordService {
     if (!update_password_response) {
       return {
         success: false,
-        statusCode: AUTH_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.PASSWORD.PASSWORD_CHANGE_FAILED,
       };
     }
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.PASSWORD_CHANGED,
     };
   }
@@ -287,7 +287,7 @@ export class PasswordService {
     // Return success response
     return {
       success: true,
-      statusCode: AUTH_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
     };
   }

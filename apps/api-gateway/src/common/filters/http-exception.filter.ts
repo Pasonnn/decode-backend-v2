@@ -63,6 +63,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
           typeof errorData === 'string' || typeof errorData === 'object'
             ? (errorData as string | Record<string, unknown>)
             : 'Service communication failed';
+        // Handle specific status codes from services
+        if (status === 401) {
+          message = (responseData?.message as string) || 'Unauthorized access';
+          error =
+            (responseData?.error as string | Record<string, unknown>) ||
+            'Authentication failed';
+        }
       } else if (exception.request) {
         status = HttpStatus.SERVICE_UNAVAILABLE;
         message = 'Service temporarily unavailable';

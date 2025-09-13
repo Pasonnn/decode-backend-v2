@@ -120,7 +120,6 @@ export class AuthGuard implements CanActivate {
         issuer: this.configService.get<string>('jwt.accessToken.issuer'),
         audience: this.configService.get<string>('jwt.accessToken.audience'),
       });
-
       // Check if session is valid
       const session = await this.sessionService.validateSession(
         payload.session_token as string,

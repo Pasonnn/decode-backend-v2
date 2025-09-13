@@ -256,6 +256,43 @@ export class AuthService {
   }
 
   /**
+   * Revoke specific session
+   */
+  async revokeSession(
+    sessionId: string,
+    authorization: string,
+  ): Promise<Response> {
+    try {
+      this.logger.log(`Revoking session: ${sessionId}`);
+
+      const config = {
+        headers: {
+          Authorization: authorization,
+        },
+      };
+      const response = await this.authServiceClient.post(
+        '/auth/session/revoke',
+        { session_id: sessionId },
+        config,
+      );
+
+      if (!response.success) {
+        throw new BadRequestException(
+          response.message || 'Session revocation failed',
+        );
+      }
+
+      this.logger.log(`Successfully revoked session: ${sessionId}`);
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to revoke session ${sessionId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Validate access token
    */
   async validateToken(
@@ -312,13 +349,16 @@ export class AuthService {
   /**
    * Get active sessions for a user
    */
-  async getActiveSessions(userId: string): Promise<Response> {
+  async getActiveSessions(
+    userId: string,
+    authorization: string,
+  ): Promise<Response> {
     try {
       this.logger.log(`Getting active sessions for user: ${userId}`);
 
       const response = await this.authServiceClient.getActiveSessions({
         user_id: userId,
-        authorization: '', // Not needed for this endpoint
+        authorization: authorization,
       });
 
       if (!response.success) {

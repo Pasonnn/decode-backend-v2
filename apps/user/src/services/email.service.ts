@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
@@ -39,7 +39,7 @@ export class EmailService {
       if (!user) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          statusCode: HttpStatus.NOT_FOUND,
           message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
         };
       }
@@ -53,14 +53,14 @@ export class EmailService {
       }
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
       this.logger.error(`Error changing email initiate: ${error as string}`);
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
@@ -78,20 +78,20 @@ export class EmailService {
     if (!verification_code_value) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.EMAIL_CHANGE.EMAIL_CHANGE_CODE_INVALID,
       };
     }
     if (verification_code_value.user_id !== user_id) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.FORBIDDEN,
+        statusCode: HttpStatus.FORBIDDEN,
         message: MESSAGES.EMAIL_CHANGE.EMAIL_CHANGE_CODE_INVALID,
       };
     }
     return {
       success: true,
-      statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.EMAIL_CHANGE_CODE_VERIFIED,
     };
   }
@@ -112,7 +112,7 @@ export class EmailService {
     if (!user) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+        statusCode: HttpStatus.NOT_FOUND,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
@@ -120,7 +120,7 @@ export class EmailService {
     if (user.email === new_email) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.EMAIL_CHANGE.NEW_EMAIL_ALREADY_EXISTS,
       };
     }
@@ -136,7 +136,7 @@ export class EmailService {
     }
     return {
       success: true,
-      statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.NEW_EMAIL_CHANGE_INITIATED,
     };
   }
@@ -158,7 +158,7 @@ export class EmailService {
       if (!user) {
         return {
           success: false,
-          statusCode: USER_CONSTANTS.STATUS_CODES.NOT_FOUND,
+          statusCode: HttpStatus.NOT_FOUND,
           message: MESSAGES.USER_INFO.USER_NOT_FOUND,
         };
       }
@@ -184,7 +184,7 @@ export class EmailService {
       }
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.NEW_EMAIL_CHANGE_INITIATED,
       };
     } catch (error: unknown) {
@@ -193,7 +193,7 @@ export class EmailService {
       );
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
@@ -211,14 +211,14 @@ export class EmailService {
     if (!verification_code_value) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.EMAIL_CHANGE.NEW_EMAIL_CHANGE_CODE_INVALID,
       };
     }
     if (verification_code_value.user_id !== user_id) {
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.FORBIDDEN,
+        statusCode: HttpStatus.FORBIDDEN,
         message: MESSAGES.EMAIL_CHANGE.NEW_EMAIL_CHANGE_CODE_INVALID,
       };
     }
@@ -229,7 +229,7 @@ export class EmailService {
     });
     return {
       success: true,
-      statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+      statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.EMAIL_CHANGED,
     };
   }
@@ -263,14 +263,14 @@ export class EmailService {
       });
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
       this.logger.error(`Error sending email verification: ${error as string}`);
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
@@ -306,7 +306,7 @@ export class EmailService {
       });
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
@@ -315,7 +315,7 @@ export class EmailService {
       );
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
@@ -333,14 +333,14 @@ export class EmailService {
       });
       return {
         success: true,
-        statusCode: USER_CONSTANTS.STATUS_CODES.SUCCESS,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_CHANGED,
       };
     } catch (error: unknown) {
       this.logger.error(`Error changing email: ${error as string}`);
       return {
         success: false,
-        statusCode: USER_CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }

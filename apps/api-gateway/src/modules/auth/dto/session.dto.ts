@@ -25,6 +25,16 @@ export class LogoutDto {
   session_token: string;
 }
 
+export class RevokeSessionDto {
+  @ApiProperty({
+    description: 'Session ID to revoke',
+    example: 'session_123456789',
+  })
+  @IsNotEmpty()
+  @IsString()
+  session_id: string;
+}
+
 export class RevokeAllSessionsDto {
   // user_id will be extracted from the authenticated user's token
 }

@@ -7,7 +7,6 @@ import {
   UseGuards,
   Get,
   Headers,
-  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,6 +31,7 @@ import {
   ValidateAccessDto,
   ValidateSsoTokenDto,
   CreateSsoTokenDto,
+  RevokeSessionDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
@@ -166,6 +166,24 @@ export class AuthController {
   ): Promise<Response> {
     return this.authService.logout(logoutDto.session_token, authorization);
   }
+
+  @ApiOperation({ summary: 'Revoke specific session' })
+  @ApiResponse({
+    status: 200,
+    description: 'Session revoked successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 400, description: 'Invalid session ID' })
+  @ApiBearerAuth('JWT-auth')
+  @Post('session/revoke')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async revokeSession(
+    @Body() dto: RevokeSessionDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.revokeSession(dto.session_id, authorization);
+  }
   @ApiOperation({ summary: 'Get current user info' })
   @ApiResponse({ status: 200, description: 'User info retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -182,23 +200,6 @@ export class AuthController {
     });
   }
 
-  @ApiOperation({ summary: 'Validate access token' })
-  @ApiResponse({ status: 200, description: 'Token is valid' })
-  @ApiResponse({ status: 401, description: 'Invalid or missing token' })
-  @Get('validate')
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  async validateToken(
-    @Headers('authorization') authorization?: string,
-  ): Promise<Response> {
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Bearer token is required');
-    }
-
-    const token = authorization.substring(7);
-    return this.authService.validateToken(token, authorization);
-  }
-
   @ApiOperation({ summary: 'Get active sessions' })
   @ApiResponse({
     status: 200,
@@ -206,13 +207,14 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
-  @Post('session/active')
+  @Get('session/active')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   async getActiveSessions(
     @CurrentUser() user: AuthenticatedUser,
+    @Headers('authorization') authorization: string,
   ): Promise<Response> {
-    return this.authService.getActiveSessions(user.userId);
+    return this.authService.getActiveSessions(user.userId, authorization);
   }
 
   @ApiOperation({ summary: 'Revoke all sessions' })
