@@ -19,7 +19,6 @@ import type {
   SearchEmailRequest,
   UserDoc,
 } from '../../infrastructure/external-services/user-service.client';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class UsersService {
@@ -73,12 +72,13 @@ export class UsersService {
       const response = await this.userServiceClient.getMyProfile(authorization);
 
       if (!response.success) {
-        throw new Error(
-          response.message || 'Failed to get current user profile',
+        this.logger.error(
+          `Failed to get current user profile: ${response.message}`,
         );
+      } else {
+        this.logger.log('Successfully retrieved current user profile');
       }
 
-      this.logger.log('Successfully retrieved current user profile');
       return response;
     } catch (error) {
       this.logger.error(
@@ -105,10 +105,13 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to update display name');
+        this.logger.error(
+          `Failed to update display name for user: ${response.message}`,
+        );
+      } else {
+        this.logger.log(`Successfully updated display name for user`);
       }
 
-      this.logger.log(`Successfully updated display name for user`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -135,10 +138,11 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to update bio');
+        this.logger.error(`Failed to update bio for user: ${response.message}`);
+      } else {
+        this.logger.log(`Successfully updated bio for user`);
       }
 
-      this.logger.log(`Successfully updated bio for user`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -165,10 +169,13 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to update avatar');
+        this.logger.error(
+          `Failed to update avatar for user: ${response.message}`,
+        );
+      } else {
+        this.logger.log(`Successfully updated avatar for user`);
       }
 
-      this.logger.log(`Successfully updated avatar for user`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -195,10 +202,11 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to update user role');
+        this.logger.error(`Failed to update user role: ${response.message}`);
+      } else {
+        this.logger.log(`Successfully updated user role`);
       }
 
-      this.logger.log(`Successfully updated role for user to ${data.role}`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -222,12 +230,12 @@ export class UsersService {
         await this.userServiceClient.changeUsernameInitiate(authorization);
 
       if (!response.success) {
-        throw new Error(
-          response.message || 'Failed to initiate username change',
+        this.logger.error(
+          `Failed to initiate username change for user: ${response.message}`,
         );
+      } else {
+        this.logger.log(`Successfully initiated username change for user`);
       }
-
-      this.logger.log(`Successfully initiated username change for user`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -254,12 +262,12 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(
-          response.message || 'Failed to verify username change code',
+        this.logger.error(
+          `Failed to verify username change code for user: ${response.message}`,
         );
+      } else {
+        this.logger.log(`Successfully verified username change code for user`);
       }
-
-      this.logger.log(`Successfully verified username change code for user`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -286,12 +294,12 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to change username');
+        this.logger.error(
+          `Failed to change username for user: ${response.message}`,
+        );
+      } else {
+        this.logger.log(`Successfully changed username for user`);
       }
-
-      this.logger.log(
-        `Successfully changed username for user to ${data.new_username}`,
-      );
 
       return response;
     } catch (error) {
@@ -316,10 +324,13 @@ export class UsersService {
         await this.userServiceClient.changeEmailInitiate(authorization);
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to initiate email change');
+        this.logger.error(
+          `Failed to initiate email change for user: ${response.message}`,
+        );
+      } else {
+        this.logger.log(`Successfully initiated email change for user`);
       }
 
-      this.logger.log(`Successfully initiated email change for user`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -346,12 +357,12 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(
-          response.message || 'Failed to verify email change code',
+        this.logger.error(
+          `Failed to verify email change code for user: ${response.message}`,
         );
+      } else {
+        this.logger.log(`Successfully verified email change code for user`);
       }
-
-      this.logger.log(`Successfully verified email change code for user`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -380,14 +391,14 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(
-          response.message || 'Failed to initiate new email change',
+        this.logger.error(
+          `Failed to initiate new email change for user: ${response.message}`,
+        );
+      } else {
+        this.logger.log(
+          `Successfully initiated new email change for user to ${data.new_email}`,
         );
       }
-
-      this.logger.log(
-        `Successfully initiated new email change for user to ${data.new_email}`,
-      );
       return response;
     } catch (error) {
       this.logger.error(
@@ -414,10 +425,12 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to verify new email code');
+        this.logger.error(
+          `Failed to verify new email code for user: ${response.message}`,
+        );
+      } else {
+        this.logger.log(`Successfully verified new email code for user`);
       }
-
-      this.logger.log(`Successfully verified new email code for user`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -446,10 +459,12 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to search users');
+        this.logger.error(`Failed to search users: ${response.message}`);
+      } else {
+        this.logger.log(
+          `Successfully found ${response.data?.length || 0} users`,
+        );
       }
-
-      this.logger.log(`Successfully found ${response.data?.length || 0} users`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -476,14 +491,14 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(
-          response.message || 'Failed to check username existence',
+        this.logger.error(
+          `Failed to check username existence: ${response.message}`,
+        );
+      } else {
+        this.logger.log(
+          `Successfully checked username existence: ${data.username}`,
         );
       }
-
-      this.logger.log(
-        `Successfully checked username existence: ${data.username}`,
-      );
       return response;
     } catch (error) {
       this.logger.error(
@@ -510,10 +525,12 @@ export class UsersService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to check email existence');
+        this.logger.error(
+          `Failed to check email existence: ${response.message}`,
+        );
+      } else {
+        this.logger.log(`Successfully checked email existence: ${data.email}`);
       }
-
-      this.logger.log(`Successfully checked email existence: ${data.email}`);
       return response;
     } catch (error) {
       this.logger.error(
