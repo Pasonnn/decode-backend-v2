@@ -128,6 +128,20 @@ export class AuthGuard implements CanActivate {
     }
   }
 
+  async activateWithUserDataResponse(
+    context: ExecutionContext,
+  ): Promise<AuthenticatedUser> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extractTokenFromHeader(request);
+    if (!token) {
+      throw new UnauthorizedException({
+        message: 'Access token is required',
+        error: 'MISSING_TOKEN',
+      });
+    }
+    return this.validateToken(token);
+  }
+
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;

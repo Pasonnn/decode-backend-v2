@@ -30,6 +30,7 @@ import {
   InfoByUserIdDto,
   InfoByEmailOrUsernameDto,
   ExistUserByEmailOrUsernameDto,
+  InfoByFingerprintHashDto,
 } from './dto/info.dto';
 import type { RevokeDeviceFingerprintDto } from './interfaces/device-fingerprint.interface';
 
@@ -399,6 +400,18 @@ export class AuthController {
         dto.email_or_username,
       );
     return info_by_email_or_username_response;
+  }
+
+  @Post('info/by-fingerprint-hashed')
+  @Public()
+  async infoByFingerprintHashed(
+    @Body() dto: InfoByFingerprintHashDto,
+  ): Promise<Response> {
+    const info_by_fingerprint_hashed_response =
+      await this.infoService.getUserInfoByFingerprintHashed(
+        dto.fingerprint_hashed,
+      );
+    return info_by_fingerprint_hashed_response;
   }
 
   /**

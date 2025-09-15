@@ -19,6 +19,7 @@ import type {
   SearchEmailRequest,
   UserDoc,
 } from '../../infrastructure/external-services/user-service.client';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class UsersService {
@@ -42,13 +43,16 @@ export class UsersService {
         authorization,
       );
 
-      if (!response.success) {
-        throw new Error(response.message || 'Failed to get user profile');
+      if (response.success) {
+        this.logger.log(
+          `Successfully retrieved profile for user: ${data.user_id}`,
+        );
+      } else {
+        this.logger.error(
+          `Failed to get profile for user: ${data.user_id}: ${response.message}`,
+        );
       }
 
-      this.logger.log(
-        `Successfully retrieved profile for user: ${data.user_id}`,
-      );
       return response;
     } catch (error) {
       this.logger.error(

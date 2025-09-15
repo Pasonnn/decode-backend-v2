@@ -18,6 +18,12 @@ export class InfoByEmailOrUsernameDto {
   email_or_username: string;
 }
 
+export class InfoByFingerprintHashDto {
+  @IsNotEmpty()
+  @IsString()
+  fingerprint_hashed: string;
+}
+
 export class ExistUserByEmailOrUsernameDto {
   @IsNotEmpty()
   @IsString()

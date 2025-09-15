@@ -53,16 +53,16 @@ import { AuthRateLimit, UserRateLimit, AdminRateLimit } from '../common/decorato
 
 // User endpoints (requires authentication)
 @Get('me')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuardWithFingerprint)
 @UserRateLimit.standard() // 60 requests per minute
 
 @Get('sessions/active')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuardWithFingerprint)
 @UserRateLimit.strict() // 30 requests per minute
 
 // Admin endpoints
 @Post('admin/users')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuardWithFingerprint)
 @AdminRateLimit.standard() // 100 requests per minute
 ```
 
@@ -358,14 +358,14 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.standard()
   async getCurrentUser(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
     return { success: true, data: user };
   }
 
   @Post('password/change')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   async changePassword(@Body() dto: ChangePasswordDto): Promise<Response> {
     return this.authService.changePassword(dto);
