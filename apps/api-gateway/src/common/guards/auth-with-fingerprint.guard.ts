@@ -32,28 +32,29 @@ export class AuthGuardWithFingerprint implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // First, run JWT authentication
-    const jwtResult =
-      await this.authGuard.activateWithUserDataResponse(context);
-    if (!jwtResult) {
-      throw new UnauthorizedException({
-        message: 'JWT authentication failed',
-        error: 'JWT_AUTH_FAILED',
-      });
-    }
-
-    const request = context.switchToHttp().getRequest<Request>();
-
-    // Extract fingerprint hash from headers
-    const fingerprintHash = this.extractFingerprintFromHeader(request);
-    if (!fingerprintHash) {
-      throw new UnauthorizedException({
-        message: 'Fingerprint hash is required',
-        error: 'MISSING_FINGERPRINT',
-      });
-    }
-
     try {
+      // First, run JWT authentication
+      const jwtResult =
+        await this.authGuard.activateWithUserDataResponse(context);
+      if (!jwtResult) {
+        throw new UnauthorizedException({
+          message: 'JWT authentication failed',
+          error: 'JWT_AUTH_FAILED',
+        });
+      }
+      console.log(jwtResult);
+
+      const request = context.switchToHttp().getRequest<Request>();
+
+      // Extract fingerprint hash from headers
+      const fingerprintHash = this.extractFingerprintFromHeader(request);
+      if (!fingerprintHash) {
+        throw new UnauthorizedException({
+          message: 'Fingerprint hash is required',
+          error: 'MISSING_FINGERPRINT',
+        });
+      }
+
       // Validate fingerprint with auth service
       const response = await firstValueFrom(
         this.httpService.post<AuthServiceResponse>(
@@ -68,7 +69,6 @@ export class AuthGuardWithFingerprint implements CanActivate {
           },
         ),
       );
-
       if (!response.data.success || !response.data.data) {
         throw new UnauthorizedException({
           message: 'Invalid fingerprint hash',
@@ -82,16 +82,23 @@ export class AuthGuardWithFingerprint implements CanActivate {
       const jwtUserData = jwtResult as unknown as AuthenticatedUser;
 
       // Compare users ID of JWT and fingerprint
-      fingerprintUsers.forEach((fingerprintUser) => {
+      const isUserMatched = fingerprintUsers.some((fingerprintUser) => {
+        console.log(jwtUserData.userId, fingerprintUser._id);
         if (jwtUserData.userId == fingerprintUser._id) {
+          console.log('User authentication matched');
           return true;
         }
+        return false;
       });
 
-      throw new UnauthorizedException({
-        message: 'User authentication mismatch',
-        error: 'USER_ID_MISMATCH',
-      });
+      if (!isUserMatched) {
+        throw new UnauthorizedException({
+          message: 'User authentication mismatch',
+          error: 'USER_ID_MISMATCH',
+        });
+      }
+
+      return true;
     } catch (error) {
       this.logger.error(
         `Fingerprint authentication failed: ${error instanceof Error ? error.message : String(error)}`,

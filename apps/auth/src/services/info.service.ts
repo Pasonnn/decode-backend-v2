@@ -123,14 +123,19 @@ export class InfoService {
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
-    const users = await this.userModel.find({
-      $in: device_fingerprints.map(
-        (device_fingerprint) => device_fingerprint.user_id,
-      ),
-      password_hashed: 0,
-      updatedAt: 0,
-      createdAt: 0,
-    });
+
+    const users: UserDoc[] = [];
+    for (const device_fingerprint of device_fingerprints) {
+      const user = await this.userModel.findById(device_fingerprint.user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
+      if (user) {
+        users.push(user as UserDoc);
+      }
+    }
+
     if (users.length === 0) {
       return {
         success: false,
@@ -142,7 +147,7 @@ export class InfoService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
-      data: users as UserDoc[],
+      data: users as unknown as UserDoc[],
     };
   }
 
