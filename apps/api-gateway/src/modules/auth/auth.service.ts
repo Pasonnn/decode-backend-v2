@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  UnauthorizedException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AuthServiceClient } from '../../infrastructure/external-services/auth-service.client';
 import { Response } from '../../interfaces/response.interface';
 import {
@@ -45,13 +40,15 @@ export class AuthService {
 
       const response = await this.authServiceClient.login(loginDto);
 
-      if (!response.success) {
-        throw new UnauthorizedException(response.message || 'Login failed');
+      if (response.success) {
+        this.logger.log(
+          `Login successful for user: ${loginDto.email_or_username}`,
+        );
+      } else {
+        this.logger.error(
+          `Login failed for user ${loginDto.email_or_username}: ${response.message}`,
+        );
       }
-
-      this.logger.log(
-        `Login successful for user: ${loginDto.email_or_username}`,
-      );
       return response;
     } catch (error) {
       this.logger.error(
@@ -75,13 +72,14 @@ export class AuthService {
           verificationDto,
         );
 
-      if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Fingerprint verification failed',
+      if (response.success) {
+        this.logger.log('Device fingerprint verification successful');
+      } else {
+        this.logger.error(
+          `Fingerprint verification failed: ${response.message}`,
         );
       }
 
-      this.logger.log('Device fingerprint verification successful');
       return response;
     } catch (error) {
       this.logger.error(
@@ -105,16 +103,16 @@ export class AuthService {
           dto,
         );
 
-      if (!response.success) {
-        throw new BadRequestException(
-          response.message ||
-            'Resend device fingerprint email verification failed',
+      if (response.success) {
+        this.logger.log(
+          'Resend device fingerprint email verification successful',
+        );
+      } else {
+        this.logger.error(
+          `Resend device fingerprint email verification failed: ${response.message}`,
         );
       }
 
-      this.logger.log(
-        'Resend device fingerprint email verification successful',
-      );
       return response;
     } catch (error) {
       this.logger.error(
@@ -136,9 +134,13 @@ export class AuthService {
       const response =
         await this.authServiceClient.emailVerificationRegister(registerDto);
 
-      if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Registration failed',
+      if (response.success) {
+        this.logger.log(
+          `Registration successful for user: ${registerDto.username}`,
+        );
+      } else {
+        this.logger.error(
+          `Registration failed for user ${registerDto.username}: ${response.message}`,
         );
       }
 
@@ -163,10 +165,10 @@ export class AuthService {
       const response =
         await this.authServiceClient.verifyEmailRegister(verifyEmailDto);
 
-      if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Email verification failed',
-        );
+      if (response.success) {
+        this.logger.log('Email verification successful');
+      } else {
+        this.logger.error(`Email verification failed: ${response.message}`);
       }
 
       this.logger.log('Email verification successful');
@@ -188,6 +190,13 @@ export class AuthService {
       const response = await this.authServiceClient.sendEmailVerification({
         email,
       });
+
+      if (response.success) {
+        this.logger.log('Email verification sent');
+      } else {
+        this.logger.error(`Email verification failed: ${response.message}`);
+      }
+
       return response;
     } catch (error) {
       this.logger.error(
@@ -207,13 +216,12 @@ export class AuthService {
       const response =
         await this.authServiceClient.refreshSession(refreshTokenDto);
 
-      if (!response.success) {
-        throw new UnauthorizedException(
-          response.message || 'Token refresh failed',
-        );
+      if (response.success) {
+        this.logger.log('Token refresh successful');
+      } else {
+        this.logger.error(`Token refresh failed: ${response.message}`);
       }
 
-      this.logger.log('Token refresh successful');
       return response;
     } catch (error) {
       this.logger.error(
@@ -242,7 +250,9 @@ export class AuthService {
       );
 
       if (!response.success) {
-        throw new BadRequestException(response.message || 'Logout failed');
+        this.logger.error(`Logout failed: ${response.message}`);
+      } else {
+        this.logger.log('Logout successful');
       }
 
       this.logger.log('Logout successful');
@@ -277,12 +287,11 @@ export class AuthService {
       );
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Session revocation failed',
-        );
+        this.logger.error(`Session revocation failed: ${response.message}`);
+      } else {
+        this.logger.log(`Successfully revoked session: ${sessionId}`);
       }
 
-      this.logger.log(`Successfully revoked session: ${sessionId}`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -362,12 +371,11 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to get active sessions',
-        );
+        this.logger.error(`Failed to get active sessions: ${response.message}`);
+      } else {
+        this.logger.log('Successfully retrieved active sessions');
       }
 
-      this.logger.log('Successfully retrieved active sessions');
       return response;
     } catch (error) {
       this.logger.error(
@@ -396,12 +404,11 @@ export class AuthService {
       );
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to revoke all sessions',
-        );
+        this.logger.error(`Failed to revoke all sessions: ${response.message}`);
+      } else {
+        this.logger.log('Successfully revoked all sessions');
       }
 
-      this.logger.log('Successfully revoked all sessions');
       return response;
     } catch (error) {
       this.logger.error(
@@ -427,12 +434,13 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new UnauthorizedException(
-          response.message || 'Access token validation failed',
+        this.logger.error(
+          `Failed to validate access token: ${response.message}`,
         );
+      } else {
+        this.logger.log('Access token validation successful');
       }
 
-      this.logger.log('Access token validation successful');
       return response;
     } catch (error) {
       this.logger.error(
@@ -460,12 +468,11 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to create SSO token',
-        );
+        this.logger.error(`Failed to create SSO token: ${response.message}`);
+      } else {
+        this.logger.log('Successfully created SSO token');
       }
 
-      this.logger.log('Successfully created SSO token');
       return response;
     } catch (error) {
       this.logger.error(
@@ -487,12 +494,11 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new UnauthorizedException(
-          response.message || 'SSO token validation failed',
-        );
+        this.logger.error(`Failed to validate SSO token: ${response.message}`);
+      } else {
+        this.logger.log('SSO token validation successful');
       }
 
-      this.logger.log('SSO token validation successful');
       return response;
     } catch (error) {
       this.logger.error(
@@ -530,12 +536,11 @@ export class AuthService {
       );
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Password change failed',
-        );
+        this.logger.error(`Failed to change password: ${response.message}`);
+      } else {
+        this.logger.log('Successfully changed password');
       }
 
-      this.logger.log('Successfully changed password');
       return response;
     } catch (error) {
       this.logger.error(
@@ -558,12 +563,13 @@ export class AuthService {
       );
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to initiate forgot password',
+        this.logger.error(
+          `Failed to initiate forgot password: ${response.message}`,
         );
+      } else {
+        this.logger.log('Successfully initiated forgot password');
       }
 
-      this.logger.log('Successfully initiated forgot password');
       return response;
     } catch (error) {
       this.logger.error(
@@ -587,12 +593,13 @@ export class AuthService {
       );
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Email verification failed',
+        this.logger.error(
+          `Failed to verify email for forgot password: ${response.message}`,
         );
+      } else {
+        this.logger.log('Successfully verified email for forgot password');
       }
 
-      this.logger.log('Successfully verified email for forgot password');
       return response;
     } catch (error) {
       this.logger.error(
@@ -641,12 +648,13 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to get device fingerprints',
+        this.logger.error(
+          `Failed to get device fingerprints: ${response.message}`,
         );
+      } else {
+        this.logger.log('Successfully retrieved device fingerprints');
       }
 
-      this.logger.log('Successfully retrieved device fingerprints');
       return response;
     } catch (error) {
       this.logger.error(
@@ -673,14 +681,15 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to revoke device fingerprint',
+        this.logger.error(
+          `Failed to revoke device fingerprint: ${response.message}`,
+        );
+      } else {
+        this.logger.log(
+          `Successfully revoked device fingerprint: ${deviceFingerprintId}`,
         );
       }
 
-      this.logger.log(
-        `Successfully revoked device fingerprint: ${deviceFingerprintId}`,
-      );
       return response;
     } catch (error) {
       this.logger.error(
@@ -708,12 +717,13 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to get user info',
+        this.logger.error(
+          `Failed to get user info by access token: ${response.message}`,
         );
+      } else {
+        this.logger.log(`Successfully retrieved user info by access token}`);
       }
 
-      this.logger.log('Successfully retrieved user info by access token');
       return response;
     } catch (error) {
       this.logger.error(
@@ -739,12 +749,15 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to get user info',
+        this.logger.error(
+          `Failed to get user info by user ID: ${response.message}`,
+        );
+      } else {
+        this.logger.log(
+          `Successfully retrieved user info by user ID: ${userId}`,
         );
       }
 
-      this.logger.log(`Successfully retrieved user info by user ID: ${userId}`);
       return response;
     } catch (error) {
       this.logger.error(
@@ -772,14 +785,15 @@ export class AuthService {
       });
 
       if (!response.success) {
-        throw new BadRequestException(
-          response.message || 'Failed to get user info',
+        this.logger.error(
+          `Failed to get user info by email or username: ${response.message}`,
+        );
+      } else {
+        this.logger.log(
+          `Successfully retrieved user info by email or username: ${emailOrUsername}`,
         );
       }
 
-      this.logger.log(
-        `Successfully retrieved user info by email or username: ${emailOrUsername}`,
-      );
       return response;
     } catch (error) {
       this.logger.error(

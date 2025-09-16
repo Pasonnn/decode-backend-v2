@@ -8,6 +8,7 @@ import { Response } from '../interfaces/response.interface';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../schemas/user.schema';
+import { DeviceFingerprint } from '../schemas/device-fingerprint.schema';
 
 // Constants Import
 import { MESSAGES } from '../constants/error-messages.constants';
@@ -17,6 +18,8 @@ import { SessionService } from './session.service';
 export class InfoService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(DeviceFingerprint.name)
+    private deviceFingerprintModel: Model<DeviceFingerprint>,
     private readonly sessionService: SessionService,
   ) {}
 
@@ -89,6 +92,39 @@ export class InfoService {
   async getUserInfoByUserId(user_id: string): Promise<Response<UserDoc>> {
     // Check if user exists
     const user = await this.userModel.findById(user_id, {
+      updatedAt: 0,
+      createdAt: 0,
+    });
+    if (!user) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
+      };
+    }
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
+      data: user as UserDoc,
+    };
+  }
+
+  async getUserInfoByFingerprintHashed(
+    fingerprint_hashed: string,
+  ): Promise<Response<UserDoc>> {
+    const device_fingerprint = await this.deviceFingerprintModel.findOne({
+      fingerprint_hashed: fingerprint_hashed,
+    });
+    if (!device_fingerprint) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
+      };
+    }
+    const user = await this.userModel.findById(device_fingerprint.user_id, {
+      password_hashed: 0,
       updatedAt: 0,
       createdAt: 0,
     });

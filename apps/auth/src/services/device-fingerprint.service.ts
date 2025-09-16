@@ -130,10 +130,10 @@ export class DeviceFingerprintService {
           message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
         };
       }
-      // await this.deviceFingerprintModel.updateOne(
-      //   { _id: device_fingerprint._id },
-      //   { $set: { is_trusted: false } },
-      // );
+      await this.deviceFingerprintModel.updateOne(
+        { _id: device_fingerprint._id },
+        { $set: { is_trusted: false } },
+      );
       const revoke_session_response =
         await this.sessionService.revokeSessionByDeviceFingerprintId(
           device_fingerprint._id.toString(),

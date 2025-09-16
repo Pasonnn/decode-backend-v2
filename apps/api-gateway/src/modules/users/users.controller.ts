@@ -35,7 +35,8 @@ import {
 } from './dto/search.dto';
 
 // Guards and Decorators
-import { AuthGuard, Public } from '../../common/guards/auth.guard';
+import { Public } from '../../common/guards/auth.guard';
+import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
 import { Roles, UserRole } from '../../common/decorators/roles.decorator';
 
 // Interfaces
@@ -45,7 +46,7 @@ import type { UserDoc } from '../../infrastructure/external-services/user-servic
 
 @ApiTags('User Management')
 @Controller('users')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuardWithFingerprint)
 @ApiBearerAuth('JWT-auth')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -80,7 +81,7 @@ export class UsersController {
   // ==================== PROFILE ENDPOINTS ====================
 
   @Get('profile/me')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({
     status: 200,
@@ -332,7 +333,7 @@ export class UsersController {
   // ==================== SEARCH ENDPOINTS ====================
 
   @Get('search')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @ApiOperation({ summary: 'Search users by username or email' })
   @ApiResponse({
     status: 200,
@@ -349,7 +350,7 @@ export class UsersController {
   }
 
   @Get('search/existing-username')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @ApiOperation({ summary: 'Check if username exists' })
   @ApiResponse({
     status: 200,
@@ -366,7 +367,7 @@ export class UsersController {
   }
 
   @Get('search/existing-email')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @ApiOperation({ summary: 'Check if email exists' })
   @ApiResponse({
     status: 200,

@@ -77,7 +77,6 @@ export class PrimaryService {
   }): Promise<Response> {
     try {
       const { address, signature, user_id } = input;
-      ('signature', signature);
       const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
         address,
         user_id,

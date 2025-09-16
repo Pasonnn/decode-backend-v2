@@ -47,7 +47,8 @@ import {
 } from './dto/info.dto';
 import { RevokeDeviceFingerprintDto } from './dto/device-fingerprint.dto';
 import { Response } from '../../interfaces/response.interface';
-import { AuthGuard, Public } from '../../common/guards/auth.guard';
+import { Public } from '../../common/guards/auth.guard';
+import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 import { AuthRateLimit } from '../../common/decorators/rate-limit.decorator';
@@ -176,7 +177,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid session ID' })
   @ApiBearerAuth('JWT-auth')
   @Post('session/revoke')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async revokeSession(
     @Body() dto: RevokeSessionDto,
@@ -189,7 +190,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
   @Get('user/current')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   getCurrentUser(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
     return Promise.resolve({
@@ -208,7 +209,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
   @Get('session/active')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getActiveSessions(
     @CurrentUser() user: AuthenticatedUser,
@@ -225,7 +226,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
   @Post('session/revoke-all')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async revokeAllSessions(
     @Headers('authorization') authorization: string,
@@ -257,7 +258,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
   @Post('sso/create')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async createSsoToken(
     @Body() dto: CreateSsoTokenDto,
@@ -291,7 +292,7 @@ export class AuthController {
   })
   @ApiBearerAuth('JWT-auth')
   @Post('password/change')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
@@ -368,7 +369,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth('JWT-auth')
   @Get('fingerprints')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getDeviceFingerprints(
     @Headers('authorization') authorization: string,
@@ -385,7 +386,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid device fingerprint ID' })
   @ApiBearerAuth('JWT-auth')
   @Post('fingerprints/revoke')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async revokeDeviceFingerprint(
     @Body() dto: RevokeDeviceFingerprintDto,
@@ -427,7 +428,7 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiBearerAuth('JWT-auth')
   @Post('info/by-user-id')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getUserInfoByUserId(
     @Body() dto: InfoByUserIdDto,
@@ -445,7 +446,7 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiBearerAuth('JWT-auth')
   @Post('info/by-email-or-username')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getUserInfoByEmailOrUsername(
     @Body() dto: InfoByEmailOrUsernameDto,
