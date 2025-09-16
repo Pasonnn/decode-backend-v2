@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import neo4j, { Driver } from 'neo4j-driver';
+import neo4j, { Driver, auth } from 'neo4j-driver';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -18,10 +18,10 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
 
     try {
-      this.driver = (neo4j as unknown as any).driver(
+      this.driver = neo4j.driver(
         neo4j_uri,
-        (neo4j as unknown as any).auth.basic(neo4j_user, neo4j_password),
-      ) as unknown as Driver;
+        auth.basic(neo4j_user, neo4j_password),
+      );
       if (!this.driver) {
         throw new Error('Failed to create Neo4j driver');
       }
