@@ -76,20 +76,22 @@ export class AuthGuardWithFingerprint implements CanActivate {
         });
       }
 
-      const fingerprintUser = response.data.data as UserDoc;
+      const fingerprintUsers = response.data.data as unknown as UserDoc[];
 
       // Get user from JWT (set by AuthGuard)
       const jwtUserData = jwtResult as unknown as AuthenticatedUser;
 
-      // Compare user IDs
-      if (jwtUserData.userId !== fingerprintUser._id) {
-        throw new UnauthorizedException({
-          message: 'User authentication mismatch',
-          error: 'USER_ID_MISMATCH',
-        });
-      }
+      // Compare users ID of JWT and fingerprint
+      fingerprintUsers.forEach((fingerprintUser) => {
+        if (jwtUserData.userId == fingerprintUser._id) {
+          return true;
+        }
+      });
 
-      return true;
+      throw new UnauthorizedException({
+        message: 'User authentication mismatch',
+        error: 'USER_ID_MISMATCH',
+      });
     } catch (error) {
       this.logger.error(
         `Fingerprint authentication failed: ${error instanceof Error ? error.message : String(error)}`,

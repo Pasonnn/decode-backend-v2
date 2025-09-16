@@ -112,23 +112,26 @@ export class InfoService {
 
   async getUserInfoByFingerprintHashed(
     fingerprint_hashed: string,
-  ): Promise<Response<UserDoc>> {
-    const device_fingerprint = await this.deviceFingerprintModel.findOne({
+  ): Promise<Response<UserDoc[]>> {
+    const device_fingerprints = await this.deviceFingerprintModel.find({
       fingerprint_hashed: fingerprint_hashed,
     });
-    if (!device_fingerprint) {
+    if (device_fingerprints.length === 0) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
-    const user = await this.userModel.findById(device_fingerprint.user_id, {
+    const users = await this.userModel.find({
+      $in: device_fingerprints.map(
+        (device_fingerprint) => device_fingerprint.user_id,
+      ),
       password_hashed: 0,
       updatedAt: 0,
       createdAt: 0,
     });
-    if (!user) {
+    if (users.length === 0) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,
@@ -139,7 +142,7 @@ export class InfoService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
-      data: user as UserDoc,
+      data: users as UserDoc[],
     };
   }
 

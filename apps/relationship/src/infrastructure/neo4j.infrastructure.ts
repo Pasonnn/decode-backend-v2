@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import neo4j, { Driver, Session, auth } from 'neo4j-driver';
 import { ConfigService } from '@nestjs/config';
-import { UserDoc as UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
+import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 @Injectable()
 export class Neo4jInfrastructure implements OnModuleInit {
   private readonly logger = new Logger(Neo4jInfrastructure.name);
@@ -255,6 +255,104 @@ export class Neo4jInfrastructure implements OnModuleInit {
         `Failed to find user to relationship: ${error instanceof Error ? error.message : String(error)}`,
       );
       return [];
+    } finally {
+      await session.close();
+    }
+  }
+
+  async createUserToUserRelationship(input: {
+    user_id_from: string;
+    user_id_to: string;
+    relationship_type: string;
+  }): Promise<boolean> {
+    const session = this.getSession();
+    const { user_id_from, user_id_to, relationship_type } = input;
+    try {
+      // Create relationship
+      await session.run(
+        'MATCH (s:User {user_id: $user_id_from}), (t:User {user_id: $user_id_to}) CREATE (s)-[r:${relationship_type}]->(t)',
+        {
+          user_id_from: user_id_from,
+          user_id_to: user_id_to,
+          relationship_type: relationship_type,
+        },
+      );
+      this.logger.log(
+        `Relationship created successfully: ${user_id_from} to ${user_id_to}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to create user relationship: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async deleteUserToUserRelationship(input: {
+    user_id_from: string;
+    user_id_to: string;
+    relationship_type: string;
+  }): Promise<boolean> {
+    const session = this.getSession();
+    const { user_id_from, user_id_to, relationship_type } = input;
+    try {
+      // Delete relationship
+      await session.run(
+        'MATCH (s:User {user_id: $user_id_from})-[r:${relationship_type}]->(t:User {user_id: $user_id_to}) DELETE r',
+        {
+          user_id_from: user_id_from,
+          user_id_to: user_id_to,
+          relationship_type: relationship_type,
+        },
+      );
+      this.logger.log(
+        `Relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete user relationship: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async deleteTwoUsersRelationships(input: {
+    user_id_from: string;
+    user_id_to: string;
+  }): Promise<boolean> {
+    const session = this.getSession();
+    const { user_id_from, user_id_to } = input;
+    try {
+      // Delete all relationships between two users
+      await session.run(
+        'MATCH (s:User {user_id: $user_id_from})-[r:${relationship_type}]->(t:User {user_id: $user_id_to}) DELETE r',
+        {
+          user_id_from: user_id_from,
+          user_id_to: user_id_to,
+        },
+      );
+      await session.run(
+        'MATCH (s:User {user_id: $user_id_to})-[r:${relationship_type}]->(t:User {user_id: $user_id_from}) DELETE r',
+        {
+          user_id_from: user_id_from,
+          user_id_to: user_id_to,
+        },
+      );
+      this.logger.log(
+        `All relationships deleted successfully: ${user_id_from} and ${user_id_to}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete two users relationships: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
     } finally {
       await session.close();
     }
