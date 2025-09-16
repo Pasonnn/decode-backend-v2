@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import neo4j, { Driver, Session, auth } from 'neo4j-driver';
 import { ConfigService } from '@nestjs/config';
 import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
+import { UserDoc } from '../interfaces/user-doc.interface';
 @Injectable()
 export class Neo4jInfrastructure implements OnModuleInit {
   private readonly logger = new Logger(Neo4jInfrastructure.name);
@@ -63,7 +64,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
-  async createUserNode(user: UserNeo4jDoc): Promise<boolean> {
+  async createUserNode(user: UserDoc): Promise<boolean> {
     const session = this.getSession();
     try {
       // Check if user node already exists
@@ -98,7 +99,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
-  async updateUserNode(user: UserNeo4jDoc): Promise<boolean> {
+  async updateUserNode(user: UserDoc): Promise<boolean> {
     const session = this.getSession();
     try {
       // Find user node
