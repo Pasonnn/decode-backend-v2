@@ -118,11 +118,10 @@ export class ProfileService {
   async updateUserAvatar(input: {
     user_id: string;
     avatar_ipfs_hash: string;
-    avatar_fallback_url: string;
   }): Promise<Response<UserDoc>> {
     try {
       // Check if user exists
-      const { user_id, avatar_ipfs_hash, avatar_fallback_url } = input;
+      const { user_id, avatar_ipfs_hash } = input;
       const user = await this.userModel.findById(user_id, {
         password_hashed: 0,
         updatedAt: 0,
@@ -136,7 +135,6 @@ export class ProfileService {
         };
       }
       user.avatar_ipfs_hash = avatar_ipfs_hash;
-      user.avatar_fallback_url = avatar_fallback_url;
       await user.save();
       return {
         success: true,

@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  MinLength,
-  MaxLength,
-  Matches,
-  IsUrl,
-} from 'class-validator';
+import { IsString, MinLength, MaxLength, Matches } from 'class-validator';
 
 export class UpdateUserDisplayNameDto {
   @ApiProperty({
@@ -53,21 +47,6 @@ export class UpdateUserAvatarDto {
     message: 'Invalid IPFS hash format',
   })
   avatar_ipfs_hash: string;
-
-  @ApiProperty({
-    description: 'Fallback URL for the avatar image',
-    example:
-      'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png',
-    maxLength: 500,
-    pattern: '^https?://.+',
-  })
-  @IsString()
-  @IsUrl()
-  @MaxLength(500)
-  @Matches(/^https?:\/\/.+/, {
-    message: 'Invalid URL format',
-  })
-  avatar_fallback_url: string;
 }
 
 export class UpdateUserRoleDto {

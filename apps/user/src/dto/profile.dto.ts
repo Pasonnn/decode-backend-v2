@@ -4,7 +4,6 @@ import {
   MaxLength,
   MinLength,
   Matches,
-  IsUrl,
   IsEnum,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -77,23 +76,6 @@ export class UpdateUserAvatarDto {
     message: 'Invalid IPFS hash format',
   })
   avatar_ipfs_hash: string;
-
-  // ==================== FALLBACK URL ====================
-  @ApiProperty({
-    description: 'Fallback URL for the avatar image',
-    example:
-      'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png',
-    maxLength: USER_CONSTANTS.PROFILE.AVATAR.FALLBACK_URL.MAX_LENGTH,
-    pattern: '^https?://.+',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @IsUrl()
-  @MaxLength(USER_CONSTANTS.PROFILE.AVATAR.FALLBACK_URL.MAX_LENGTH)
-  @Matches(USER_CONSTANTS.PROFILE.AVATAR.FALLBACK_URL.PATTERN, {
-    message: 'Invalid URL format',
-  })
-  avatar_fallback_url: string;
 }
 
 export class UpdateUserRoleDto {

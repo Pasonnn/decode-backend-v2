@@ -20,7 +20,6 @@ export interface UpdateUserBioRequest {
 
 export interface UpdateUserAvatarRequest {
   avatar_ipfs_hash: string;
-  avatar_fallback_url: string;
 }
 
 export interface UpdateUserRoleRequest {
@@ -74,7 +73,6 @@ export interface UserDoc {
   display_name: string;
   bio: string;
   avatar_ipfs_hash: string;
-  avatar_fallback_url: string;
   last_login: Date;
 }
 

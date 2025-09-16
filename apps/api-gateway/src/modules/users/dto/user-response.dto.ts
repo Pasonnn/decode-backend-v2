@@ -52,13 +52,6 @@ export class UserResponseDto {
   avatar_ipfs_hash: string;
 
   @ApiProperty({
-    description: 'Fallback URL for avatar',
-    example:
-      'https://res.cloudinary.com/dfzu1b238/image/upload/v1748419831/default_user_icon_rt4zcm.png',
-  })
-  avatar_fallback_url: string;
-
-  @ApiProperty({
     description: 'Last login timestamp',
     example: '2024-01-15T10:30:00.000Z',
   })

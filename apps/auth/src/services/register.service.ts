@@ -278,7 +278,6 @@ export class RegisterService {
       role: AUTH_CONSTANTS.USER.DEFAULT_ROLE,
       bio: AUTH_CONSTANTS.USER.DEFAULT_BIO,
       avatar_ipfs_hash: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_IPFS_HASH,
-      avatar_fallback_url: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_FALLBACK_URL,
     });
     // Return success response
     return {

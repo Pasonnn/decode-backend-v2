@@ -172,7 +172,6 @@ export class UsersController {
     return await this.usersService.updateUserAvatar(
       {
         avatar_ipfs_hash: body.avatar_ipfs_hash,
-        avatar_fallback_url: body.avatar_fallback_url,
       },
       authorization,
     );

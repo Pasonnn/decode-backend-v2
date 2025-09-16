@@ -7,7 +7,6 @@ export interface User {
   display_name: string;
   bio: string;
   avatar_ipfs_hash: string;
-  avatar_fallback_url: string;
   last_login: Date;
 }
 
@@ -16,7 +15,6 @@ export interface UserProfile {
   display_name: string;
   bio: string;
   avatar_ipfs_hash: string;
-  avatar_fallback_url: string;
 }
 
 export interface UserSearchResult {

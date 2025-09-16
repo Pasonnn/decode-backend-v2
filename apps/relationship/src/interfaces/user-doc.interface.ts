@@ -7,6 +7,5 @@ export type UserDoc = {
   display_name: string;
   bio: string;
   avatar_ipfs_hash: string;
-  avatar_fallback_url: string;
   last_login: Date;
 };
