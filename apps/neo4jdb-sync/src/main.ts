@@ -10,7 +10,7 @@ async function bootstrap() {
       transport: Transport.RMQ,
       options: {
         urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
-        queue: 'neo4jdb_create_user',
+        queue: 'create_user_queue',
         queueOptions: {
           durable: true,
         },
@@ -27,7 +27,7 @@ async function bootstrap() {
       transport: Transport.RMQ,
       options: {
         urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
-        queue: 'neo4jdb_update_user',
+        queue: 'update_user_queue',
         queueOptions: {
           durable: true,
         },
@@ -40,8 +40,7 @@ async function bootstrap() {
   await createUserApp.listen();
   await updateUserApp.listen();
   console.log(
-    `Neo4j Database Sync Microservice is listening on both queues
-     neo4jdb_create_user and neo4jdb_update_user`,
+    `Neo4j Database Sync Microservice is listening on both queues:\ncreate_user_queue (create_user_request) and update_user_queue (update_user_request)`,
   );
 }
 

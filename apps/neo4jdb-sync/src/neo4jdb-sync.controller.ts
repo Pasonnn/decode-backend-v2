@@ -1,24 +1,34 @@
-import { Controller } from '@nestjs/common';
-import { UserSyncService } from './services/user-sync.service';
+import { Controller, HttpStatus } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import type { UserNeo4jDoc } from './interfaces/user-neo4j-doc.interface';
 import type { Response } from './interfaces/response.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure';
 
 @Controller('neo4jdb-sync')
 export class Neo4jdbSyncController {
-  constructor(private readonly userSyncService: UserSyncService) {}
+  constructor(
+    private readonly rabbitMQInfrastructure: RabbitMQInfrastructure,
+  ) {}
 
-  @MessagePattern('create-user')
+  @MessagePattern('create_user_request')
   async createUser(user: CreateUserDto): Promise<Response<UserNeo4jDoc>> {
-    const create_user_response = await this.userSyncService.createUser(user);
-    return create_user_response;
+    await this.rabbitMQInfrastructure.processCreateUserRequest(user);
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      message: 'User created successfully',
+    };
   }
 
-  @MessagePattern('update-user')
+  @MessagePattern('update_user_request')
   async updateUser(user: UpdateUserDto): Promise<Response<UserNeo4jDoc>> {
-    const update_user_response = await this.userSyncService.updateUser(user);
-    return update_user_response;
+    await this.rabbitMQInfrastructure.processUpdateUserRequest(user);
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      message: 'User updated successfully',
+    };
   }
 }

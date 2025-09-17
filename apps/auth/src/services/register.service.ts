@@ -94,7 +94,7 @@ export class RegisterService {
     private readonly passwordService: PasswordService,
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
-    @Inject('NEO4JDB_CREATE_USER_SERVICE')
+    @Inject('NEO4JDB_SYNC_SERVICE')
     private readonly neo4jdbCreateUserService: ClientProxy,
   ) {
     this.logger = new Logger(RegisterService.name);

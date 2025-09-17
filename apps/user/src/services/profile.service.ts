@@ -23,9 +23,7 @@ export class ProfileService {
   private readonly logger: Logger;
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
-    @Inject('NEO4JDB_CREATE_USER_SERVICE')
-    private readonly neo4jdbCreateUserService: ClientProxy,
-    @Inject('NEO4JDB_UPDATE_USER_SERVICE')
+    @Inject('NEO4JDB_SYNC_SERVICE')
     private readonly neo4jdbUpdateUserService: ClientProxy,
   ) {
     this.logger = new Logger(ProfileService.name);

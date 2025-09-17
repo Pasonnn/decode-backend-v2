@@ -4,6 +4,7 @@ import { Neo4jdbSyncController } from './neo4jdb-sync.controller';
 import { UserSyncService } from './services/user-sync.service';
 import neo4jdbSyncConfig from './config/neo4jdb-sync.config';
 import { Neo4jInfrastructure } from './infrastructure/neo4j.infrastructure';
+import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { Neo4jInfrastructure } from './infrastructure/neo4j.infrastructure';
     ConfigModule.forFeature(neo4jdbSyncConfig),
   ],
   controllers: [Neo4jdbSyncController],
-  providers: [UserSyncService, Neo4jInfrastructure],
+  providers: [UserSyncService, RabbitMQInfrastructure, Neo4jInfrastructure],
 })
 export class Neo4jDbSyncModule {}

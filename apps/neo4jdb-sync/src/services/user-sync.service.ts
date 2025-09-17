@@ -1,4 +1,4 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
@@ -8,6 +8,7 @@ import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 import type { Response } from '../interfaces/response.interface';
 import type { UserDoc } from '../interfaces/user-doc.interface';
 
+@Injectable()
 export class UserSyncService {
   private readonly logger = new Logger(UserSyncService.name);
   constructor(private readonly neo4jInfrastructure: Neo4jInfrastructure) {

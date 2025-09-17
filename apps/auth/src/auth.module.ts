@@ -182,7 +182,7 @@ import jwtConfig from './config/jwt.config';
         transport: Transport.RMQ,
         options: {
           urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
-          queue: 'neo4jdb_create_user',
+          queue: 'create_user_queue',
           queueOptions: {
             durable: true,
           },

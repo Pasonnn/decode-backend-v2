@@ -18,7 +18,7 @@ export class RabbitMQInfrastructure implements OnModuleInit {
     this.createUserClient = ClientProxyFactory.create({
       options: {
         urls: [this.configService.get('RABBITMQ_URL', 'amqp://localhost:5672')],
-        queue: 'neo4jdb_create_user',
+        queue: 'create_user_queue',
         queueOptions: {
           durable: true,
         },
@@ -30,7 +30,7 @@ export class RabbitMQInfrastructure implements OnModuleInit {
     this.updateUserClient = ClientProxyFactory.create({
       options: {
         urls: [this.configService.get('RABBITMQ_URL', 'amqp://localhost:5672')],
-        queue: 'neo4jdb_update_user',
+        queue: 'update_user_queue',
         queueOptions: {
           durable: true,
         },

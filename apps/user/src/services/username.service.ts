@@ -22,7 +22,7 @@ export class UsernameService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
-    @Inject('NEO4JDB_UPDATE_USER_SERVICE')
+    @Inject('NEO4JDB_SYNC_SERVICE')
     private readonly neo4jdbUpdateUserService: ClientProxy,
     private readonly redisInfrastructure: RedisInfrastructure,
   ) {
