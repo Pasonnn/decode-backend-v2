@@ -20,4 +20,8 @@ export class RelationshipController {
   }
 
   @MessagePattern('relationship/sync/update-user')
+  async updateUser(user: UserDoc): Promise<Response<UserNeo4jDoc>> {
+    const update_user_response = await this.userService.updateUser(user);
+    return update_user_response;
+  }
 }

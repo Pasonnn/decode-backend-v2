@@ -6,4 +6,6 @@ export type UserNeo4jDoc = {
   role: string;
   display_name: string;
   avatar_ipfs_hash: string;
+  following_number: number;
+  followers_number: number;
 };

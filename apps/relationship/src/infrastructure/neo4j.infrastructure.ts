@@ -3,6 +3,8 @@ import neo4j, { Driver, Session, auth } from 'neo4j-driver';
 import { ConfigService } from '@nestjs/config';
 import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 import { UserDoc } from '../interfaces/user-doc.interface';
+import { PaginationResponse } from '../interfaces/pagination-response.interface';
+import { HttpStatus } from '@nestjs/common';
 @Injectable()
 export class Neo4jInfrastructure implements OnModuleInit {
   private readonly logger = new Logger(Neo4jInfrastructure.name);
@@ -85,6 +87,8 @@ export class Neo4jInfrastructure implements OnModuleInit {
           role: user.role,
           display_name: user.display_name,
           avatar_ipfs_hash: user.avatar_ipfs_hash,
+          following_number: 0,
+          followers_number: 0,
         },
       );
       this.logger.log(`User node created successfully: ${user._id}`);
@@ -145,7 +149,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
-  async findUserNode(input: { user_id: string }): Promise<boolean> {
+  async findUserNode(input: { user_id: string }): Promise<UserNeo4jDoc | null> {
     const session = this.getSession();
     try {
       const result = await session.run(
@@ -156,14 +160,14 @@ export class Neo4jInfrastructure implements OnModuleInit {
       );
       if (result.records.length === 0) {
         this.logger.log(`User node not found: ${input.user_id}`);
-        return false;
+        return null;
       }
-      return true;
+      return result.records[0].get('u') as UserNeo4jDoc;
     } catch (error) {
       this.logger.error(
         `Failed to find user node: ${error instanceof Error ? error.message : String(error)}`,
       );
-      return false;
+      return null;
     } finally {
       await session.close();
     }
@@ -203,25 +207,29 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
-  async findUserFromRelationship(input: {
+  async findUserFromRelationshipPaginated(input: {
     user_id: string;
     relationship_type: string;
+    page: number;
+    limit: number;
   }): Promise<UserNeo4jDoc[]> {
     const session = this.getSession();
-    const { user_id, relationship_type } = input;
+    const { user_id, relationship_type, page, limit } = input;
     try {
       const result = await session.run(
-        'MATCH (s)-[r:${relationship_type}]->(t) WHERE s.user_id = ${user_id} RETURN r',
+        'MATCH (s)-[r:${relationship_type}]->(t) WHERE s.user_id = ${user_id} RETURN t SKIP ${page} LIMIT ${limit}',
         {
           relationship_type: relationship_type,
           user_id: user_id,
+          page: page,
+          limit: limit,
         },
       );
       if (result.records.length === 0) {
         this.logger.log(`Relationship not found: ${user_id}`);
         return [];
       }
-      return result.records.map((record) => record.get('r') as UserNeo4jDoc);
+      return result.records.map((record) => record.get('t') as UserNeo4jDoc);
     } catch (error) {
       this.logger.error(
         `Failed to find user from relationship: ${error instanceof Error ? error.message : String(error)}`,
@@ -232,25 +240,29 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
-  async findUserToRelationship(input: {
+  async findUserToRelationshipPaginated(input: {
     user_id: string;
     relationship_type: string;
+    page: number;
+    limit: number;
   }): Promise<UserNeo4jDoc[]> {
     const session = this.getSession();
-    const { user_id, relationship_type } = input;
+    const { user_id, relationship_type, page, limit } = input;
     try {
       const result = await session.run(
-        'MATCH (s)-[r:${relationship_type}]->(t) WHERE t.user_id = ${user_id} RETURN r',
+        'MATCH (s)-[r:${relationship_type}]->(t) WHERE t.user_id = ${user_id} RETURN s SKIP ${page} LIMIT ${limit}',
         {
           relationship_type: relationship_type,
           user_id: user_id,
+          page: page,
+          limit: limit,
         },
       );
       if (result.records.length === 0) {
         this.logger.log(`Relationship not found: ${user_id}`);
         return [];
       }
-      return result.records.map((record) => record.get('r') as UserNeo4jDoc);
+      return result.records.map((record) => record.get('s') as UserNeo4jDoc);
     } catch (error) {
       this.logger.error(
         `Failed to find user to relationship: ${error instanceof Error ? error.message : String(error)}`,
@@ -261,99 +273,289 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
-  async createUserToUserRelationship(input: {
-    user_id_from: string;
-    user_id_to: string;
-    relationship_type: string;
-  }): Promise<boolean> {
-    const session = this.getSession();
-    const { user_id_from, user_id_to, relationship_type } = input;
-    try {
-      // Create relationship
-      await session.run(
-        'MATCH (s:User {user_id: $user_id_from}), (t:User {user_id: $user_id_to}) CREATE (s)-[r:${relationship_type}]->(t)',
-        {
-          user_id_from: user_id_from,
-          user_id_to: user_id_to,
-          relationship_type: relationship_type,
-        },
-      );
-      this.logger.log(
-        `Relationship created successfully: ${user_id_from} to ${user_id_to}`,
-      );
-      return true;
-    } catch (error) {
-      this.logger.error(
-        `Failed to create user relationship: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      return false;
-    } finally {
-      await session.close();
-    }
-  }
-
-  async deleteUserToUserRelationship(input: {
-    user_id_from: string;
-    user_id_to: string;
-    relationship_type: string;
-  }): Promise<boolean> {
-    const session = this.getSession();
-    const { user_id_from, user_id_to, relationship_type } = input;
-    try {
-      // Delete relationship
-      await session.run(
-        'MATCH (s:User {user_id: $user_id_from})-[r:${relationship_type}]->(t:User {user_id: $user_id_to}) DELETE r',
-        {
-          user_id_from: user_id_from,
-          user_id_to: user_id_to,
-          relationship_type: relationship_type,
-        },
-      );
-      this.logger.log(
-        `Relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
-      );
-      return true;
-    } catch (error) {
-      this.logger.error(
-        `Failed to delete user relationship: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      return false;
-    } finally {
-      await session.close();
-    }
-  }
-
-  async deleteTwoUsersRelationships(input: {
+  async createUserToUserFollowingRelationship(input: {
     user_id_from: string;
     user_id_to: string;
   }): Promise<boolean> {
     const session = this.getSession();
     const { user_id_from, user_id_to } = input;
     try {
-      // Delete all relationships between two users
+      // Create relationship
       await session.run(
-        'MATCH (s:User {user_id: $user_id_from})-[r:${relationship_type}]->(t:User {user_id: $user_id_to}) DELETE r',
-        {
-          user_id_from: user_id_from,
-          user_id_to: user_id_to,
-        },
-      );
-      await session.run(
-        'MATCH (s:User {user_id: $user_id_to})-[r:${relationship_type}]->(t:User {user_id: $user_id_from}) DELETE r',
+        `MATCH (s:User {user_id: $user_id_from}), (t:User {user_id: $user_id_to}) CREATE (s)-[r:FOLLOWING]->(t);
+        SET s.following_number = s.following_number + 1, t.followers_number = t.followers_number + 1`,
         {
           user_id_from: user_id_from,
           user_id_to: user_id_to,
         },
       );
       this.logger.log(
-        `All relationships deleted successfully: ${user_id_from} and ${user_id_to}`,
+        `User following relationship created successfully: ${user_id_from} to ${user_id_to}`,
       );
       return true;
     } catch (error) {
       this.logger.error(
-        `Failed to delete two users relationships: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create user following relationship: ${error instanceof Error ? error.message : String(error)}`,
       );
       return false;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async createUserToUserBlockedRelationship(input: {
+    user_id_from: string;
+    user_id_to: string;
+  }): Promise<boolean> {
+    const session = this.getSession();
+    const { user_id_from, user_id_to } = input;
+    try {
+      // Create relationship
+      await session.run(
+        `MATCH (s:User {user_id: $user_id_from}), (t:User {user_id: $user_id_to}) CREATE (s)-[r:BLOCKED]->(t);`,
+        {
+          user_id_from: user_id_from,
+          user_id_to: user_id_to,
+        },
+      );
+      this.logger.log(
+        `User blocked relationship created successfully: ${user_id_from} to ${user_id_to}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to create user blocked relationship: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async deleteUserToUserFollowingRelationship(input: {
+    user_id_from: string;
+    user_id_to: string;
+  }): Promise<boolean> {
+    const session = this.getSession();
+    const { user_id_from, user_id_to } = input;
+    try {
+      // Delete relationship
+      await session.run(
+        `MATCH (s:User {user_id: $user_id_from})-[r:FOLLOWING]->(t:User {user_id: $user_id_to}) DELETE r;
+        SET s.following_number = s.following_number - 1, t.followers_number = t.followers_number - 1`,
+        {
+          user_id_from: user_id_from,
+          user_id_to: user_id_to,
+        },
+      );
+      this.logger.log(
+        `User following relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete user following relationship: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async deleteUserToUserBlockedRelationship(input: {
+    user_id_from: string;
+    user_id_to: string;
+  }): Promise<boolean> {
+    const session = this.getSession();
+    const { user_id_from, user_id_to } = input;
+    try {
+      // Delete relationship
+      await session.run(
+        `MATCH (s:User {user_id: $user_id_from})-[r:BLOCKED]->(t:User {user_id: $user_id_to}) DELETE r;`,
+        {
+          user_id_from: user_id_from,
+          user_id_to: user_id_to,
+        },
+      );
+      this.logger.log(
+        `User blocked relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete user blocked relationship: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async getFriendsSuggestions(input: {
+    user_id: string;
+    page: number;
+    limit: number;
+  }): Promise<PaginationResponse<UserNeo4jDoc[]>> {
+    const session = this.getSession();
+    const { user_id, page, limit } = input;
+    try {
+      const second_degree_suggestions_count =
+        await this.secondDegreeSuggestionsCount({
+          user_id: user_id,
+        });
+      const third_degree_start_page = Math.ceil(
+        second_degree_suggestions_count / limit,
+      );
+      if (page < third_degree_start_page) {
+        const second_degree_suggestions = await this.secondDegreeSuggestions({
+          user_id: user_id,
+          page: page,
+          limit: limit,
+        });
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: `Second degree suggestions fetched successfully`,
+          data: {
+            users: second_degree_suggestions,
+            meta: {
+              total: second_degree_suggestions.length,
+              page: page,
+              limit: limit,
+              is_last_page: false,
+            },
+          },
+        };
+      } else {
+        const third_degree_suggestions = await this.thirdDegreeSuggestions({
+          user_id: user_id,
+          page: third_degree_start_page,
+          limit: limit,
+        });
+        const is_last_page = third_degree_suggestions.length < limit;
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: `Third degree suggestions fetched successfully`,
+          data: {
+            users: third_degree_suggestions,
+            meta: {
+              total: third_degree_suggestions.length,
+              page: third_degree_start_page,
+              limit: limit,
+              is_last_page: is_last_page,
+            },
+          },
+        };
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to get friends suggestions: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: `Failed to get friends suggestions`,
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  private async secondDegreeSuggestions(input: {
+    user_id: string;
+    page: number;
+    limit: number;
+  }): Promise<UserNeo4jDoc[]> {
+    const session = this.getSession();
+    const { user_id, page, limit } = input;
+    try {
+      const result = await session.run(
+        `MATCH (me:User {user_id: ${user_id}})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
+        WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
+        RETURN DISTINCT fof.user_id, fof.username, fof.display_name, fof.avatar_ipfs_hash
+        SKIP ${page * limit} LIMIT ${limit}`,
+        {
+          user_id: user_id,
+          page: page,
+          limit: limit,
+        },
+      );
+      if (result.records.length === 0) {
+        this.logger.log(
+          `No second degree suggestions found for user: ${user_id}`,
+        );
+        return [];
+      }
+      return result.records.map((record) => record.get('fof') as UserNeo4jDoc);
+    } catch (error) {
+      this.logger.error(
+        `Failed to get second degree suggestions: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return [];
+    } finally {
+      await session.close();
+    }
+  }
+
+  private async thirdDegreeSuggestions(input: {
+    user_id: string;
+    page: number;
+    limit: number;
+  }): Promise<UserNeo4jDoc[]> {
+    const session = this.getSession();
+    const { user_id, page, limit } = input;
+    try {
+      const result = await session.run(
+        `MATCH (me:User {user_id: $user_id})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)-[:FOLLOWING]->(fofof)
+        WHERE NOT (me)-[:FOLLOWING]->(fofof) AND me <> fofof AND fof <> fofof
+        RETURN DISTINCT fofof.user_id, fofof.username, fofof.display_name, fofof.avatar_ipfs_hash
+        SKIP ${page * limit} LIMIT ${limit}`,
+        {
+          user_id: user_id,
+          page: page,
+          limit: limit,
+        },
+      );
+      if (result.records.length === 0) {
+        this.logger.log(
+          `No third degree suggestions found for user: ${user_id}`,
+        );
+        return [];
+      }
+      return result.records.map(
+        (record) => record.get('fofof') as UserNeo4jDoc,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to get second degree suggestions: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return [];
+    } finally {
+      await session.close();
+    }
+  }
+
+  private async secondDegreeSuggestionsCount(input: {
+    user_id: string;
+  }): Promise<number> {
+    const session = this.getSession();
+    const { user_id } = input;
+    try {
+      const result = await session.run(
+        `MATCH (me:User {user_id: $user_id})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
+        WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
+        RETURN COUNT(DISTINCT fof.user_id)`,
+        {
+          user_id: user_id,
+        },
+      );
+      return result.records[0].get('count') as number;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get second degree suggestions count: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return 0;
     } finally {
       await session.close();
     }
