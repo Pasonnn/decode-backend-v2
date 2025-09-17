@@ -1,4 +1,36 @@
-// Modules Import
+/**
+ * @fileoverview Session Management Service
+ *
+ * This service handles all aspects of user session management including creation,
+ * validation, refresh, and revocation. It implements a secure session-based
+ * authentication system using JWT tokens and MongoDB for session persistence.
+ *
+ * Session Architecture:
+ * - Access Tokens: Short-lived JWT tokens for API authentication (15 minutes)
+ * - Session Tokens: Long-lived tokens for session refresh (30 days)
+ * - Session Records: Persistent session data stored in MongoDB
+ * - Device Fingerprinting: Links sessions to specific devices for security
+ *
+ * Key Features:
+ * - Secure session creation with device fingerprinting
+ * - Token refresh mechanism for seamless user experience
+ * - Session validation and access control
+ * - Session revocation and cleanup
+ * - Active session management and monitoring
+ *
+ * Security Measures:
+ * - JWT token signing with secure secrets
+ * - Session expiration and automatic cleanup
+ * - Device fingerprint validation
+ * - Session revocation capabilities
+ * - Comprehensive logging and monitoring
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+// Core NestJS modules for dependency injection and HTTP status codes
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -24,9 +56,37 @@ import { Logger } from '@nestjs/common';
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { MESSAGES } from '../constants/error-messages.constants';
 
+/**
+ * Session Management Service
+ *
+ * This service provides comprehensive session management capabilities for the
+ * authentication system. It handles session lifecycle from creation to revocation,
+ * implementing secure token-based authentication with device fingerprinting.
+ *
+ * The service manages two types of tokens:
+ * - Access Tokens: Short-lived tokens for API authentication
+ * - Session Tokens: Long-lived tokens for session refresh
+ *
+ * Key responsibilities:
+ * - Create secure sessions with device fingerprinting
+ * - Validate and refresh session tokens
+ * - Manage session expiration and cleanup
+ * - Handle session revocation and logout
+ * - Provide session monitoring and management
+ *
+ * @Injectable - Marks this class as a provider that can be injected into other classes
+ */
 @Injectable()
 export class SessionService {
   private readonly logger: Logger;
+
+  /**
+   * Constructor for dependency injection
+   *
+   * @param jwtStrategy - JWT token generation and validation strategy
+   * @param sessionModel - MongoDB model for session data operations
+   * @param sessionStrategy - Session token validation strategy
+   */
   constructor(
     private readonly jwtStrategy: JwtStrategy,
     @InjectModel(Session.name) private sessionModel: Model<Session>,

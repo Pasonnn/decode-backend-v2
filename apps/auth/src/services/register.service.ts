@@ -1,3 +1,37 @@
+/**
+ * @fileoverview User Registration Service
+ *
+ * This service handles the complete user registration flow including email verification,
+ * account creation, and welcome email notifications. It implements a secure two-step
+ * registration process to prevent unauthorized account creation.
+ *
+ * Registration Flow:
+ * 1. User submits registration information (username, email, password)
+ * 2. System validates password strength and checks for existing accounts
+ * 3. Registration data is temporarily stored in Redis with expiration
+ * 4. Email verification code is generated and sent to user's email
+ * 5. User verifies email with the provided code
+ * 6. User account is created in MongoDB with hashed password
+ * 7. Welcome email is sent to the new user
+ *
+ * Security Features:
+ * - Password strength validation with configurable requirements
+ * - Bcrypt password hashing with salt rounds
+ * - Email verification to prevent fake account creation
+ * - Temporary storage of registration data with automatic expiration
+ * - Duplicate account prevention (email and username uniqueness)
+ *
+ * Data Storage:
+ * - MongoDB: Permanent user account data
+ * - Redis: Temporary registration data and verification codes
+ * - Email Service: Asynchronous email delivery via RabbitMQ
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+// Core NestJS modules for dependency injection and HTTP status codes
 import { Inject, Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -22,9 +56,38 @@ import { MESSAGES } from '../constants/error-messages.constants';
 import { RegisterInfoValue } from '../interfaces/register-info-value.interface';
 import { EmailVerificationValue } from '../interfaces/email-verification-value.interface';
 
+/**
+ * User Registration Service
+ *
+ * This service manages the complete user registration lifecycle from initial
+ * registration request to account creation and welcome email delivery.
+ *
+ * The service implements a secure two-step registration process:
+ * 1. Email verification step - validates user's email ownership
+ * 2. Account creation step - creates the actual user account
+ *
+ * Key responsibilities:
+ * - Validate registration data and password strength
+ * - Check for duplicate accounts (email/username uniqueness)
+ * - Store temporary registration data in Redis
+ * - Generate and send email verification codes
+ * - Create user accounts after email verification
+ * - Send welcome emails to new users
+ *
+ * @Injectable - Marks this class as a provider that can be injected into other classes
+ */
 @Injectable()
 export class RegisterService {
   private readonly logger: Logger;
+
+  /**
+   * Constructor for dependency injection
+   *
+   * @param redisInfrastructure - Redis operations for temporary data storage
+   * @param passwordService - Password validation and hashing utilities
+   * @param userModel - MongoDB model for user data operations
+   * @param emailService - RabbitMQ client for email service communication
+   */
   constructor(
     private readonly redisInfrastructure: RedisInfrastructure,
     private readonly passwordService: PasswordService,
@@ -34,7 +97,40 @@ export class RegisterService {
     this.logger = new Logger(RegisterService.name);
   }
 
-  // register/email-verification
+  /**
+   * Initiates user registration process with email verification
+   *
+   * This method handles the first step of the registration process:
+   * 1. Validates password strength and requirements
+   * 2. Checks for existing accounts with the same email or username
+   * 3. Stores registration data temporarily in Redis
+   * 4. Sends email verification code to the user
+   *
+   * The registration data is stored in Redis with a 1-hour expiration to prevent
+   * indefinite storage of sensitive information. The email verification code
+   * expires after 5 minutes for security.
+   *
+   * @param register_info - User registration information
+   * @param register_info.username - Unique username for the account
+   * @param register_info.email - User's email address for verification
+   * @param register_info.password - Plain text password (will be hashed)
+   *
+   * @returns Promise<Response> - Registration status and next steps
+   *
+   * @throws Will return error response if:
+   * - Password doesn't meet strength requirements
+   * - Email or username already exists
+   * - Email service is unavailable
+   *
+   * @example
+   * ```typescript
+   * const result = await registerService.emailVerificationRegister({
+   *   username: 'johndoe',
+   *   email: 'john@example.com',
+   *   password: 'SecurePass123!'
+   * });
+   * ```
+   */
   async emailVerificationRegister(register_info: {
     username: string;
     email: string;

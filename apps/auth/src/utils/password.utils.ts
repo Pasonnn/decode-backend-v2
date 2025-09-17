@@ -1,11 +1,60 @@
+/**
+ * @fileoverview Password Utilities Service
+ *
+ * This service provides comprehensive password management utilities including
+ * hashing, validation, strength checking, and security features for the
+ * Decode authentication system.
+ *
+ * Password Security Features:
+ * - Bcrypt hashing with configurable salt rounds
+ * - Password strength validation with detailed feedback
+ * - Secure password generation with customizable options
+ * - Password similarity checking to prevent reuse
+ * - Compromised password detection
+ * - Levenshtein distance calculation for similarity
+ *
+ * Security Standards:
+ * - Industry-standard bcrypt hashing algorithm
+ * - Configurable salt rounds for enhanced security
+ * - Comprehensive password strength requirements
+ * - Protection against common password patterns
+ * - Secure random password generation
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+// Core NestJS modules for dependency injection
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import authConfig from '../config/auth.config';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
+/**
+ * Password Utilities Service
+ *
+ * This service provides comprehensive password management capabilities including
+ * hashing, validation, strength checking, and security features. It implements
+ * industry-standard security practices for password handling.
+ *
+ * Key capabilities:
+ * - Secure password hashing with bcrypt
+ * - Password strength validation and scoring
+ * - Secure password generation
+ * - Password similarity and reuse detection
+ * - Compromised password checking
+ *
+ * @Injectable - Marks this class as a provider that can be injected into other classes
+ */
 @Injectable()
 export class PasswordUtils {
+  /**
+   * Constructor for dependency injection
+   *
+   * @param configService - Configuration service for accessing password settings
+   */
   constructor(private readonly configService: ConfigService) {}
 
   /**

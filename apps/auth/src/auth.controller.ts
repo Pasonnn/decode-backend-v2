@@ -1,4 +1,40 @@
-// Import the necessary modules
+/**
+ * @fileoverview Authentication Controller
+ *
+ * This controller serves as the main HTTP API gateway for the Decode Authentication Service.
+ * It handles all authentication-related HTTP requests and routes them to appropriate
+ * business logic services.
+ *
+ * The controller provides comprehensive authentication endpoints including:
+ * - User registration with email verification
+ * - Secure login with device fingerprinting
+ * - Session management (refresh, logout, validation)
+ * - Password management (change, reset, forgot password)
+ * - User information retrieval
+ * - Device fingerprint management
+ * - Single Sign-On (SSO) operations
+ *
+ * Security Features:
+ * - JWT-based authentication with access and session tokens
+ * - Device fingerprinting for enhanced security
+ * - Email verification for account creation and device trust
+ * - Role-based access control with guards
+ * - Comprehensive input validation using DTOs
+ * - Rate limiting and brute force protection
+ *
+ * API Design Principles:
+ * - RESTful endpoint design
+ * - Consistent response format
+ * - Comprehensive error handling
+ * - Input validation and sanitization
+ * - Security-first approach
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+// Core NestJS modules for HTTP request handling and security
 import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 
 // DTOs Import
@@ -52,9 +88,34 @@ import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './common/guards/auth.guard';
 import { InitiateForgotPasswordDto } from 'apps/api-gateway/src/modules/auth/dto/password.dto';
 
-// Auth Controller Class
+/**
+ * Authentication Controller
+ *
+ * This controller handles all HTTP requests related to user authentication and authorization.
+ * It serves as the main API gateway for the authentication service, providing endpoints
+ * for user registration, login, session management, password operations, and more.
+ *
+ * The controller follows RESTful design principles and implements comprehensive security
+ * measures including JWT authentication, device fingerprinting, and role-based access control.
+ *
+ * All endpoints return consistent response formats and include proper error handling
+ * and validation. Sensitive operations require authentication and appropriate permissions.
+ *
+ * @Controller('auth') - Base route prefix for all authentication endpoints
+ */
 @Controller('auth')
 export class AuthController {
+  /**
+   * Constructor for dependency injection of all required services
+   *
+   * @param registerService - Handles user registration and email verification
+   * @param loginService - Manages user authentication and login flow
+   * @param sessionService - Handles session management and token operations
+   * @param passwordService - Manages password operations and reset functionality
+   * @param infoService - Provides user information retrieval services
+   * @param deviceFingerprintService - Handles device tracking and verification
+   * @param ssoService - Manages Single Sign-On token operations
+   */
   constructor(
     private readonly registerService: RegisterService,
     private readonly loginService: LoginService,

@@ -1,3 +1,46 @@
+/**
+ * @fileoverview Error Messages Constants
+ *
+ * This file contains all error messages and success messages used throughout
+ * the Decode authentication system. It provides centralized message management
+ * for consistent user experience and easy maintenance.
+ *
+ * Message Categories:
+ * - Authentication and login errors
+ * - Registration and account creation errors
+ * - Session management errors
+ * - Password operation errors
+ * - Email verification errors
+ * - Device fingerprint errors
+ * - User information errors
+ * - Validation errors
+ * - Database operation errors
+ * - Redis operation errors
+ * - Server and system errors
+ * - Microservice communication errors
+ * - Success messages and confirmations
+ *
+ * Benefits of Centralized Messages:
+ * - Consistent error messaging across the system
+ * - Easy localization and translation
+ * - Centralized message updates and maintenance
+ * - Clear documentation of all possible responses
+ * - Type safety and validation
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+/**
+ * System Messages Constants
+ *
+ * This object contains all error messages and success messages for the
+ * authentication system. It provides centralized message management for
+ * consistent user experience and easy maintenance.
+ *
+ * @constant {Object} MESSAGES - Main messages object
+ */
 export const MESSAGES = {
   // Authentication & Login Errors
   AUTH: {

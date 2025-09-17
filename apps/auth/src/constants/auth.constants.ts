@@ -1,3 +1,45 @@
+/**
+ * @fileoverview Authentication Constants
+ *
+ * This file contains all the configuration constants used throughout the
+ * Decode authentication system. It centralizes configuration values for
+ * security, validation, timeouts, and system behavior.
+ *
+ * Configuration Categories:
+ * - JWT token configuration and expiration times
+ * - Session management settings
+ * - Redis caching and TTL values
+ * - Email verification settings
+ * - Password security requirements
+ * - Device fingerprinting configuration
+ * - User management defaults
+ * - HTTP status codes
+ * - Rate limiting settings
+ * - Validation rules and patterns
+ * - Security settings and algorithms
+ * - Logging configuration
+ *
+ * Benefits of Centralized Constants:
+ * - Consistent configuration across the system
+ * - Easy maintenance and updates
+ * - Clear documentation of all settings
+ * - Type safety and validation
+ * - Environment-specific overrides
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+/**
+ * Authentication System Constants
+ *
+ * This object contains all configuration constants for the authentication system.
+ * It provides centralized configuration management for security, validation,
+ * timeouts, and system behavior.
+ *
+ * @constant {Object} AUTH_CONSTANTS - Main configuration object
+ */
 export const AUTH_CONSTANTS = {
   // JWT Configuration
   JWT: {

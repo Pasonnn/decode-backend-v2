@@ -1,3 +1,37 @@
+/**
+ * @fileoverview User Login Service
+ *
+ * This service handles user authentication and login operations with comprehensive
+ * security features including device fingerprinting, session management, and
+ * multi-factor authentication through email verification.
+ *
+ * Login Flow:
+ * 1. User submits credentials (email/username, password, device fingerprint)
+ * 2. System validates credentials against stored user data
+ * 3. Device fingerprint is checked for trust status
+ * 4. If device is not trusted, email verification is required
+ * 5. If device is trusted, session is created and tokens are generated
+ * 6. User's last login time is updated
+ *
+ * Security Features:
+ * - Bcrypt password verification
+ * - Device fingerprinting for enhanced security
+ * - Email verification for new devices
+ * - Session management with JWT tokens
+ * - Comprehensive logging for security monitoring
+ *
+ * Device Fingerprinting:
+ * - Tracks and verifies user devices for security
+ * - Requires email verification for new devices
+ * - Maintains trust status for known devices
+ * - Prevents unauthorized access from unknown devices
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+// Core NestJS modules for dependency injection and HTTP status codes
 import { Injectable, Logger, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -17,9 +51,39 @@ import { DeviceFingerprintService } from './device-fingerprint.service';
 // Constants Import
 import { MESSAGES } from '../constants/error-messages.constants';
 
+/**
+ * User Login Service
+ *
+ * This service manages user authentication with advanced security features including
+ * device fingerprinting and multi-factor authentication. It implements a comprehensive
+ * login flow that balances security with user experience.
+ *
+ * The service handles both trusted and untrusted device scenarios:
+ * - Trusted devices: Direct login with session creation
+ * - Untrusted devices: Email verification required before session creation
+ *
+ * Key responsibilities:
+ * - Validate user credentials (email/username and password)
+ * - Check device fingerprint trust status
+ * - Create and manage user sessions
+ * - Handle device fingerprint verification
+ * - Update user login tracking
+ *
+ * @Injectable - Marks this class as a provider that can be injected into other classes
+ */
 @Injectable()
 export class LoginService {
   private readonly logger: Logger;
+
+  /**
+   * Constructor for dependency injection
+   *
+   * @param userModel - MongoDB model for user data operations
+   * @param sessionService - Session management and token operations
+   * @param infoService - User information retrieval services
+   * @param passwordService - Password validation and verification
+   * @param deviceFingerprintService - Device tracking and verification
+   */
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly sessionService: SessionService,

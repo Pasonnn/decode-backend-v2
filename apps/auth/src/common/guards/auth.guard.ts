@@ -1,3 +1,31 @@
+/**
+ * @fileoverview Authentication Guard
+ *
+ * This guard provides comprehensive authentication and authorization for the
+ * Decode authentication system. It implements JWT token validation, session
+ * management, and role-based access control.
+ *
+ * Authentication Features:
+ * - JWT access token validation
+ * - Session validation and management
+ * - Role-based access control
+ * - Permission-based authorization
+ * - Public route support
+ * - Comprehensive error handling
+ *
+ * Security Measures:
+ * - Token extraction from Authorization header
+ * - JWT signature and expiration validation
+ * - Session state verification
+ * - Role and permission checking
+ * - Detailed error responses for debugging
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+// Core NestJS modules for guards, exceptions, and metadata
 import {
   Injectable,
   CanActivate,
@@ -44,10 +72,34 @@ interface RequestWithUser extends Request {
   user?: AuthenticatedUser;
 }
 
+/**
+ * Authentication Guard
+ *
+ * This guard implements comprehensive authentication and authorization for
+ * the authentication system. It validates JWT tokens, checks session status,
+ * and enforces role-based access control.
+ *
+ * The guard supports:
+ * - Public routes (no authentication required)
+ * - Role-based access control
+ * - Permission-based authorization
+ * - Session validation
+ * - Comprehensive error handling
+ *
+ * @Injectable - Marks this class as a provider that can be injected into other classes
+ */
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly logger = new Logger(AuthGuard.name);
 
+  /**
+   * Constructor for dependency injection
+   *
+   * @param reflector - Service for accessing metadata and decorators
+   * @param jwtService - JWT service for token operations
+   * @param configService - Configuration service for accessing settings
+   * @param sessionService - Session service for session validation
+   */
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,

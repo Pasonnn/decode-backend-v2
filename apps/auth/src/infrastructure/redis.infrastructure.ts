@@ -1,9 +1,63 @@
+/**
+ * @fileoverview Redis Infrastructure Service
+ *
+ * This service provides a comprehensive interface for Redis operations in the
+ * Decode authentication system. It handles caching, temporary data storage,
+ * and session management using Redis as the primary caching layer.
+ *
+ * Redis Operations:
+ * - Key-value storage with TTL support
+ * - JSON serialization and deserialization
+ * - Key existence checking and expiration management
+ * - Atomic operations and batch operations
+ * - Connection health monitoring
+ *
+ * Use Cases:
+ * - Email verification code storage
+ * - Session data caching
+ * - Rate limiting and throttling
+ * - Temporary registration data
+ * - SSO token management
+ *
+ * Security Features:
+ * - Automatic data expiration
+ * - Secure key naming conventions
+ * - Connection health monitoring
+ * - Error handling and recovery
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+// Core NestJS modules for dependency injection
 import { Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Redis } from 'ioredis';
 
+/**
+ * Redis Infrastructure Service
+ *
+ * This service provides a comprehensive interface for Redis operations including
+ * data storage, retrieval, and management. It handles JSON serialization,
+ * TTL management, and provides utility methods for common Redis operations.
+ *
+ * Key features:
+ * - Automatic JSON serialization/deserialization
+ * - TTL support for automatic data expiration
+ * - Batch operations for efficiency
+ * - Connection health monitoring
+ * - Error handling and recovery
+ *
+ * @Injectable - Marks this class as a provider that can be injected into other classes
+ */
 @Injectable()
 export class RedisInfrastructure {
+  /**
+   * Constructor for dependency injection
+   *
+   * @param redis - Redis client instance for database operations
+   */
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
   async set(key: string, value: any, ttl?: number): Promise<void> {

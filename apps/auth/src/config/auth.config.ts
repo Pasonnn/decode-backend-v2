@@ -1,5 +1,42 @@
+/**
+ * @fileoverview Authentication Configuration
+ *
+ * This configuration file defines all authentication-related settings for the
+ * Decode authentication system. It provides centralized configuration management
+ * for security, validation, and system behavior.
+ *
+ * Configuration Categories:
+ * - Password security requirements and validation
+ * - Session management and timeout settings
+ * - Email verification configuration
+ * - Security policies and restrictions
+ * - Rate limiting and throttling
+ * - Redis caching and TTL settings
+ *
+ * Benefits:
+ * - Centralized configuration management
+ * - Environment-specific overrides
+ * - Type safety and validation
+ * - Easy maintenance and updates
+ * - Clear documentation of all settings
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
 import { registerAs } from '@nestjs/config';
 
+/**
+ * Authentication Configuration
+ *
+ * This configuration object contains all authentication-related settings
+ * for the system. It provides centralized configuration management with
+ * environment-specific overrides.
+ *
+ * @param registerAs - NestJS configuration registration function
+ * @returns Configuration object with authentication settings
+ */
 export default registerAs('auth', () => ({
   // Password Configuration
   password: {
