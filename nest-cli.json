@@ -37,6 +37,15 @@
         "tsConfigPath": "apps/email-worker/tsconfig.app.json"
       }
     },
+    "neo4jdb-sync": {
+      "type": "application",
+      "root": "apps/neo4jdb-sync",
+      "entryFile": "main",
+      "sourceRoot": "apps/neo4jdb-sync/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/neo4jdb-sync/tsconfig.app.json"
+      }
+    },
     "relationship": {
       "type": "application",
       "root": "apps/relationship",
