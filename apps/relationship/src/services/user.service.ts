@@ -5,7 +5,8 @@ import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
 
 // Interface Import
 import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
-import { Response } from '../interfaces/response.interface';
+import type { Response } from '../interfaces/response.interface';
+import type { UserDoc } from '../interfaces/user-doc.interface';
 
 export class UserService {
   private readonly logger = new Logger(UserService.name);
@@ -14,7 +15,7 @@ export class UserService {
     this.neo4jInfrastructure = neo4jInfrastructure;
   }
 
-  async createUser(user: UserNeo4jDoc): Promise<Response<UserNeo4jDoc>> {
+  async createUser(user: UserDoc): Promise<Response<UserNeo4jDoc>> {
     // Create user
     const create_user_node_response =
       await this.neo4jInfrastructure.createUserNode(user);
@@ -29,7 +30,7 @@ export class UserService {
       success: true,
       statusCode: HttpStatus.OK,
       message: `User node created successfully`,
-      data: user,
+      data: user as UserNeo4jDoc,
     };
   }
 }
