@@ -17,6 +17,17 @@ export class UserSyncService {
 
   async createUser(user: UserDoc): Promise<Response<UserNeo4jDoc>> {
     try {
+      // Check if user exists
+      const user_exists_response = await this.neo4jInfrastructure.findUserNode(
+        user._id,
+      );
+      if (user_exists_response) {
+        return {
+          success: false,
+          statusCode: HttpStatus.CONFLICT,
+          message: `User already exists`,
+        };
+      }
       // Create user
       const create_user_node_response =
         await this.neo4jInfrastructure.createUserNode(user);
@@ -47,6 +58,17 @@ export class UserSyncService {
 
   async updateUser(user: UserDoc): Promise<Response<UserNeo4jDoc>> {
     try {
+      // Check if user exists, if not create user
+      const user_exists_response = await this.neo4jInfrastructure.findUserNode(
+        user._id,
+      );
+      if (!user_exists_response) {
+        const create_user_response = await this.createUser(user);
+        if (!create_user_response.success) {
+          return create_user_response;
+        }
+        return create_user_response;
+      }
       // Update user
       const update_user_node_response =
         await this.neo4jInfrastructure.updateUserNode(user);

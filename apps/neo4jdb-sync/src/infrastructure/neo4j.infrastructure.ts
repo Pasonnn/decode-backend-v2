@@ -77,10 +77,9 @@ export class Neo4jInfrastructure implements OnModuleInit {
       }
       // Create user node
       await session.run(
-        'CREATE (u:User {user_id: $user_id, email: $email, username: $username, role: $role, display_name: $display_name, avatar_ipfs_hash: $avatar_ipfs_hash})',
+        'CREATE (u:User {user_id: $user_id, username: $username, role: $role, display_name: $display_name, avatar_ipfs_hash: $avatar_ipfs_hash})',
         {
           user_id: user._id.toString(),
-          email: user.email,
           username: user.username,
           role: user.role,
           display_name: user.display_name,
@@ -125,10 +124,9 @@ export class Neo4jInfrastructure implements OnModuleInit {
       }
       // Update user node
       await session.run(
-        'MATCH (u:User {user_id: $user_id}) SET u.email = $email, u.username = $username, u.role = $role, u.display_name = $display_name, u.avatar_ipfs_hash = $avatar_ipfs_hash',
+        'MATCH (u:User {user_id: $user_id}) SET u.username = $username, u.role = $role, u.display_name = $display_name, u.avatar_ipfs_hash = $avatar_ipfs_hash',
         {
           user_id: user._id.toString(),
-          email: user.email,
           username: user.username,
           role: user.role,
           display_name: user.display_name,
@@ -140,6 +138,30 @@ export class Neo4jInfrastructure implements OnModuleInit {
     } catch (error) {
       this.logger.error(
         `Failed to update user node: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async findUserNode(user_id: string): Promise<boolean> {
+    const session = this.getSession();
+    try {
+      const result = await session.run(
+        'MATCH (u:User {user_id: $user_id}) RETURN u',
+        {
+          user_id: user_id.toString(),
+        },
+      );
+      if (result.records.length === 0) {
+        this.logger.log(`User node not found: ${user_id}`);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to find user node: ${error instanceof Error ? error.message : String(error)}`,
       );
       return false;
     } finally {

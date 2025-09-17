@@ -177,6 +177,17 @@ import jwtConfig from './config/jwt.config';
           },
         },
       },
+      {
+        name: 'NEO4JDB_SYNC_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'neo4jdb_create_user',
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
     ]),
   ],
 

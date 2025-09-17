@@ -55,6 +55,7 @@ import { MESSAGES } from '../constants/error-messages.constants';
 // Interfaces Import
 import { RegisterInfoValue } from '../interfaces/register-info-value.interface';
 import { EmailVerificationValue } from '../interfaces/email-verification-value.interface';
+import { UserDoc } from '../interfaces/user-doc.interface';
 
 /**
  * User Registration Service
@@ -93,6 +94,8 @@ export class RegisterService {
     private readonly passwordService: PasswordService,
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
+    @Inject('NEO4JDB_CREATE_USER_SERVICE')
+    private readonly neo4jdbCreateUserService: ClientProxy,
   ) {
     this.logger = new Logger(RegisterService.name);
   }
@@ -366,7 +369,7 @@ export class RegisterService {
     // Delete register info from Redis
     await this.redisInfrastructure.del(register_info_key);
     // Create user
-    const user = await this.userModel.create({
+    await this.userModel.create({
       username: register_info_value.username,
       email: register_info_value.email,
       display_name: register_info_value.username,
@@ -375,12 +378,26 @@ export class RegisterService {
       bio: AUTH_CONSTANTS.USER.DEFAULT_BIO,
       avatar_ipfs_hash: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_IPFS_HASH,
     });
+    const created_user = await this.userModel.findOne(
+      {
+        username: register_info_value.username,
+      },
+      {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      },
+    );
+    // Sync user to Neo4j
+    await this.neo4jdbCreateUserService
+      .emit('create_user_request', created_user as UserDoc)
+      .toPromise();
     // Return success response
     return {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_CREATED,
-      data: user,
+      data: created_user,
     };
   }
 

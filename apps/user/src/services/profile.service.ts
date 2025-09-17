@@ -3,6 +3,7 @@ import {
   InternalServerErrorException,
   Logger,
   HttpStatus,
+  Inject,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -16,14 +17,50 @@ import { User } from '../schemas/user.schema';
 
 // Constants Import
 import { MESSAGES } from '../constants/messages.constants';
+import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 export class ProfileService {
   private readonly logger: Logger;
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    @Inject('NEO4JDB_CREATE_USER_SERVICE')
+    private readonly neo4jdbCreateUserService: ClientProxy,
+    @Inject('NEO4JDB_UPDATE_USER_SERVICE')
+    private readonly neo4jdbUpdateUserService: ClientProxy,
+  ) {
     this.logger = new Logger(ProfileService.name);
   }
 
   async getUserProfile(input: { user_id: string }): Promise<Response<UserDoc>> {
+    try {
+      // Check if user exists
+      const { user_id } = input;
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        email: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
+      if (!user) {
+        return {
+          success: false,
+          statusCode: HttpStatus.NOT_FOUND,
+          message: MESSAGES.PROFILE.PROFILE_NOT_FOUND,
+        };
+      }
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.PROFILE_FETCHED,
+        data: user as UserDoc,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting user profile: ${error as string}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getMyProfile(input: { user_id: string }): Promise<Response<UserDoc>> {
     try {
       // Check if user exists
       const { user_id } = input;
@@ -46,7 +83,7 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
-      this.logger.error(`Error getting user profile: ${error as string}`);
+      this.logger.error(`Error getting my profile: ${error as string}`);
       throw new InternalServerErrorException(error);
     }
   }
@@ -71,6 +108,9 @@ export class ProfileService {
       }
       user.display_name = display_name;
       await user.save();
+      await this.neo4jdbUpdateUserService
+        .emit('update_user_request', user as UserDoc)
+        .toPromise();
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -103,6 +143,9 @@ export class ProfileService {
       }
       user.bio = bio;
       await user.save();
+      await this.neo4jdbUpdateUserService
+        .emit('update_user_request', user as UserDoc)
+        .toPromise();
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -136,6 +179,9 @@ export class ProfileService {
       }
       user.avatar_ipfs_hash = avatar_ipfs_hash;
       await user.save();
+      await this.neo4jdbUpdateUserService
+        .emit('update_user_request', user as UserDoc)
+        .toPromise();
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -168,6 +214,9 @@ export class ProfileService {
       }
       user.role = role;
       await user.save();
+      await this.neo4jdbUpdateUserService
+        .emit('update_user_request', user as UserDoc)
+        .toPromise();
       return {
         success: true,
         statusCode: HttpStatus.OK,

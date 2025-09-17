@@ -14,6 +14,7 @@ import { User } from '../schemas/user.schema';
 // Constants Import
 import { USER_CONSTANTS } from '../constants/user.constants';
 import { MESSAGES } from '../constants/messages.constants';
+import { UserDoc } from '../interfaces/user-doc.interface';
 
 @Injectable()
 export class UsernameService {
@@ -21,6 +22,8 @@ export class UsernameService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
+    @Inject('NEO4JDB_UPDATE_USER_SERVICE')
+    private readonly neo4jdbUpdateUserService: ClientProxy,
     private readonly redisInfrastructure: RedisInfrastructure,
   ) {
     this.logger = new Logger(UsernameService.name);
@@ -145,6 +148,15 @@ export class UsernameService {
       username: new_username,
       last_username_change: new Date(),
     });
+    const updated_user = await this.userModel.findById(user_id, {
+      password_hashed: 0,
+      email: 0,
+      updatedAt: 0,
+      createdAt: 0,
+    });
+    await this.neo4jdbUpdateUserService
+      .emit('update_user_request', updated_user as UserDoc)
+      .toPromise();
     return {
       success: true,
       statusCode: HttpStatus.OK,

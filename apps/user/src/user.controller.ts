@@ -57,7 +57,7 @@ export class UserController {
   async getMyProfile(
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<UserDoc>> {
-    return await this.profileService.getUserProfile({
+    return await this.profileService.getMyProfile({
       user_id: user.userId,
     });
   }

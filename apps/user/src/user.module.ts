@@ -58,6 +58,17 @@ import configuration from './config/configuration';
           },
         },
       },
+      {
+        name: 'NEO4JDB_SYNC_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'neo4jdb_update_user',
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
     ]),
   ],
   controllers: [UserController],
