@@ -41,7 +41,10 @@ import { Roles, UserRole } from '../../common/decorators/roles.decorator';
 
 // Interfaces
 import type { Response } from '../../interfaces/response.interface';
-import { UserResponseDto } from './dto/user-response.dto';
+import {
+  UserResponseDto,
+  UserResponseWithoutEmailDto,
+} from './dto/user-response.dto';
 import type { UserDoc } from '../../infrastructure/external-services/user-service.client';
 
 @ApiTags('User Management')
@@ -101,7 +104,7 @@ export class UsersController {
   @ApiResponse({
     status: 200,
     description: 'User profile retrieved successfully',
-    type: UserResponseDto,
+    type: UserResponseWithoutEmailDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
