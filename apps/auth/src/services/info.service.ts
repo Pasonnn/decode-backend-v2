@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, forwardRef, Inject } from '@nestjs/common';
 
 // Interfaces
 import { UserDoc } from '../interfaces/user-doc.interface';
@@ -20,6 +20,7 @@ export class InfoService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(DeviceFingerprint.name)
     private deviceFingerprintModel: Model<DeviceFingerprint>,
+    @Inject(forwardRef(() => SessionService))
     private readonly sessionService: SessionService,
   ) {}
 

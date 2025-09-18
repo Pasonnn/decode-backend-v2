@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, HttpStatus } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  HttpStatus,
+  forwardRef,
+} from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -32,7 +38,9 @@ export class DeviceFingerprintService {
     private deviceFingerprintModel: Model<DeviceFingerprint>,
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly redisInfrastructure: RedisInfrastructure,
+    @Inject(forwardRef(() => InfoService))
     private readonly infoService: InfoService,
+    @Inject(forwardRef(() => SessionService))
     private readonly sessionService: SessionService,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
   ) {

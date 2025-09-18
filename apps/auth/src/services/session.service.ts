@@ -31,7 +31,7 @@
  */
 
 // Core NestJS modules for dependency injection and HTTP status codes
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, forwardRef, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
@@ -97,6 +97,7 @@ export class SessionService {
     @InjectModel(Session.name) private sessionModel: Model<Session>,
     private readonly sessionStrategy: SessionStrategy,
     private readonly redisInfrastructure: RedisInfrastructure,
+    @Inject(forwardRef(() => DeviceFingerprintService))
     private readonly deviceFingerprintService: DeviceFingerprintService,
   ) {
     this.logger = new Logger(SessionService.name);
