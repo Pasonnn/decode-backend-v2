@@ -42,7 +42,6 @@ export class AuthGuardWithFingerprint implements CanActivate {
           error: 'JWT_AUTH_FAILED',
         });
       }
-      console.log(jwtResult);
 
       const request = context.switchToHttp().getRequest<Request>();
 
@@ -83,9 +82,7 @@ export class AuthGuardWithFingerprint implements CanActivate {
 
       // Compare users ID of JWT and fingerprint
       const isUserMatched = fingerprintUsers.some((fingerprintUser) => {
-        console.log(jwtUserData.userId, fingerprintUser._id);
         if (jwtUserData.userId == fingerprintUser._id) {
-          console.log('User authentication matched');
           return true;
         }
         return false;

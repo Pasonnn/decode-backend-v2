@@ -97,7 +97,6 @@ export class RabbitMQInfrastructure implements OnModuleInit {
     const startTime = Date.now();
     this.logger.log(`Processing update user request ${request._id}`);
     try {
-      console.log('infrastructure', request);
       await this.userSyncService.updateUser(request);
       const duration = Date.now() - startTime;
       this.logger.log(

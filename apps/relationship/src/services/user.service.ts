@@ -30,11 +30,9 @@ export class UserService {
     const { user_id_from, user_id_to } = input;
     try {
       // Get user
-      console.log('User Service', input);
       const user_response = await this.neo4jInfrastructure.findUserNode({
         user_id: user_id_to,
       });
-      console.log(user_response);
       if (!user_response) {
         return {
           success: false,

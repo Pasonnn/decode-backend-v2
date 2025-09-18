@@ -19,7 +19,6 @@ export class UserSyncService {
   async createUser(user: UserDoc): Promise<Response<UserNeo4jDoc>> {
     try {
       // Check if user exists
-      console.log('createUser', user);
       const user_exists_response = await this.neo4jInfrastructure.findUserNode(
         user._id,
       );
@@ -71,7 +70,6 @@ export class UserSyncService {
         }
         return create_user_response;
       }
-      console.log('service', user);
       // Update user
       const update_user_node_response =
         await this.neo4jInfrastructure.updateUserNode(user);
@@ -82,7 +80,6 @@ export class UserSyncService {
           message: `Failed to update user node`,
         };
       }
-      console.log('success');
       return {
         success: true,
         statusCode: HttpStatus.OK,
