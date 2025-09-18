@@ -1,9 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import neo4j, { Driver, Session, auth } from 'neo4j-driver';
+import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
+import neo4j, { Driver, Session, auth } from 'neo4j-driver';
 import { PaginationResponse } from '../interfaces/pagination-response.interface';
-import { HttpStatus } from '@nestjs/common';
+import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 @Injectable()
 export class Neo4jInfrastructure implements OnModuleInit {
   private readonly logger = new Logger(Neo4jInfrastructure.name);
@@ -511,20 +510,22 @@ export class Neo4jInfrastructure implements OnModuleInit {
   }
 
   async searchFollowers(input: {
+    user_id: string;
     params: string;
     page: number;
     limit: number;
   }): Promise<UserNeo4jDoc[]> {
     const session = this.getSession();
-    const { params, page, limit } = input;
+    const { user_id, params, page, limit } = input;
     try {
       const result = await session.run(
-        `MATCH (s:User)-[:FOLLOWING]->(t:User) 
-         WHERE toLower(t.username) CONTAINS toLower($params) 
+        `MATCH (s:User)-[:FOLLOWING]->(t:User {user_id: $user_id})
+         WHERE (toLower(t.username) CONTAINS toLower($params)
             OR toLower(t.display_name) CONTAINS toLower($params)
-         RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash 
+         RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash
          SKIP $skip LIMIT $limit`,
         {
+          user_id: user_id,
           params: params,
           skip: page * limit,
           limit: limit,
@@ -546,20 +547,22 @@ export class Neo4jInfrastructure implements OnModuleInit {
   }
 
   async searchFollowing(input: {
+    user_id: string;
     params: string;
     page: number;
     limit: number;
   }): Promise<UserNeo4jDoc[]> {
     const session = this.getSession();
-    const { params, page, limit } = input;
+    const { user_id, params, page, limit } = input;
     try {
       const result = await session.run(
-        `MATCH (s:User)-[:FOLLOWING]->(t:User)
-         WHERE toLower(t.username) CONTAINS toLower($params) 
+        `MATCH (s:User {user_id: $user_id})-[:FOLLOWING]->(t:User)
+         WHERE toLower(t.username) CONTAINS toLower($params)
             OR toLower(t.display_name) CONTAINS toLower($params)
-         RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash 
+         RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash
          SKIP $skip LIMIT $limit`,
         {
+          user_id: user_id,
           params: params,
           skip: page * limit,
           limit: limit,

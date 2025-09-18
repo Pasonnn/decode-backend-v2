@@ -4,22 +4,25 @@ import { HttpStatus, Logger } from '@nestjs/common';
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
 
 // Interface Import
-import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
-import type { Response } from '../interfaces/response.interface';
 import type { PaginationResponse } from '../interfaces/pagination-response.interface';
+import type { Response } from '../interfaces/response.interface';
+import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 
 // Service Import
 import { FollowService } from './follow.service';
+import { UserService } from './user.service';
 
 export class BlockService {
   private readonly logger = new Logger(BlockService.name);
   constructor(
     private readonly neo4jInfrastructure: Neo4jInfrastructure,
     private readonly followService: FollowService,
+    private readonly userService: UserService,
   ) {
     this.logger = new Logger(BlockService.name);
     this.neo4jInfrastructure = neo4jInfrastructure;
     this.followService = followService;
+    this.userService = userService;
   }
 
   async blockUser(input: {
@@ -123,14 +126,19 @@ export class BlockService {
       } else if (blocked_users_response.length < limit) {
         is_last_page = true;
       }
+      // Full blocked users response
+      const full_blocked_users = await this.userService.filterUsers({
+        users: blocked_users_response,
+        from_user_id: user_id,
+      });
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: `Blocked users fetched successfully`,
         data: {
-          users: blocked_users_response,
+          users: full_blocked_users,
           meta: {
-            total: blocked_users_response.length,
+            total: full_blocked_users.length,
             page: page,
             limit: limit,
             is_last_page,

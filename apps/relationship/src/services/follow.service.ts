@@ -4,22 +4,25 @@ import { HttpStatus, Logger } from '@nestjs/common';
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
 
 // Interface Import
-import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
-import type { Response } from '../interfaces/response.interface';
 import type { PaginationResponse } from '../interfaces/pagination-response.interface';
+import type { Response } from '../interfaces/response.interface';
+import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 
 // Service Import
 import { BlockService } from './block.service';
+import { UserService } from './user.service';
 
 export class FollowService {
   private readonly logger = new Logger(FollowService.name);
   constructor(
     private readonly neo4jInfrastructure: Neo4jInfrastructure,
     private readonly blockService: BlockService,
+    private readonly userService: UserService,
   ) {
     this.logger = new Logger(FollowService.name);
     this.neo4jInfrastructure = neo4jInfrastructure;
     this.blockService = blockService;
+    this.userService = userService;
   }
 
   async followingUser(input: {
@@ -251,14 +254,19 @@ export class FollowService {
       } else if (following_users_response.length < limit) {
         is_last_page = true;
       }
+      // Full following users response
+      const full_following_users = await this.userService.filterUsers({
+        users: following_users_response,
+        from_user_id: user_id,
+      });
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: `Following users fetched successfully`,
         data: {
-          users: following_users_response,
+          users: full_following_users,
           meta: {
-            total: following_users_response.length,
+            total: full_following_users.length,
             page: page,
             limit: limit,
             is_last_page,
@@ -307,14 +315,19 @@ export class FollowService {
       if (followers_response.length < limit) {
         is_last_page = true;
       }
+      // Full followers response
+      const full_followers = await this.userService.filterUsers({
+        users: followers_response,
+        from_user_id: user_id,
+      });
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: `Followers fetched successfully`,
         data: {
-          users: followers_response,
+          users: full_followers,
           meta: {
-            total: followers_response.length,
+            total: full_followers.length,
             page: page,
             limit: limit,
             is_last_page,

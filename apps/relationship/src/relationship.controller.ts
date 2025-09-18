@@ -1,23 +1,233 @@
-import { Controller, Param } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Delete,
+  Post,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 // Interface Import
-import type { UserDoc } from './interfaces/user-doc.interface';
-import { UserNeo4jDoc } from './interfaces/user-neo4j-doc.interface';
 import type { Response } from './interfaces/response.interface';
+import { UserNeo4jDoc } from './interfaces/user-neo4j-doc.interface';
+
+// DTOs
+import {
+  FollowDto,
+  UnfollowDto,
+  RemoveFollowerDto,
+  GetFollowingDto,
+  GetFollowersDto,
+} from './dto/follow.dto';
+import { GetUserDto } from './dto/user.dto';
+import { BlockDto, UnblockDto, GetBlockedUsersDto } from './dto/block.dto';
+import { MutualDto } from './dto/mutual.dto';
+import { SearchFollowersDto, SearchFollowingDto } from './dto/search.dto';
+import { GetSuggestionsPaginatedDto } from './dto/suggest.dto';
 
 // Service Import
-import { UserService } from './services/user.service';
-import { FollowService } from './services/follow.service';
 import { BlockService } from './services/block.service';
-import { MutualsService } from './services/mutuals.service';
+import { FollowService } from './services/follow.service';
+import { MutualService } from './services/mutual.service';
 import { SearchService } from './services/search.service';
 import { SuggestService } from './services/suggest.service';
+import { UserService } from './services/user.service';
 
+// Guards and Decorators
+import { CurrentUser } from './common/decorators/current-user.decorator';
+import { AuthGuard } from './common/guards/auth.guard';
+import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
+
+@ApiTags('Relationship Management')
 @Controller('relationship')
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class RelationshipController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly followService: FollowService,
+    private readonly blockService: BlockService,
+    private readonly mutualService: MutualService,
+    private readonly searchService: SearchService,
+    private readonly suggestService: SuggestService,
+  ) {}
 
-  @
+  // ==================== USER ENDPOINTS ====================
+
+  @Get('user/:user_id')
+  @UseGuards(AuthGuard)
+  async getUser(
+    @Param() params: GetUserDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response<UserNeo4jDoc>> {
+    return await this.userService.getUser({
+      user_id_from: user.userId,
+      user_id_to: params.user_id,
+    });
+  }
+
+  // ==================== FOLLOW ENDPOINTS ====================
+
+  @Post('follow/following')
+  @UseGuards(AuthGuard)
+  async follow(
+    @Body() body: FollowDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.followService.followingUser({
+      user_id_from: user.userId,
+      user_id_to: body.user_id_to,
+    });
+  }
+
+  @Delete('follow/unfollowing')
+  @UseGuards(AuthGuard)
+  async unfollow(
+    @Body() body: UnfollowDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.followService.unfollowingUser({
+      user_id_from: user.userId,
+      user_id_to: body.user_id_to,
+    });
+  }
+
+  @Delete('follow/remove-follower')
+  @UseGuards(AuthGuard)
+  async removeFollower(
+    @Body() body: RemoveFollowerDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.followService.removeFollower({
+      user_id_from: user.userId,
+      user_id_to: body.user_id_to,
+    });
+  }
+
+  @Get('follow/followings')
+  @UseGuards(AuthGuard)
+  async getFollowing(
+    @Query() query: GetFollowingDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.followService.getFollowing({
+      user_id: user.userId,
+      page: query.page,
+      limit: query.limit,
+    });
+  }
+
+  @Get('follow/followers')
+  @UseGuards(AuthGuard)
+  async getFollowers(
+    @Query() query: GetFollowersDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.followService.getFollowers({
+      user_id: user.userId,
+      page: query.page,
+      limit: query.limit,
+    });
+  }
+
+  // ==================== BLOCK ENDPOINTS ====================
+
+  @Post('block/blocking')
+  @UseGuards(AuthGuard)
+  async block(
+    @Body() body: BlockDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.blockService.blockUser({
+      user_id_from: user.userId,
+      user_id_to: body.user_id_to,
+    });
+  }
+
+  @Delete('block/unblocking')
+  @UseGuards(AuthGuard)
+  async unblock(
+    @Body() body: UnblockDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.blockService.unblockUser({
+      user_id_from: user.userId,
+      user_id_to: body.user_id_to,
+    });
+  }
+
+  @Get('block/blocked')
+  @UseGuards(AuthGuard)
+  async getBlocked(
+    @Query() query: GetBlockedUsersDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.blockService.getBlockedUsers({
+      user_id: user.userId,
+      page: query.page,
+      limit: query.limit,
+    });
+  }
+
+  // ==================== MUTUAL ENDPOINTS ====================
+
+  @Post('mutual/followers')
+  @UseGuards(AuthGuard)
+  async mutual(
+    @Body() body: MutualDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.mutualService.getMutualFollowers({
+      user_id_from: user.userId,
+      user_id_to: body.user_id_to,
+    });
+  }
+
+  // ==================== SEARCH ENDPOINTS ====================
+
+  @Get('search/followers')
+  @UseGuards(AuthGuard)
+  async searchFollowers(
+    @Param() params: SearchFollowersDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.searchService.searchFollowers({
+      user_id: user.userId,
+      params: params.params,
+      page: params.page,
+      limit: params.limit,
+    });
+  }
+
+  @Get('search/following')
+  @UseGuards(AuthGuard)
+  async searchFollowing(
+    @Param() params: SearchFollowingDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.searchService.searchFollowing({
+      user_id: user.userId,
+      params: params.params,
+      page: params.page,
+      limit: params.limit,
+    });
+  }
+
+  // ==================== SUGGEST ENDPOINTS ====================
+
+  @Get('suggest/followers')
+  @UseGuards(AuthGuard)
+  async getSuggestions(
+    @Query() query: GetSuggestionsPaginatedDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.suggestService.getSuggestionsPaginated({
+      user_id: user.userId,
+      page: query.page,
+      limit: query.limit,
+    });
+  }
 }

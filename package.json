@@ -16,6 +16,7 @@
     "start:dev:user": "nest start --watch user",
     "start:dev:wallet": "nest start --watch wallet",
     "start:dev:neo4jdb-sync": "nest start --watch neo4jdb-sync",
+    "start:dev:relationship": "nest start --watch relationship",
     "start:dev:all": "npm run start:dev:api-gateway | npm run start:dev:auth | npm run start:dev:email-worker | npm run start:dev:user | npm run start:dev:wallet",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/decode-backend-v2/main",

@@ -5,8 +5,11 @@ import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 
 // Interface Import
-import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 import type { PaginationResponse } from '../interfaces/pagination-response.interface';
+import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
+
+// Service Import
+import { UserService } from './user.service';
 
 /**
  * SuggestService - Friend Suggestion Algorithm Service
@@ -33,10 +36,12 @@ export class SuggestService {
   constructor(
     private readonly neo4jInfrastructure: Neo4jInfrastructure,
     private readonly redisInfrastructure: RedisInfrastructure,
+    private readonly userService: UserService,
   ) {
     this.logger = new Logger(SuggestService.name);
     this.neo4jInfrastructure = neo4jInfrastructure;
     this.redisInfrastructure = redisInfrastructure;
+    this.userService = userService;
   }
 
   /**
@@ -118,7 +123,7 @@ export class SuggestService {
       // Step 3: Filter out already suggested users using set difference
       // Time complexity: O(n*m) where n = new suggestions, m = cached suggestions
       // TODO: Consider using Set data structure for O(1) lookup performance
-      const suggestion_users = new_suggestion_users.filter(
+      const not_cached_suggestion_users = new_suggestion_users.filter(
         (user) =>
           !cached_suggestion_users.some(
             (cachedUser) => cachedUser.user_id === user.user_id,
@@ -130,11 +135,17 @@ export class SuggestService {
       // This ensures users don't see the same suggestions repeatedly
       await this.redisInfrastructure.set(
         `suggestions:${user_id}`,
-        [...cached_suggestion_users, ...suggestion_users],
+        [...cached_suggestion_users, ...not_cached_suggestion_users],
         5 * 60, // 5 minutes TTL
       );
 
-      // Step 5: Return filtered, paginated results
+      // Step 5: Filter out already suggested users with needed information
+      const suggestion_users = await this.userService.filterUsers({
+        users: not_cached_suggestion_users,
+        from_user_id: user_id,
+      });
+
+      // Step 6: Return filtered, paginated results
       // Note: The total count reflects filtered results, not original Neo4j count
       return {
         success: true,
