@@ -27,8 +27,9 @@ export class PrimaryService {
   }): Promise<Response> {
     try {
       const { user_id, address } = input;
+      const address_lowercase = address.toLowerCase();
       const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
-        address,
+        address: address_lowercase,
         user_id,
       });
       if (!check_valid_primary_wallet.success) {
@@ -39,10 +40,10 @@ export class PrimaryService {
         };
       }
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
-        address: address,
-        message: `Welcome to Decode Network! To set your wallet (${address.slice(0, 6)}...${address.slice(-4)}) as primary, please sign this message with your wallet. 
-          This cryptographic signature proves you control your wallet without revealing any sensitive information. 
-          By signing this message, you are requesting access to your wallet. 
+        address: address_lowercase,
+        message: `Welcome to Decode Network! To set your wallet (${address.slice(0, 6)}...${address.slice(-4)}) as primary, please sign this message with your wallet.
+          This cryptographic signature proves you control your wallet without revealing any sensitive information.
+          By signing this message, you are requesting access to your wallet.
           This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.`,
       });
       if (!nonceMessage) {
@@ -77,8 +78,9 @@ export class PrimaryService {
   }): Promise<Response> {
     try {
       const { address, signature, user_id } = input;
+      const address_lowercase = address.toLowerCase();
       const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
-        address,
+        address: address_lowercase,
         user_id,
       });
       if (!check_valid_primary_wallet.success) {
@@ -89,7 +91,7 @@ export class PrimaryService {
         };
       }
       const signatureIsValid = await this.cryptoUtils.validateNonceMessage({
-        address,
+        address: address_lowercase,
         signature,
       });
       if (!signatureIsValid) {
@@ -101,7 +103,7 @@ export class PrimaryService {
       }
       const setPrimaryWallet = await this.setPrimaryWallet({
         user_id,
-        address: address,
+        address: address_lowercase,
       });
       if (!setPrimaryWallet.success) {
         return setPrimaryWallet;
@@ -127,8 +129,9 @@ export class PrimaryService {
   }): Promise<Response> {
     try {
       const { user_id, address } = input;
+      const address_lowercase = address.toLowerCase();
       const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
-        address,
+        address: address_lowercase,
         user_id,
       });
       if (!check_valid_primary_wallet.success) {
@@ -141,7 +144,7 @@ export class PrimaryService {
       const unsetPrimaryWallet = await this.walletModel.findOneAndUpdate(
         {
           user_id: new Types.ObjectId(user_id),
-          address: address,
+          address: address_lowercase,
         },
         { is_primary: false },
       );
@@ -203,8 +206,9 @@ export class PrimaryService {
   }): Promise<Response> {
     try {
       const { user_id, address } = input;
+      const address_lowercase = address.toLowerCase();
       const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
-        address,
+        address: address_lowercase,
         user_id,
       });
       if (!check_valid_primary_wallet.success) {
@@ -216,7 +220,7 @@ export class PrimaryService {
       }
       const set_primary_wallet = await this.walletModel.findOneAndUpdate(
         {
-          address: address,
+          address: address_lowercase,
           user_id: new Types.ObjectId(user_id),
         },
         { is_primary: true },
@@ -249,6 +253,7 @@ export class PrimaryService {
     user_id: string;
   }): Promise<Response<WalletDoc>> {
     const { address, user_id } = input;
+    const address_lowercase = address.toLowerCase();
     const is_user_primary_wallet = await this.userPrimaryWallet({ user_id });
     if (is_user_primary_wallet) {
       return {
@@ -257,7 +262,7 @@ export class PrimaryService {
         message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_EXISTS,
       };
     }
-    const wallet = await this.getWallet({ address });
+    const wallet = await this.getWallet({ address: address_lowercase });
     const is_user_wallet = this.isUserWallet({ wallet, user_id });
     if (!is_user_wallet) {
       return {
@@ -283,7 +288,10 @@ export class PrimaryService {
   }
   private async getWallet(input: { address: string }): Promise<WalletDoc> {
     const { address } = input;
-    const wallet = await this.walletModel.findOne({ address });
+    const address_lowercase = address.toLowerCase();
+    const wallet = await this.walletModel.findOne({
+      address: address_lowercase,
+    });
     return wallet as WalletDoc;
   }
 

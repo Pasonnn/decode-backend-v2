@@ -26,8 +26,11 @@ export class LinkService {
   async generateLinkChallenge(input: { address: string }): Promise<Response> {
     try {
       const { address } = input;
+      const address_lowercase = address.toLowerCase();
       // Check if wallet is already linked
-      const existingWallet = await this.walletExists({ address });
+      const existingWallet = await this.walletExists({
+        address: address_lowercase,
+      });
       if (existingWallet) {
         return {
           success: false,
@@ -36,20 +39,20 @@ export class LinkService {
         };
       }
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
-        address,
+        address: address_lowercase,
         message: WALLET_CONSTANTS.CHALLENGE.NONCE.MESSAGE_TEMPLATE.LINK,
       });
       if (!nonceMessage) {
         return {
           success: false,
           statusCode: HttpStatus.BAD_REQUEST,
-          message: 'Failed to generate link challenge',
+          message: MESSAGES.CHALLENGE.CHALLENGE_GENERATION_FAILED,
         };
       }
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: 'Link challenge generated successfully',
+        message: MESSAGES.SUCCESS.CHALLENGE_GENERATED,
         data: {
           nonceMessage: nonceMessage,
         },
@@ -71,8 +74,9 @@ export class LinkService {
   }): Promise<Response> {
     try {
       const { address, signature, user_id } = input;
+      const address_lowercase = address.toLowerCase();
       const signatureIsValid = await this.cryptoUtils.validateNonceMessage({
-        address,
+        address: address_lowercase,
         signature,
       });
       if (!signatureIsValid) {
@@ -83,7 +87,10 @@ export class LinkService {
         };
       }
       // Link wallet
-      const linkedWallet = await this.linkWallet({ user_id, address });
+      const linkedWallet = await this.linkWallet({
+        user_id,
+        address: address_lowercase,
+      });
       if (!linkedWallet.success) {
         return linkedWallet;
       }
@@ -108,8 +115,9 @@ export class LinkService {
   }): Promise<Response> {
     try {
       const { user_id, address } = input;
+      const address_lowercase = address.toLowerCase();
       const validUnlinkWallet = await this.validUnlinkWallet({
-        address,
+        address: address_lowercase,
         user_id,
       });
       if (!validUnlinkWallet) {
@@ -120,7 +128,7 @@ export class LinkService {
         };
       }
       const deletedWallet = await this.walletModel.deleteOne({
-        address,
+        address: address_lowercase,
         user_id: new Types.ObjectId(user_id),
       });
       if (!deletedWallet) {
@@ -180,7 +188,10 @@ export class LinkService {
   }): Promise<Response> {
     try {
       const { user_id, address } = input;
-      const existingWallet = await this.walletExists({ address });
+      const address_lowercase = address.toLowerCase();
+      const existingWallet = await this.walletExists({
+        address: address_lowercase,
+      });
       if (existingWallet) {
         return {
           success: false,
@@ -190,7 +201,7 @@ export class LinkService {
       }
       const newWallet = await this.walletModel.create({
         user_id: new Types.ObjectId(user_id),
-        address,
+        address: address_lowercase,
       });
       return {
         success: true,
@@ -211,8 +222,9 @@ export class LinkService {
   private async isPrimaryWallet(input: { address: string }): Promise<boolean> {
     try {
       const { address } = input;
+      const address_lowercase = address.toLowerCase();
       const primaryWallet = await this.walletModel.findOne({
-        address,
+        address: address_lowercase,
         is_primary: true,
       });
       if (primaryWallet) {
@@ -230,8 +242,9 @@ export class LinkService {
     user_id: string;
   }): Promise<boolean> {
     const { address, user_id } = input;
+    const address_lowercase = address.toLowerCase();
     const wallet = await this.walletModel.findOne({
-      address,
+      address: address_lowercase,
       user_id: new Types.ObjectId(user_id),
     });
     if (!wallet) {
@@ -248,7 +261,10 @@ export class LinkService {
 
   private async walletExists(input: { address: string }): Promise<boolean> {
     const { address } = input;
-    const wallet = await this.walletModel.findOne({ address });
+    const address_lowercase = address.toLowerCase();
+    const wallet = await this.walletModel.findOne({
+      address: address_lowercase,
+    });
     return wallet ? true : false;
   }
 }
