@@ -141,9 +141,6 @@ export class ProfileService {
       }
       user.bio = bio;
       await user.save();
-      await this.neo4jdbUpdateUserService
-        .emit('update_user_request', user as UserDoc)
-        .toPromise();
       return {
         success: true,
         statusCode: HttpStatus.OK,

@@ -8,29 +8,16 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 @Injectable()
 export class RabbitMQInfrastructure implements OnModuleInit {
   private readonly logger = new Logger(RabbitMQInfrastructure.name);
-  private createUserClient: ClientProxy;
-  private updateUserClient: ClientProxy;
+  private syncClient: ClientProxy;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly userSyncService: UserSyncService,
   ) {
-    this.createUserClient = ClientProxyFactory.create({
+    this.syncClient = ClientProxyFactory.create({
       options: {
         urls: [this.configService.get('RABBITMQ_URL', 'amqp://localhost:5672')],
-        queue: 'create_user_queue',
-        queueOptions: {
-          durable: true,
-        },
-        noAck: false,
-        prefetchCount: 1,
-      },
-    });
-
-    this.updateUserClient = ClientProxyFactory.create({
-      options: {
-        urls: [this.configService.get('RABBITMQ_URL', 'amqp://localhost:5672')],
-        queue: 'update_user_queue',
+        queue: 'neo4j_sync_queue',
         queueOptions: {
           durable: true,
         },
@@ -42,8 +29,7 @@ export class RabbitMQInfrastructure implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      await this.createUserClient.connect();
-      await this.updateUserClient.connect();
+      await this.syncClient.connect();
       this.logger.log('Connected to RabbitMQ successfully');
 
       // Start consuming messages
@@ -64,9 +50,7 @@ export class RabbitMQInfrastructure implements OnModuleInit {
 
   async sendCreateUserRequest(request: CreateUserDto): Promise<void> {
     try {
-      await this.createUserClient
-        .emit('create_user_request', request)
-        .toPromise();
+      await this.syncClient.emit('create_user_request', request).toPromise();
       this.logger.log(`Create user request queued: ${request._id}`);
     } catch (error) {
       this.logger.error(
@@ -79,9 +63,7 @@ export class RabbitMQInfrastructure implements OnModuleInit {
 
   async sendUpdateUserRequest(request: UpdateUserDto): Promise<void> {
     try {
-      await this.updateUserClient
-        .emit('update_user_request', request)
-        .toPromise();
+      await this.syncClient.emit('update_user_request', request).toPromise();
       this.logger.log(`Update user request queued: ${request._id}`);
     } catch (error) {
       this.logger.error(
@@ -115,6 +97,7 @@ export class RabbitMQInfrastructure implements OnModuleInit {
     const startTime = Date.now();
     this.logger.log(`Processing update user request ${request._id}`);
     try {
+      console.log('infrastructure', request);
       await this.userSyncService.updateUser(request);
       const duration = Date.now() - startTime;
       this.logger.log(

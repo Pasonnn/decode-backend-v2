@@ -1,4 +1,10 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import {
+  HttpStatus,
+  Logger,
+  Injectable,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
@@ -12,10 +18,12 @@ import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 import { BlockService } from './block.service';
 import { UserService } from './user.service';
 
+@Injectable()
 export class FollowService {
   private readonly logger = new Logger(FollowService.name);
   constructor(
     private readonly neo4jInfrastructure: Neo4jInfrastructure,
+    @Inject(forwardRef(() => BlockService))
     private readonly blockService: BlockService,
     private readonly userService: UserService,
   ) {

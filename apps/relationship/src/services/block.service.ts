@@ -1,4 +1,4 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
@@ -12,6 +12,7 @@ import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 import { FollowService } from './follow.service';
 import { UserService } from './user.service';
 
+@Injectable()
 export class BlockService {
   private readonly logger = new Logger(BlockService.name);
   constructor(

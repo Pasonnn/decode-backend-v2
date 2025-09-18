@@ -7,10 +7,10 @@ export type UserNeo4jDoc<T = unknown[]> = {
   avatar_ipfs_hash: string;
   following_number: number;
   followers_number: number;
-  following?: boolean;
-  follower?: boolean;
-  blocked?: boolean;
-  blocked_by?: boolean;
+  is_following?: boolean;
+  is_follower?: boolean;
+  is_blocked?: boolean;
+  is_blocked_by?: boolean;
   mutual_followers_number?: number;
   mutual_followers_list?: T;
 };
