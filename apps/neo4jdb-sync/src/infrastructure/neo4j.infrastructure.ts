@@ -77,7 +77,13 @@ export class Neo4jInfrastructure implements OnModuleInit {
       }
       // Create user node
       await session.run(
-        'CREATE (u:User {user_id: $user_id, username: $username, role: $role, display_name: $display_name, avatar_ipfs_hash: $avatar_ipfs_hash})',
+        `CREATE (u:User {user_id: $user_id,
+        username: $username,
+        role: $role,
+        display_name: $display_name,
+        avatar_ipfs_hash: $avatar_ipfs_hash,
+        following_number: $following_number,
+        followers_number: $followers_number})`,
         {
           user_id: user._id.toString(),
           username: user.username,
@@ -105,7 +111,8 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       // Find user node
       const result = await session.run(
-        'MATCH (u:User {user_id: $user_id}) RETURN u',
+        `MATCH (u:User {user_id: $user_id})
+        RETURN u`,
         {
           user_id: user._id.toString(),
         },
@@ -114,25 +121,14 @@ export class Neo4jInfrastructure implements OnModuleInit {
         this.logger.log(`User node not found: ${user._id}`);
         return false;
       }
-      // Check which fields are different
-      const differentFields = Object.keys(user).filter(
-        (key) => user[key] !== result.records[0].get(key),
-      );
-      if (differentFields.length === 0) {
-        this.logger.log(`User node is up to date: ${user._id}`);
-        return true;
-      }
       // Update user node
-      await session.run(
-        'MATCH (u:User {user_id: $user_id}) SET u.username = $username, u.role = $role, u.display_name = $display_name, u.avatar_ipfs_hash = $avatar_ipfs_hash',
-        {
-          user_id: user._id.toString(),
-          username: user.username,
-          role: user.role,
-          display_name: user.display_name,
-          avatar_ipfs_hash: user.avatar_ipfs_hash,
-        },
-      );
+      const query = `MATCH (u:User {user_id: "${user._id.toString()}"})
+        SET u.username = "${user.username}",
+        u.role = "${user.role}",
+        u.display_name = "${user.display_name}",
+        u.avatar_ipfs_hash = "${user.avatar_ipfs_hash}"`;
+      console.log(query);
+      await session.run(query);
       this.logger.log(`User node updated successfully: ${user._id}`);
       return true;
     } catch (error) {

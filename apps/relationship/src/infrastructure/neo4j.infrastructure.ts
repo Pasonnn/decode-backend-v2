@@ -66,15 +66,14 @@ export class Neo4jInfrastructure implements OnModuleInit {
 
   async findUserNode(input: { user_id: string }): Promise<UserNeo4jDoc | null> {
     const session = this.getSession();
+    const { user_id } = input;
     try {
       const result = await session.run(
-        'MATCH (u:User {user_id: $user_id}) RETURN u',
-        {
-          user_id: input.user_id,
-        },
+        `MATCH (u:User {user_id: "${user_id}"})
+        RETURN u`,
       );
       if (result.records.length === 0) {
-        this.logger.log(`User node not found: ${input.user_id}`);
+        this.logger.log(`User node not found: ${user_id}`);
         return null;
       }
       return result.records[0].get('u') as UserNeo4jDoc;
@@ -98,12 +97,9 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       // Find relationship_type of user_id_from to user_id_to
       const result = await session.run(
-        'MATCH (s)-[r:$relationship_type]->(t) WHERE s.user_id = $from_user_id AND t.user_id = $to_user_id RETURN r',
-        {
-          relationship_type: relationship_type,
-          from_user_id: user_id_from,
-          to_user_id: user_id_to,
-        },
+        `MATCH (s)-[r:${relationship_type}]->(t)
+        WHERE s.user_id = "${user_id_from}" AND t.user_id = "${user_id_to}"
+        RETURN r`,
       );
       if (result.records.length === 0) {
         this.logger.log(
@@ -132,13 +128,9 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id, relationship_type, page, limit } = input;
     try {
       const result = await session.run(
-        'MATCH (s)-[r:$relationship_type]->(t) WHERE s.user_id = $user_id RETURN t SKIP $skip LIMIT $limit',
-        {
-          relationship_type: relationship_type,
-          user_id: user_id,
-          skip: page * limit,
-          limit: limit,
-        },
+        `MATCH (s)-[r:${relationship_type}]->(t)
+        WHERE s.user_id = "${user_id}"
+        RETURN t SKIP ${page * limit} LIMIT ${limit}`,
       );
       if (result.records.length === 0) {
         this.logger.log(`Relationship not found: ${user_id}`);
@@ -165,13 +157,9 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id, relationship_type, page, limit } = input;
     try {
       const result = await session.run(
-        'MATCH (s)-[r:$relationship_type]->(t) WHERE t.user_id = $user_id RETURN s SKIP $skip LIMIT $limit',
-        {
-          relationship_type: relationship_type,
-          user_id: user_id,
-          skip: page * limit,
-          limit: limit,
-        },
+        `MATCH (s)-[r:${relationship_type}]->(t)
+        WHERE t.user_id = "${user_id}"
+        RETURN s SKIP ${page * limit} LIMIT ${limit}`,
       );
       if (result.records.length === 0) {
         this.logger.log(`Relationship not found: ${user_id}`);
@@ -196,13 +184,11 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id_from, user_id_to } = input;
     try {
       // Create relationship
+      console.log('Neo4j Infrastructure', input);
       await session.run(
-        `MATCH (s:User {user_id: $user_id_from}), (t:User {user_id: $user_id_to}) CREATE (s)-[r:FOLLOWING]->(t);
-        SET s.following_number = s.following_number + 1, t.followers_number = t.followers_number + 1`,
-        {
-          user_id_from: user_id_from,
-          user_id_to: user_id_to,
-        },
+        `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"})
+         CREATE (s)-[r:FOLLOWING]->(t)
+         SET s.following_number = s.following_number + 1, t.followers_number = t.followers_number + 1`,
       );
       this.logger.log(
         `User following relationship created successfully: ${user_id_from} to ${user_id_to}`,
@@ -227,11 +213,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       // Create relationship
       await session.run(
-        `MATCH (s:User {user_id: $user_id_from}), (t:User {user_id: $user_id_to}) CREATE (s)-[r:BLOCKED]->(t);`,
-        {
-          user_id_from: user_id_from,
-          user_id_to: user_id_to,
-        },
+        `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"}) CREATE (s)-[r:BLOCKED]->(t);`,
       );
       this.logger.log(
         `User blocked relationship created successfully: ${user_id_from} to ${user_id_to}`,
@@ -256,12 +238,8 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       // Delete relationship
       await session.run(
-        `MATCH (s:User {user_id: $user_id_from})-[r:FOLLOWING]->(t:User {user_id: $user_id_to}) DELETE r;
+        `MATCH (s:User {user_id: "${user_id_from}"})-[r:FOLLOWING]->(t:User {user_id: "${user_id_to}"}) DELETE r;
         SET s.following_number = s.following_number - 1, t.followers_number = t.followers_number - 1`,
-        {
-          user_id_from: user_id_from,
-          user_id_to: user_id_to,
-        },
       );
       this.logger.log(
         `User following relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
@@ -286,11 +264,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       // Delete relationship
       await session.run(
-        `MATCH (s:User {user_id: $user_id_from})-[r:BLOCKED]->(t:User {user_id: $user_id_to}) DELETE r;`,
-        {
-          user_id_from: user_id_from,
-          user_id_to: user_id_to,
-        },
+        `MATCH (s:User {user_id: "${user_id_from}"})-[r:BLOCKED]->(t:User {user_id: "${user_id_to}"}) DELETE r;`,
       );
       this.logger.log(
         `User blocked relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
@@ -386,15 +360,10 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id, page, limit } = input;
     try {
       const result = await session.run(
-        `MATCH (me:User {user_id: ${user_id}})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
+        `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
         WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
         RETURN DISTINCT fof.user_id, fof.username, fof.display_name, fof.avatar_ipfs_hash
-        SKIP $skip LIMIT $limit`,
-        {
-          user_id: user_id,
-          skip: page * limit,
-          limit: limit,
-        },
+        SKIP ${page * limit} LIMIT ${limit}`,
       );
       if (result.records.length === 0) {
         this.logger.log(
@@ -422,15 +391,10 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id, page, limit } = input;
     try {
       const result = await session.run(
-        `MATCH (me:User {user_id: $user_id})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)-[:FOLLOWING]->(fofof)
+        `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)-[:FOLLOWING]->(fofof)
         WHERE NOT (me)-[:FOLLOWING]->(fofof) AND me <> fofof AND fof <> fofof
         RETURN DISTINCT fofof.user_id, fofof.username, fofof.display_name, fofof.avatar_ipfs_hash
-        SKIP $skip LIMIT $limit`,
-        {
-          user_id: user_id,
-          skip: page * limit,
-          limit: limit,
-        },
+        SKIP ${page * limit} LIMIT ${limit}`,
       );
       if (result.records.length === 0) {
         this.logger.log(
@@ -458,12 +422,9 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id } = input;
     try {
       const result = await session.run(
-        `MATCH (me:User {user_id: $user_id})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
+        `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
         WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
         RETURN COUNT(DISTINCT fof.user_id)`,
-        {
-          user_id: user_id,
-        },
       );
       return result.records[0].get('count') as number;
     } catch (error) {
@@ -485,12 +446,8 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       // get followers of user_id_from who I am following
       const result = await session.run(
-        `MATCH (s:User {user_id: $user_id_from})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(t:User {user_id: $user_id_to})
+        `MATCH (s:User {user_id: "${user_id_from}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(t:User {user_id: "${user_id_to}"})
         RETURN DISTINCT follower.user_id, follower.username, follower.display_name, follower.avatar_ipfs_hash`,
-        {
-          user_id_from: user_id_from,
-          user_id_to: user_id_to,
-        },
       );
       if (result.records.length === 0) {
         this.logger.log(`No mutual followers found for user: ${user_id_from}`);
@@ -519,17 +476,11 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id, params, page, limit } = input;
     try {
       const result = await session.run(
-        `MATCH (s:User)-[:FOLLOWING]->(t:User {user_id: $user_id})
-         WHERE (toLower(t.username) CONTAINS toLower($params)
-            OR toLower(t.display_name) CONTAINS toLower($params)
+        `MATCH (s:User)-[:FOLLOWING]->(t:User {user_id: "${user_id}"})
+         WHERE (toLower(t.username) CONTAINS toLower("${params}")
+            OR toLower(t.display_name) CONTAINS toLower("${params}")
          RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash
-         SKIP $skip LIMIT $limit`,
-        {
-          user_id: user_id,
-          params: params,
-          skip: page * limit,
-          limit: limit,
-        },
+         SKIP ${page * limit} LIMIT ${limit}`,
       );
       if (result.records.length === 0) {
         this.logger.log(`No followers found for params: ${params}`);
@@ -556,17 +507,11 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id, params, page, limit } = input;
     try {
       const result = await session.run(
-        `MATCH (s:User {user_id: $user_id})-[:FOLLOWING]->(t:User)
-         WHERE toLower(t.username) CONTAINS toLower($params)
-            OR toLower(t.display_name) CONTAINS toLower($params)
+        `MATCH (s:User {user_id: "${user_id}"})-[:FOLLOWING]->(t:User)
+         WHERE toLower(t.username) CONTAINS toLower("${params}")
+            OR toLower(t.display_name) CONTAINS toLower("${params}")
          RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash
-         SKIP $skip LIMIT $limit`,
-        {
-          user_id: user_id,
-          params: params,
-          skip: page * limit,
-          limit: limit,
-        },
+         SKIP ${page * limit} LIMIT ${limit}`,
       );
       if (result.records.length === 0) {
         this.logger.log(`No following found for params: ${params}`);

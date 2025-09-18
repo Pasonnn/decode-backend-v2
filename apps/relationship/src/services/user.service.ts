@@ -1,4 +1,4 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Logger, Injectable } from '@nestjs/common';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
@@ -11,6 +11,7 @@ import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 // Service Import
 import { MutualService } from './mutual.service';
 
+@Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
   constructor(
@@ -29,9 +30,11 @@ export class UserService {
     const { user_id_from, user_id_to } = input;
     try {
       // Get user
+      console.log('User Service', input);
       const user_response = await this.neo4jInfrastructure.findUserNode({
         user_id: user_id_to,
       });
+      console.log(user_response);
       if (!user_response) {
         return {
           success: false,
@@ -88,24 +91,15 @@ export class UserService {
             return null;
           }
           const user_data = user_response.data;
-          // Get mutual followers
-          const mutual_followers_response: ResponseWithCount<UserNeo4jDoc> =
-            await this.mutualService.getMutualFollowers({
-              user_id_from: from_user_id,
-              user_id_to: user.user_id,
-            });
-          if (
-            !mutual_followers_response.success ||
-            !mutual_followers_response.data
-          ) {
+
+          const filtered_user = await this.filterUser({
+            user: user_data,
+            user_id_from: from_user_id,
+          });
+          if (!filtered_user) {
             return null;
           }
-          // Update user response
-          user_data.mutual_followers_number =
-            mutual_followers_response.data.meta.total;
-          user_data.mutual_followers_list =
-            mutual_followers_response.data.users;
-          return user_data;
+          return filtered_user;
         }),
       );
       const full_users_response_filtered = full_users_response.filter(
@@ -158,10 +152,10 @@ export class UserService {
       const mutual_followers_list = mutual_followers_response.data.users;
       const mutual_followers_number = mutual_followers_response.data.meta.total;
       // Update user response
-      user.following = is_following;
-      user.follower = is_follower;
-      user.blocked = is_blocked;
-      user.blocked_by = is_blocked_by;
+      user.is_following = is_following;
+      user.is_follower = is_follower;
+      user.is_blocked = is_blocked;
+      user.is_blocked_by = is_blocked_by;
       user.mutual_followers_list = mutual_followers_list;
       user.mutual_followers_number = mutual_followers_number;
       return user;

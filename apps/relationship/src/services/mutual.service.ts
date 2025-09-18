@@ -1,4 +1,4 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Logger, Injectable } from '@nestjs/common';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
@@ -7,6 +7,7 @@ import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
 import type { ResponseWithCount } from '../interfaces/response-with-count.interface';
 import type { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 
+@Injectable()
 export class MutualService {
   private readonly logger = new Logger(MutualService.name);
   constructor(private readonly neo4jInfrastructure: Neo4jInfrastructure) {

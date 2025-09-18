@@ -1,4 +1,4 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
@@ -31,6 +31,7 @@ import { UserService } from './user.service';
  * @author Development Team
  * @since 1.0.0
  */
+@Injectable()
 export class SuggestService {
   private readonly logger = new Logger(SuggestService.name);
   constructor(

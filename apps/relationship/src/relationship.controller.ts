@@ -133,6 +133,8 @@ export class RelationshipController {
     });
   }
 
+  // Add two more endpoints to view following and followers of other users
+
   // ==================== BLOCK ENDPOINTS ====================
 
   @Post('block/blocking')

@@ -53,17 +53,8 @@ import configuration from './config/configuration';
     RedisInfrastructure,
   ],
   exports: [
-    // Export services that might be used by other modules
-    UserService,
-    FollowService,
-    BlockService,
-    SuggestService,
-    MutualService,
-    SearchService,
-
     // Infrastructure
     Neo4jInfrastructure,
-    RedisInfrastructure,
   ],
 })
 export class RelationshipModule {}
