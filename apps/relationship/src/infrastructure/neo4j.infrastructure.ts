@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import neo4j, { Driver, Session, auth } from 'neo4j-driver';
 import { PaginationResponse } from '../interfaces/pagination-response.interface';
 import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
+import { NodeResponse } from '../interfaces/node-response.interface';
+
 @Injectable()
 export class Neo4jInfrastructure implements OnModuleInit {
   private readonly logger = new Logger(Neo4jInfrastructure.name);
@@ -64,19 +66,20 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
-  async findUserNode(input: { user_id: string }): Promise<UserNeo4jDoc | null> {
+  async findUserNode(input: {
+    user_id: string;
+  }): Promise<NodeResponse<UserNeo4jDoc> | null> {
     const session = this.getSession();
     const { user_id } = input;
     try {
-      const result = await session.run(
-        `MATCH (u:User {user_id: "${user_id}"})
-        RETURN u`,
-      );
+      const query = `MATCH (u:User {user_id: "${user_id}"})
+      RETURN u`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(`User node not found: ${user_id}`);
         return null;
       }
-      return result.records[0].get('u') as UserNeo4jDoc;
+      return result.records[0].get('u') as NodeResponse<UserNeo4jDoc>;
     } catch (error) {
       this.logger.error(
         `Failed to find user node: ${error instanceof Error ? error.message : String(error)}`,
@@ -96,11 +99,10 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id_from, user_id_to, relationship_type } = input;
     try {
       // Find relationship_type of user_id_from to user_id_to
-      const result = await session.run(
-        `MATCH (s)-[r:${relationship_type}]->(t)
-        WHERE s.user_id = "${user_id_from}" AND t.user_id = "${user_id_to}"
-        RETURN r`,
-      );
+      const query = `MATCH (s)-[r:${relationship_type}]->(t)
+      WHERE s.user_id = "${user_id_from}" AND t.user_id = "${user_id_to}"
+      RETURN r`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(
           `Relationship not found: ${user_id_from} to ${user_id_to}`,
@@ -123,20 +125,21 @@ export class Neo4jInfrastructure implements OnModuleInit {
     relationship_type: string;
     page: number;
     limit: number;
-  }): Promise<UserNeo4jDoc[]> {
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
     const session = this.getSession();
     const { user_id, relationship_type, page, limit } = input;
     try {
-      const result = await session.run(
-        `MATCH (s)-[r:${relationship_type}]->(t)
-        WHERE s.user_id = "${user_id}"
-        RETURN t SKIP ${page * limit} LIMIT ${limit}`,
-      );
+      const query = `MATCH (s:User {user_id: "${user_id}"})-[r:${relationship_type}]->(t)
+      RETURN t SKIP ${page * limit} LIMIT ${limit}`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(`Relationship not found: ${user_id}`);
         return [];
       }
-      return result.records.map((record) => record.get('t') as UserNeo4jDoc);
+      const users = result.records.map(
+        (record) => record.get('t') as NodeResponse<UserNeo4jDoc>,
+      );
+      return users;
     } catch (error) {
       this.logger.error(
         `Failed to find user from relationship: ${error instanceof Error ? error.message : String(error)}`,
@@ -152,20 +155,21 @@ export class Neo4jInfrastructure implements OnModuleInit {
     relationship_type: string;
     page: number;
     limit: number;
-  }): Promise<UserNeo4jDoc[]> {
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
     const session = this.getSession();
     const { user_id, relationship_type, page, limit } = input;
     try {
-      const result = await session.run(
-        `MATCH (s)-[r:${relationship_type}]->(t)
-        WHERE t.user_id = "${user_id}"
-        RETURN s SKIP ${page * limit} LIMIT ${limit}`,
-      );
+      const query = `MATCH (s)-[r:${relationship_type}]->(t)
+      WHERE t.user_id = "${user_id}"
+      RETURN s SKIP ${page * limit} LIMIT ${limit}`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(`Relationship not found: ${user_id}`);
         return [];
       }
-      return result.records.map((record) => record.get('s') as UserNeo4jDoc);
+      return result.records.map(
+        (record) => record.get('s') as NodeResponse<UserNeo4jDoc>,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to find user to relationship: ${error instanceof Error ? error.message : String(error)}`,
@@ -184,12 +188,10 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id_from, user_id_to } = input;
     try {
       // Create relationship
-      console.log('Neo4j Infrastructure', input);
-      await session.run(
-        `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"})
+      const query = `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"})
          CREATE (s)-[r:FOLLOWING]->(t)
-         SET s.following_number = s.following_number + 1, t.followers_number = t.followers_number + 1`,
-      );
+         SET s.following_number = s.following_number + 1, t.followers_number = t.followers_number + 1`;
+      await session.run(query);
       this.logger.log(
         `User following relationship created successfully: ${user_id_from} to ${user_id_to}`,
       );
@@ -212,9 +214,9 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id_from, user_id_to } = input;
     try {
       // Create relationship
-      await session.run(
-        `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"}) CREATE (s)-[r:BLOCKED]->(t);`,
-      );
+      const query = `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"})
+      CREATE (s)-[r:BLOCKED]->(t);`;
+      await session.run(query);
       this.logger.log(
         `User blocked relationship created successfully: ${user_id_from} to ${user_id_to}`,
       );
@@ -237,10 +239,10 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id_from, user_id_to } = input;
     try {
       // Delete relationship
-      await session.run(
-        `MATCH (s:User {user_id: "${user_id_from}"})-[r:FOLLOWING]->(t:User {user_id: "${user_id_to}"}) DELETE r;
-        SET s.following_number = s.following_number - 1, t.followers_number = t.followers_number - 1`,
-      );
+      const query = `MATCH (s:User {user_id: "${user_id_from}"})-[r:FOLLOWING]->(t:User {user_id: "${user_id_to}"})
+      DELETE r
+      SET s.following_number = s.following_number - 1, t.followers_number = t.followers_number - 1`;
+      await session.run(query);
       this.logger.log(
         `User following relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
       );
@@ -263,9 +265,9 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const { user_id_from, user_id_to } = input;
     try {
       // Delete relationship
-      await session.run(
-        `MATCH (s:User {user_id: "${user_id_from}"})-[r:BLOCKED]->(t:User {user_id: "${user_id_to}"}) DELETE r;`,
-      );
+      const query = `MATCH (s:User {user_id: "${user_id_from}"})-[r:BLOCKED]->(t:User {user_id: "${user_id_to}"})
+      DELETE r;`;
+      await session.run(query);
       this.logger.log(
         `User blocked relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
       );
@@ -284,7 +286,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
     user_id: string;
     page: number;
     limit: number;
-  }): Promise<PaginationResponse<UserNeo4jDoc[]>> {
+  }): Promise<PaginationResponse<NodeResponse<UserNeo4jDoc>[]>> {
     const session = this.getSession();
     const { user_id, page, limit } = input;
     try {
@@ -296,11 +298,12 @@ export class Neo4jInfrastructure implements OnModuleInit {
         second_degree_suggestions_count / limit,
       );
       if (page < third_degree_start_page) {
-        const second_degree_suggestions = await this.secondDegreeSuggestions({
-          user_id: user_id,
-          page: page,
-          limit: limit,
-        });
+        const second_degree_suggestions: NodeResponse<UserNeo4jDoc>[] =
+          await this.secondDegreeSuggestions({
+            user_id: user_id,
+            page: page,
+            limit: limit,
+          });
         return {
           success: true,
           statusCode: HttpStatus.OK,
@@ -316,11 +319,12 @@ export class Neo4jInfrastructure implements OnModuleInit {
           },
         };
       } else {
-        const third_degree_suggestions = await this.thirdDegreeSuggestions({
-          user_id: user_id,
-          page: third_degree_start_page,
-          limit: limit,
-        });
+        const third_degree_suggestions: NodeResponse<UserNeo4jDoc>[] =
+          await this.thirdDegreeSuggestions({
+            user_id: user_id,
+            page: third_degree_start_page,
+            limit: limit,
+          });
         const is_last_page = third_degree_suggestions.length < limit;
         return {
           success: true,
@@ -355,23 +359,24 @@ export class Neo4jInfrastructure implements OnModuleInit {
     user_id: string;
     page: number;
     limit: number;
-  }): Promise<UserNeo4jDoc[]> {
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
     const session = this.getSession();
     const { user_id, page, limit } = input;
     try {
-      const result = await session.run(
-        `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
-        WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
-        RETURN DISTINCT fof.user_id, fof.username, fof.display_name, fof.avatar_ipfs_hash
-        SKIP ${page * limit} LIMIT ${limit}`,
-      );
+      const query = `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
+      WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
+      RETURN DISTINCT fof.user_id, fof.username, fof.display_name, fof.avatar_ipfs_hash
+      SKIP ${page * limit} LIMIT ${limit}`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(
           `No second degree suggestions found for user: ${user_id}`,
         );
         return [];
       }
-      return result.records.map((record) => record.get('fof') as UserNeo4jDoc);
+      return result.records.map(
+        (record) => record.get('fof') as NodeResponse<UserNeo4jDoc>,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to get second degree suggestions: ${error instanceof Error ? error.message : String(error)}`,
@@ -386,16 +391,15 @@ export class Neo4jInfrastructure implements OnModuleInit {
     user_id: string;
     page: number;
     limit: number;
-  }): Promise<UserNeo4jDoc[]> {
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
     const session = this.getSession();
     const { user_id, page, limit } = input;
     try {
-      const result = await session.run(
-        `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)-[:FOLLOWING]->(fofof)
-        WHERE NOT (me)-[:FOLLOWING]->(fofof) AND me <> fofof AND fof <> fofof
-        RETURN DISTINCT fofof.user_id, fofof.username, fofof.display_name, fofof.avatar_ipfs_hash
-        SKIP ${page * limit} LIMIT ${limit}`,
-      );
+      const query = `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)-[:FOLLOWING]->(fofof)
+      WHERE NOT (me)-[:FOLLOWING]->(fofof) AND me <> fofof AND fof <> fofof
+      RETURN DISTINCT fofof.user_id, fofof.username, fofof.display_name, fofof.avatar_ipfs_hash
+      SKIP ${page * limit} LIMIT ${limit}`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(
           `No third degree suggestions found for user: ${user_id}`,
@@ -403,7 +407,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
         return [];
       }
       return result.records.map(
-        (record) => record.get('fofof') as UserNeo4jDoc,
+        (record) => record.get('fofof') as NodeResponse<UserNeo4jDoc>,
       );
     } catch (error) {
       this.logger.error(
@@ -421,11 +425,10 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const session = this.getSession();
     const { user_id } = input;
     try {
-      const result = await session.run(
-        `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
-        WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
-        RETURN COUNT(DISTINCT fof.user_id)`,
-      );
+      const query = `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
+      WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
+      RETURN COUNT(DISTINCT fof.user_id)`;
+      const result = await session.run(query);
       return result.records[0].get('count') as number;
     } catch (error) {
       this.logger.error(
@@ -440,21 +443,19 @@ export class Neo4jInfrastructure implements OnModuleInit {
   async getMutualFollowers(input: {
     user_id_from: string;
     user_id_to: string;
-  }): Promise<UserNeo4jDoc[]> {
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
     const session = this.getSession();
     const { user_id_from, user_id_to } = input;
     try {
       // get followers of user_id_from who I am following
-      const result = await session.run(
-        `MATCH (s:User {user_id: "${user_id_from}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(t:User {user_id: "${user_id_to}"})
-        RETURN DISTINCT follower.user_id, follower.username, follower.display_name, follower.avatar_ipfs_hash`,
-      );
+      const query = `MATCH (s:User {user_id: "${user_id_from}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(t:User {user_id: "${user_id_to}"}) RETURN DISTINCT follower`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(`No mutual followers found for user: ${user_id_from}`);
         return [];
       }
       return result.records.map(
-        (record) => record.get('follower') as UserNeo4jDoc,
+        (record) => record.get('follower') as NodeResponse<UserNeo4jDoc>,
       );
     } catch (error) {
       this.logger.error(
@@ -471,22 +472,23 @@ export class Neo4jInfrastructure implements OnModuleInit {
     params: string;
     page: number;
     limit: number;
-  }): Promise<UserNeo4jDoc[]> {
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
     const session = this.getSession();
     const { user_id, params, page, limit } = input;
     try {
-      const result = await session.run(
-        `MATCH (s:User)-[:FOLLOWING]->(t:User {user_id: "${user_id}"})
-         WHERE (toLower(t.username) CONTAINS toLower("${params}")
-            OR toLower(t.display_name) CONTAINS toLower("${params}")
+      const query = `MATCH (s:User)-[:FOLLOWING]->(t:User {user_id: "${user_id}"})
+      WHERE (toLower(t.username) CONTAINS toLower("${params}")
+         OR toLower(t.display_name) CONTAINS toLower("${params}")
          RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash
-         SKIP ${page * limit} LIMIT ${limit}`,
-      );
+         SKIP ${page * limit} LIMIT ${limit}`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(`No followers found for params: ${params}`);
         return [];
       }
-      return result.records.map((record) => record.get('t') as UserNeo4jDoc);
+      return result.records.map(
+        (record) => record.get('t') as NodeResponse<UserNeo4jDoc>,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to search followers: ${error instanceof Error ? error.message : String(error)}`,
@@ -502,22 +504,23 @@ export class Neo4jInfrastructure implements OnModuleInit {
     params: string;
     page: number;
     limit: number;
-  }): Promise<UserNeo4jDoc[]> {
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
     const session = this.getSession();
     const { user_id, params, page, limit } = input;
     try {
-      const result = await session.run(
-        `MATCH (s:User {user_id: "${user_id}"})-[:FOLLOWING]->(t:User)
-         WHERE toLower(t.username) CONTAINS toLower("${params}")
-            OR toLower(t.display_name) CONTAINS toLower("${params}")
+      const query = `MATCH (s:User {user_id: "${user_id}"})-[:FOLLOWING]->(t:User)
+      WHERE (toLower(t.username) CONTAINS toLower("${params}")
+         OR toLower(t.display_name) CONTAINS toLower("${params}")
          RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash
-         SKIP ${page * limit} LIMIT ${limit}`,
-      );
+         SKIP ${page * limit} LIMIT ${limit}`;
+      const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(`No following found for params: ${params}`);
         return [];
       }
-      return result.records.map((record) => record.get('t') as UserNeo4jDoc);
+      return result.records.map(
+        (record) => record.get('t') as NodeResponse<UserNeo4jDoc>,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to search following: ${error instanceof Error ? error.message : String(error)}`,

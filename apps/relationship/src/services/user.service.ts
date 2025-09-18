@@ -7,6 +7,7 @@ import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
 import { ResponseWithCount } from '../interfaces/response-with-count.interface';
 import type { Response } from '../interfaces/response.interface';
 import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
+import { NodeResponse } from '../interfaces/node-response.interface';
 
 // Service Import
 import { MutualService } from './mutual.service';
@@ -30,10 +31,10 @@ export class UserService {
     const { user_id_from, user_id_to } = input;
     try {
       // Get user
-      const user_response = await this.neo4jInfrastructure.findUserNode({
+      const user = (await this.neo4jInfrastructure.findUserNode({
         user_id: user_id_to,
-      });
-      if (!user_response) {
+      })) as NodeResponse<UserNeo4jDoc>;
+      if (!user) {
         return {
           success: false,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -42,7 +43,7 @@ export class UserService {
       }
       // Filter user
       const filtered_user = await this.filterUser({
-        user: user_response,
+        user: user,
         user_id_from: user_id_from,
       });
       if (!filtered_user) {
@@ -57,7 +58,7 @@ export class UserService {
         success: true,
         statusCode: HttpStatus.OK,
         message: `User fetched successfully`,
-        data: user_response,
+        data: filtered_user,
       };
     } catch (error) {
       this.logger.error(
@@ -72,7 +73,7 @@ export class UserService {
   }
 
   async filterUsers(input: {
-    users: UserNeo4jDoc[];
+    users: NodeResponse<UserNeo4jDoc>[];
     from_user_id: string;
   }): Promise<UserNeo4jDoc[]> {
     const { users, from_user_id } = input;
@@ -80,18 +81,8 @@ export class UserService {
       // Full followers response
       const full_users_response = await Promise.all(
         users.map(async (user) => {
-          // Get user
-          const user_response = await this.getUser({
-            user_id_from: from_user_id,
-            user_id_to: user.user_id,
-          });
-          if (!user_response.success || !user_response.data) {
-            return null;
-          }
-          const user_data = user_response.data;
-
           const filtered_user = await this.filterUser({
-            user: user_data,
+            user: user,
             user_id_from: from_user_id,
           });
           if (!filtered_user) {
@@ -113,33 +104,33 @@ export class UserService {
   }
 
   async filterUser(input: {
-    user: UserNeo4jDoc;
+    user: NodeResponse<UserNeo4jDoc>;
     user_id_from: string;
   }): Promise<UserNeo4jDoc | null> {
     const { user, user_id_from } = input;
-    const user_id_to = user.user_id;
+    const user_neo4j: UserNeo4jDoc = user.properties;
     try {
       // Check follow status, block status, and mutual followers
       const is_following = await this.isFollowing({
         user_id_from: user_id_from,
-        user_id_to: user_id_to,
+        user_id_to: user_neo4j.user_id,
       });
       const is_follower = await this.isFollower({
         user_id_from: user_id_from,
-        user_id_to: user_id_to,
+        user_id_to: user_neo4j.user_id,
       });
       const is_blocked = await this.isBlocked({
         user_id_from: user_id_from,
-        user_id_to: user_id_to,
+        user_id_to: user_neo4j.user_id,
       });
       const is_blocked_by = await this.isBlockedBy({
         user_id_from: user_id_from,
-        user_id_to: user_id_to,
+        user_id_to: user_neo4j.user_id,
       });
       const mutual_followers_response: ResponseWithCount<UserNeo4jDoc> =
         await this.mutualService.getMutualFollowers({
           user_id_from: user_id_from,
-          user_id_to: user_id_to,
+          user_id_to: user_neo4j.user_id,
         });
       if (
         !mutual_followers_response.success ||
@@ -150,13 +141,13 @@ export class UserService {
       const mutual_followers_list = mutual_followers_response.data.users;
       const mutual_followers_number = mutual_followers_response.data.meta.total;
       // Update user response
-      user.is_following = is_following;
-      user.is_follower = is_follower;
-      user.is_blocked = is_blocked;
-      user.is_blocked_by = is_blocked_by;
-      user.mutual_followers_list = mutual_followers_list;
-      user.mutual_followers_number = mutual_followers_number;
-      return user;
+      user_neo4j.is_following = is_following;
+      user_neo4j.is_follower = is_follower;
+      user_neo4j.is_blocked = is_blocked;
+      user_neo4j.is_blocked_by = is_blocked_by;
+      user_neo4j.mutual_followers_list = mutual_followers_list;
+      user_neo4j.mutual_followers_number = mutual_followers_number;
+      return user_neo4j;
     } catch (error) {
       this.logger.error(
         `Failed to filter user: ${error instanceof Error ? error.message : String(error)}`,

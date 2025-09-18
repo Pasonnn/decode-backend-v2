@@ -35,7 +35,9 @@ export class AuthService {
   async generateLoginChallenge(input: { address: string }): Promise<Response> {
     const { address } = input;
     try {
-      const wallet = await this.getWallet({ address });
+      const address_lowercase = address.toLowerCase();
+      // Get Wallet Data
+      const wallet = await this.getWallet({ address: address_lowercase });
       if (!wallet) {
         this.logger.error(
           `Wallet Authenticate not found for address ${address}`,
@@ -57,7 +59,7 @@ export class AuthService {
         };
       }
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
-        address,
+        address: address_lowercase,
         message: WALLET_CONSTANTS.CHALLENGE.NONCE.MESSAGE_TEMPLATE.LOGIN,
       });
       if (!nonceMessage) {
@@ -104,9 +106,10 @@ export class AuthService {
   }): Promise<Response> {
     const { address, signature, fingerprint_hashed, browser, device } = input;
     try {
+      const address_lowercase = address.toLowerCase();
       // Validate signature
       const signatureIsValid = await this.cryptoUtils.validateNonceMessage({
-        address,
+        address: address_lowercase,
         signature,
       });
       if (!signatureIsValid) {
@@ -120,7 +123,7 @@ export class AuthService {
         };
       }
       // Get Wallet Data
-      const wallet = await this.getWallet({ address });
+      const wallet = await this.getWallet({ address: address_lowercase });
       if (!wallet) {
         this.logger.error(
           `Wallet Authenticate not found for address ${address}`,
@@ -195,7 +198,10 @@ export class AuthService {
 
   private async getWallet(input: { address: string }): Promise<WalletDoc> {
     const { address } = input;
-    const wallet = await this.walletModel.findOne({ address });
+    const address_lowercase = address.toLowerCase();
+    const wallet = await this.walletModel.findOne({
+      address: address_lowercase,
+    });
     return wallet as WalletDoc;
   }
 

@@ -31,7 +31,7 @@ export class MutualService {
         statusCode: HttpStatus.OK,
         message: `Mutual followers fetched successfully`,
         data: {
-          users: mutual_followers,
+          users: mutual_followers.map((follower) => follower.properties),
           meta: {
             total: mutual_followers.length,
           },

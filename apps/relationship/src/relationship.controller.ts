@@ -83,7 +83,7 @@ export class RelationshipController {
     });
   }
 
-  @Delete('follow/unfollowing')
+  @Delete('follow/unfollow')
   @UseGuards(AuthGuard)
   async unfollow(
     @Body() body: UnfollowDto,

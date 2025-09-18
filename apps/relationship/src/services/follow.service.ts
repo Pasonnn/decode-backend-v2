@@ -41,6 +41,7 @@ export class FollowService {
     try {
       // Check if you are following yourself
       if (user_id_from === user_id_to) {
+        console.log('You are following yourself');
         return {
           success: false,
           statusCode: HttpStatus.FORBIDDEN,
@@ -111,6 +112,14 @@ export class FollowService {
   }): Promise<Response> {
     const { user_id_from, user_id_to } = input;
     try {
+      // Check if you are unfollowing yourself
+      if (user_id_from === user_id_to) {
+        return {
+          success: false,
+          statusCode: HttpStatus.FORBIDDEN,
+          message: `You cannot unfollow yourself`,
+        };
+      }
       // Check if user blocked
       const user_blocked_response = await this.blockService.checkIfUserBlocked({
         user_id_from: user_id_from,
@@ -175,6 +184,14 @@ export class FollowService {
   }): Promise<Response> {
     const { user_id_from, user_id_to } = input;
     try {
+      // Check if you are removing yourself
+      if (user_id_from === user_id_to) {
+        return {
+          success: false,
+          statusCode: HttpStatus.FORBIDDEN,
+          message: `You cannot remove yourself`,
+        };
+      }
       // Check if user blocked
       const user_blocked_response = await this.blockService.checkIfUserBlocked({
         user_id_from: user_id_from,
@@ -192,7 +209,7 @@ export class FollowService {
         user_id_from: user_id_to,
         user_id_to: user_id_from,
       });
-      if (user_following_response) {
+      if (!user_following_response) {
         return {
           success: false,
           statusCode: HttpStatus.FORBIDDEN,
@@ -253,6 +270,7 @@ export class FollowService {
         await this.neo4jInfrastructure.findUserFromRelationshipPaginated(
           following_users_payload,
         );
+      console.log(following_users_response);
       if (!following_users_response) {
         return {
           success: false,

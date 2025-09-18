@@ -7,6 +7,7 @@ import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 // Interface Import
 import type { PaginationResponse } from '../interfaces/pagination-response.interface';
 import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
+import { NodeResponse } from '../interfaces/node-response.interface';
 
 // Service Import
 import { UserService } from './user.service';
@@ -100,18 +101,24 @@ export class SuggestService {
       // Step 1: Fetch fresh suggestions from Neo4j using hybrid 2nd/3rd degree algorithm
       // This method intelligently transitions from 2nd to 3rd degree connections
       // based on available data and pagination requirements
-      const suggestions = await this.neo4jInfrastructure.getFriendsSuggestions({
-        user_id: user_id,
-        page: page,
-        limit: limit,
-      });
+      const suggestions: PaginationResponse<NodeResponse<UserNeo4jDoc>[]> =
+        await this.neo4jInfrastructure.getFriendsSuggestions({
+          user_id: user_id,
+          page: page,
+          limit: limit,
+        });
 
       // Early return if Neo4j query failed or returned no data
       if (!suggestions.success || !suggestions.data) {
-        return suggestions;
+        return {
+          success: false,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: `Failed to get suggestions`,
+        };
       }
 
-      const new_suggestion_users = suggestions.data.users;
+      const new_suggestion_users: NodeResponse<UserNeo4jDoc>[] =
+        suggestions.data.users;
 
       // Step 2: Retrieve cached suggestions to implement deduplication
       // Cache key format: suggestions:${user_id}
@@ -119,7 +126,7 @@ export class SuggestService {
       const cached_suggestion_users =
         ((await this.redisInfrastructure.get(
           `suggestions:${user_id}`,
-        )) as UserNeo4jDoc[]) || []; // Default to empty array if cache miss
+        )) as NodeResponse<UserNeo4jDoc>[]) || []; // Default to empty array if cache miss
 
       // Step 3: Filter out already suggested users using set difference
       // Time complexity: O(n*m) where n = new suggestions, m = cached suggestions
@@ -127,7 +134,8 @@ export class SuggestService {
       const not_cached_suggestion_users = new_suggestion_users.filter(
         (user) =>
           !cached_suggestion_users.some(
-            (cachedUser) => cachedUser.user_id === user.user_id,
+            (cachedUser) =>
+              cachedUser.properties.user_id === user.properties.user_id,
           ),
       );
 
