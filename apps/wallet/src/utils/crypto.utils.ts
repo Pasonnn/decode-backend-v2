@@ -19,12 +19,7 @@ export class CryptoUtils {
     const random_nonce = randomUUID();
     const issued_at = Math.floor(Date.now() / 1000);
     const expires_at = issued_at + 60 * 5; // 5 minutes
-    const nonce_message: string = `
-    ${message}\n\n
-    Address: ${address}\n\n
-    Nonce: ${random_nonce}\n\n
-    Issued At: ${issued_at}\n\n
-    Expires At: ${expires_at}`;
+    const nonce_message: string = `${message}; Address: ${address}; Nonce: ${random_nonce}; Issued At: ${issued_at}; Expires At: ${expires_at}`;
     // Store nonce message in
     const nonce_message_key = `verify_nonce:${address}`;
     const nonce_message_value = nonce_message;

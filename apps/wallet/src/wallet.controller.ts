@@ -35,10 +35,10 @@ import type { AuthenticatedUser } from './interfaces/authenticated-user.interfac
 // Guard
 import { AuthGuard } from './common/guards/auth.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
+import { Public } from './common/decorators/public.decorator';
 
 @ApiTags('Wallet Management')
 @Controller('wallets')
-@UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class WalletController {
   constructor(
@@ -47,6 +47,7 @@ export class WalletController {
     private readonly primaryService: PrimaryService,
   ) {}
 
+  @Public()
   @Post('auth/challenge')
   async generateLoginChallenge(
     @Body() dto: LoginChallengeDto,
@@ -54,6 +55,7 @@ export class WalletController {
     return this.authService.generateLoginChallenge(dto);
   }
 
+  @Public()
   @Post('auth/validation')
   async validateLoginChallenge(
     @Body() dto: LoginChallengeValidationDto,
@@ -61,6 +63,7 @@ export class WalletController {
     return this.authService.validateLoginChallenge(dto);
   }
 
+  @UseGuards(AuthGuard)
   @Post('link/challenge')
   async generateLinkChallenge(
     @Body() dto: LinkChallengeDto,
@@ -68,6 +71,7 @@ export class WalletController {
     return this.linkService.generateLinkChallenge(dto);
   }
 
+  @UseGuards(AuthGuard)
   @Post('link/validation')
   async validateLinkChallenge(
     @Body() dto: LinkChallengeValidationDto,
@@ -80,11 +84,13 @@ export class WalletController {
     });
   }
 
+  @UseGuards(AuthGuard)
   @Get('link')
   async getWallets(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
     return this.linkService.getWallets({ user_id: user.userId });
   }
 
+  @UseGuards(AuthGuard)
   @Get('link/:user_id')
   async getWalletsByUserId(
     @Param('user_id') user_id: string,
@@ -92,6 +98,7 @@ export class WalletController {
     return this.linkService.getWallets({ user_id });
   }
 
+  @UseGuards(AuthGuard)
   @Delete('link')
   async unlinkWallet(
     @Body() dto: UnlinkWalletDto,
@@ -103,6 +110,7 @@ export class WalletController {
     });
   }
 
+  @UseGuards(AuthGuard)
   @Post('primary/challenge')
   async generatePrimaryWalletChallenge(
     @Body() dto: PrimaryWalletChallengeDto,
@@ -114,6 +122,7 @@ export class WalletController {
     });
   }
 
+  @UseGuards(AuthGuard)
   @Post('primary/validation')
   async validatePrimaryWalletChallenge(
     @Body() dto: PrimaryWalletChallengeValidationDto,
@@ -126,6 +135,7 @@ export class WalletController {
     });
   }
 
+  @UseGuards(AuthGuard)
   @Patch('primary')
   async unsetPrimaryWallet(
     @Body() dto: UnsetPrimaryWalletDto,
@@ -137,6 +147,7 @@ export class WalletController {
     });
   }
 
+  @UseGuards(AuthGuard)
   @Get('primary')
   async getPrimaryWallet(
     @CurrentUser() user: AuthenticatedUser,

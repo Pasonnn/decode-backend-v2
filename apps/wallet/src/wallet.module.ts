@@ -7,6 +7,9 @@ import { HttpModule } from '@nestjs/axios';
 // Controllers Import
 import { WalletController } from './wallet.controller';
 
+// External Services Import
+import { AuthServiceClient } from './infrastructure/external-services/auth-service.client';
+
 // Services Import
 import { LinkService } from './services/link.service';
 import { AuthService } from './services/auth.service';
@@ -58,6 +61,9 @@ import configuration from './config/configuration';
     // Infrastructure
     RedisInfrastructure,
     CryptoUtils,
+
+    // External Services
+    AuthServiceClient,
   ],
   exports: [
     // Export services that might be used by other modules
