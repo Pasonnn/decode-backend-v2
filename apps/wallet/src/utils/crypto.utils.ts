@@ -26,7 +26,7 @@ export class CryptoUtils {
     await this.redisInfrastructure.set(
       nonce_message_key,
       nonce_message_value,
-      expires_at,
+      60 * 5,
     );
     this.logger.log(`Nonce message stored for address: ${address}`);
     // Return nonce message as NonceMessage
