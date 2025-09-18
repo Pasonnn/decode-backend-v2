@@ -63,7 +63,7 @@ import configuration from './config/configuration';
         transport: Transport.RMQ,
         options: {
           urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
-          queue: 'update_user_queue',
+          queue: 'neo4j_sync_queue',
           queueOptions: {
             durable: true,
           },
