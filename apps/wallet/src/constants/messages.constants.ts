@@ -3,6 +3,7 @@ export const MESSAGES = {
   AUTH: {
     INVALID_CREDENTIALS: 'Invalid wallet address or signature',
     WALLET_NOT_FOUND: 'Wallet not found',
+    ONLY_PRIMARY_WALLET_ALLOWED: 'Only primary wallet is allowed',
     ACCOUNT_LOCKED:
       'Account temporarily locked due to too many failed attempts',
     SESSION_EXPIRED: 'Session has expired',

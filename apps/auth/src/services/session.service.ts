@@ -40,6 +40,7 @@ import { Session } from '../schemas/session.schema';
 
 // Interfaces Import
 import { SessionDoc } from '../interfaces/session-doc.interface';
+import { WalletPassTokenDoc } from '../interfaces/wallet-pass-token-doc.interface';
 
 // Interfaces Import
 import { Response } from '../interfaces/response.interface';
@@ -48,6 +49,7 @@ import { JwtPayload } from '../interfaces/jwt-payload.interface';
 // Infrastructure and Strategies Import
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { SessionStrategy } from '../strategies/session.strategy';
+import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 
 // Logger Import
 import { Logger } from '@nestjs/common';
@@ -55,6 +57,9 @@ import { Logger } from '@nestjs/common';
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { MESSAGES } from '../constants/error-messages.constants';
+
+// Services Import
+import { DeviceFingerprintService } from './device-fingerprint.service';
 
 /**
  * Session Management Service
@@ -91,6 +96,8 @@ export class SessionService {
     private readonly jwtStrategy: JwtStrategy,
     @InjectModel(Session.name) private sessionModel: Model<Session>,
     private readonly sessionStrategy: SessionStrategy,
+    private readonly redisInfrastructure: RedisInfrastructure,
+    private readonly deviceFingerprintService: DeviceFingerprintService,
   ) {
     this.logger = new Logger(SessionService.name);
   }
@@ -111,7 +118,7 @@ export class SessionService {
         session_token: session_token,
         app,
         expires_at: new Date(
-          Date.now() + AUTH_CONSTANTS.SESSION.EXPIRES_IN_HOURS * 60 * 60 * 1000,
+          Date.now() + AUTH_CONSTANTS.SESSION.EXPIRES_IN_HOURS * 60 * 60 * 1000, // 30 days
         ),
         is_active: true,
       });
@@ -476,6 +483,122 @@ export class SessionService {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.SESSION.SESSION_VALIDATION_ERROR,
       };
+    }
+  }
+
+  async validateWalletPassToken(input: {
+    wallet_pass_token: string;
+    user_agent: string;
+  }): Promise<Response> {
+    const { wallet_pass_token, user_agent } = input;
+    try {
+      // Check user agent from wallet service
+      if (user_agent !== 'Wallet-Service/1.0') {
+        return {
+          success: false,
+          statusCode: HttpStatus.UNAUTHORIZED,
+          message: MESSAGES.SESSION.INVALID_USER_AGENT,
+        };
+      }
+      // Validate wallet pass token
+      const wallet_pass_token_value = await this.validateWalletPassTokenRedis({
+        wallet_pass_token,
+      });
+      if (!wallet_pass_token_value) {
+        return {
+          success: false,
+          statusCode: HttpStatus.UNAUTHORIZED,
+          message: MESSAGES.SESSION.WALLET_PASS_TOKEN_INVALID,
+        };
+      }
+      // Check if device fingerprint is trusted
+      const check_device_fingerprint_response =
+        await this.deviceFingerprintService.checkDeviceFingerprint({
+          user_id: wallet_pass_token_value.user_id,
+          fingerprint_hashed: wallet_pass_token_value.fingerprint_hashed,
+        });
+      if (
+        !check_device_fingerprint_response.success ||
+        !check_device_fingerprint_response.data
+      ) {
+        // Create a trusted device fingerprint and create a session with new trusted device fingerprint
+        const create_trusted_device_fingerprint_response =
+          await this.deviceFingerprintService.createTrustedDeviceFingerprint({
+            user_id: wallet_pass_token_value.user_id,
+            fingerprint_hashed: wallet_pass_token_value.fingerprint_hashed,
+            browser: wallet_pass_token_value.browser,
+            device: wallet_pass_token_value.device,
+          });
+        if (
+          !create_trusted_device_fingerprint_response.success ||
+          !create_trusted_device_fingerprint_response.data
+        ) {
+          return create_trusted_device_fingerprint_response;
+        }
+        const create_session_response = await this.createSession({
+          user_id: wallet_pass_token_value.user_id,
+          device_fingerprint_id:
+            create_trusted_device_fingerprint_response.data._id,
+          app: 'decode',
+        });
+        if (!create_session_response.success) {
+          return create_session_response;
+        }
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message:
+            MESSAGES.SUCCESS
+              .WALLET_PASS_TOKEN_VALIDATED_WITH_NEW_DEVICE_FINGERPRINT,
+          data: create_session_response.data,
+        };
+      } else {
+        // Create a session with existing trusted device fingerprint
+        const create_session_response = await this.createSession({
+          user_id: wallet_pass_token_value.user_id,
+          device_fingerprint_id: check_device_fingerprint_response.data._id,
+          app: 'decode',
+        });
+        if (!create_session_response.success) {
+          return create_session_response;
+        }
+        this.logger.log(
+          `Session created for user ${wallet_pass_token_value.user_id} with existing trusted device fingerprint ${check_device_fingerprint_response.data._id}`,
+        );
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: MESSAGES.SUCCESS.WALLET_PASS_TOKEN_VALIDATED,
+          data: create_session_response.data,
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Error validating wallet pass token`, error);
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.SESSION.WALLET_PASS_TOKEN_VALIDATION_ERROR,
+      };
+    }
+  }
+
+  private async validateWalletPassTokenRedis(input: {
+    wallet_pass_token: string;
+  }): Promise<WalletPassTokenDoc | null> {
+    const { wallet_pass_token } = input;
+    try {
+      // Validate wallet pass token
+      const wallet_pass_token_key = `${AUTH_CONSTANTS.REDIS.KEYS.WALLET_PASS_TOKEN}:${wallet_pass_token}`;
+      const wallet_pass_token_value = (await this.redisInfrastructure.get(
+        wallet_pass_token_key,
+      )) as WalletPassTokenDoc;
+      if (!wallet_pass_token_value) {
+        return null;
+      }
+      return wallet_pass_token_value;
+    } catch (error) {
+      this.logger.error(`Error validating wallet pass token`, error);
+      return null;
     }
   }
 

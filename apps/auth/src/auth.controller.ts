@@ -35,7 +35,14 @@
  */
 
 // Core NestJS modules for HTTP request handling and security
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Headers,
+} from '@nestjs/common';
 
 // DTOs Import
 import {
@@ -55,6 +62,7 @@ import {
   ValidateSsoTokenDto,
   CreateSsoTokenDto,
   RevokeSessionDto,
+  ValidateWalletPassTokenDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
@@ -313,6 +321,20 @@ export class AuthController {
       dto.access_token,
     );
     return validate_access_response;
+  }
+
+  @Post('session/validate-wallet-pass-token')
+  @Public()
+  async validateWalletPassToken(
+    @Body() dto: ValidateWalletPassTokenDto,
+    @Headers('User-Agent') userAgent: string,
+  ): Promise<Response> {
+    const validate_wallet_pass_token_response =
+      await this.sessionService.validateWalletPassToken({
+        wallet_pass_token: dto.wallet_pass_token,
+        user_agent: userAgent,
+      });
+    return validate_wallet_pass_token_response;
   }
 
   /**

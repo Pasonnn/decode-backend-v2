@@ -72,6 +72,7 @@ export const AUTH_CONSTANTS = {
       FINGERPRINT_VERIFICATION: 'fingerprint-email-verification',
       PASSWORD_RESET: 'change_password_verification_code',
       LOGIN_ATTEMPTS: 'login_attempts',
+      WALLET_PASS_TOKEN: 'wallet_pass_token',
     },
   },
 

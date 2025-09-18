@@ -288,6 +288,60 @@ export class DeviceFingerprintService {
     };
   }
 
+  async createTrustedDeviceFingerprint(input: {
+    user_id: string;
+    fingerprint_hashed: string;
+    browser: string;
+    device: string;
+  }): Promise<Response<DeviceFingerprintDoc>> {
+    const { user_id, fingerprint_hashed, browser, device } = input;
+    try {
+      // Find any existing device fingerprint
+      const existing_untrusted_device_fingerprint =
+        await this.deviceFingerprintModel.findOne({
+          $and: [
+            { user_id: user_id },
+            { fingerprint_hashed: fingerprint_hashed },
+            { is_trusted: false },
+          ],
+        });
+      if (existing_untrusted_device_fingerprint) {
+        // Edit the is_trusted to true
+        existing_untrusted_device_fingerprint.is_trusted = true;
+        await existing_untrusted_device_fingerprint.save();
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
+          data: existing_untrusted_device_fingerprint as DeviceFingerprintDoc,
+        };
+      }
+      const device_fingerprint = await this.deviceFingerprintModel.create({
+        user_id: user_id,
+        fingerprint_hashed: fingerprint_hashed,
+        browser: browser,
+        device: device,
+        is_trusted: true,
+      });
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_CREATED,
+        data: device_fingerprint as DeviceFingerprintDoc,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error creating trusted device fingerprint for ${user_id}`,
+        error,
+      );
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.DEVICE_FINGERPRINT.CREATION_FAILED,
+      };
+    }
+  }
+
   async sendDeviceFingerprintEmailVerification(input: {
     user_id: string;
     fingerprint_hashed: string;

@@ -1,5 +1,6 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Param } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 // Interface Import
 import type { UserDoc } from './interfaces/user-doc.interface';
@@ -8,20 +9,15 @@ import type { Response } from './interfaces/response.interface';
 
 // Service Import
 import { UserService } from './services/user.service';
+import { FollowService } from './services/follow.service';
+import { BlockService } from './services/block.service';
+import { MutualsService } from './services/mutuals.service';
+import { SearchService } from './services/search.service';
+import { SuggestService } from './services/suggest.service';
 
-@Controller()
+@Controller('relationship')
 export class RelationshipController {
   constructor(private readonly userService: UserService) {}
 
-  @MessagePattern('relationship/sync/create-user')
-  async createUser(user: UserDoc): Promise<Response<UserNeo4jDoc>> {
-    const create_user_response = await this.userService.createUser(user);
-    return create_user_response;
-  }
-
-  @MessagePattern('relationship/sync/update-user')
-  async updateUser(user: UserDoc): Promise<Response<UserNeo4jDoc>> {
-    const update_user_response = await this.userService.updateUser(user);
-    return update_user_response;
-  }
+  @
 }

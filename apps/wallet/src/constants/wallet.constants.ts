@@ -143,6 +143,7 @@ export const WALLET_CONSTANTS = {
       WALLET_CACHE: 'wallet_cache',
       PRIMARY_WALLET: 'primary_wallet',
       USER_WALLETS: 'user_wallets',
+      WALLET_PASS_TOKEN: 'wallet_pass_token',
     },
   },
 
@@ -239,6 +240,7 @@ export const WALLET_CONSTANTS = {
     PRIMARY_WALLET_TTL: 60 * 60, // 1 hour
     USER_WALLETS_TTL: 15 * 60, // 15 minutes
     CHALLENGE_TTL: 5 * 60, // 5 minutes
+    WALLET_PASS_TOKEN_TTL: 30, // 30 seconds
   },
 
   // External Service Configuration

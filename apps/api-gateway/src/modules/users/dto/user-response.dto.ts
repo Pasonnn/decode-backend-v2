@@ -58,7 +58,6 @@ export class UserResponseDto {
   last_login: Date;
 }
 
-
 export class UserResponseWithoutEmailDto {
   @ApiProperty({
     description: 'User ID',

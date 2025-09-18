@@ -70,4 +70,9 @@ export class CryptoUtils {
       return false;
     }
   }
+
+  generateWalletPassToken(): string {
+    const wallet_pass_token = randomUUID().slice(0, 6);
+    return wallet_pass_token;
+  }
 }
