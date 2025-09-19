@@ -83,6 +83,30 @@ export abstract class BaseHttpClient {
     }
   }
 
+  protected async patch<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<Response<T>> {
+    try {
+      const requestConfig: AxiosRequestConfig = {
+        timeout: 10000, // 10 second timeout
+        ...config,
+      };
+
+      const response: AxiosResponse<Response<T>> = await firstValueFrom(
+        this.httpService.patch<Response<T>>(
+          `${this.baseURL}${url}`,
+          data,
+          requestConfig,
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      this.handleError(error, 'PATCH', url);
+    }
+  }
+
   protected async delete<T>(
     url: string,
     config?: AxiosRequestConfig,

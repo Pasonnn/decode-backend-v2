@@ -12,11 +12,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 // DTOs Import
 import { LoginChallengeDto, LoginChallengeValidationDto } from './dto/auth.dto';
-import {
-  LinkChallengeDto,
-  LinkChallengeValidationDto,
-  UnlinkWalletDto,
-} from './dto/link.dto';
+import { LinkChallengeDto, LinkChallengeValidationDto } from './dto/link.dto';
 import {
   PrimaryWalletChallengeDto,
   PrimaryWalletChallengeValidationDto,
@@ -99,14 +95,14 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard)
-  @Delete('link/unlink')
+  @Delete('link/unlink/:address')
   async unlinkWallet(
-    @Body() dto: UnlinkWalletDto,
+    @Param('address') address: string,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     return this.linkService.unlinkWallet({
       user_id: user.userId,
-      address: dto.address,
+      address: address,
     });
   }
 
@@ -136,11 +132,12 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard)
-  @Patch('primary')
+  @Patch('primary/unset')
   async unsetPrimaryWallet(
     @Body() dto: UnsetPrimaryWalletDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
+    console.log('unsetPrimaryWallet', dto);
     return this.primaryService.unsetPrimaryWallet({
       user_id: user.userId,
       address: dto.address,

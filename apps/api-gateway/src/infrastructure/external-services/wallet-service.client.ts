@@ -13,7 +13,6 @@ import {
   ValidateLoginChallengeRequest,
   GenerateLinkChallengeRequest,
   ValidateLinkChallengeRequest,
-  UnlinkWalletRequest,
   GetWalletsByUserIdRequest,
   GeneratePrimaryWalletChallengeRequest,
   ValidatePrimaryWalletChallengeRequest,
@@ -85,7 +84,7 @@ export class WalletServiceClient extends BaseHttpClient {
   }
 
   async unlinkWallet(
-    data: UnlinkWalletRequest,
+    address: string,
     authorization: string,
   ): Promise<Response> {
     const config = {
@@ -93,7 +92,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/wallets/link/unlink', data, config);
+    return this.delete(`/wallets/link/unlink/${address}`, config);
   }
 
   async getWallets(authorization: string): Promise<Response<WalletDoc[]>> {
@@ -150,7 +149,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/wallets/primary/unset', data, config);
+    return this.patch('/wallets/primary/unset', data, config);
   }
 
   async getPrimaryWallet(authorization: string): Promise<Response<WalletDoc>> {
