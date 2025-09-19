@@ -29,18 +29,12 @@ export class BaseWalletResponseDto {
 export class ChallengeResponseDto extends BaseWalletResponseDto {
   @ApiProperty({
     description: 'Challenge data containing the nonce message',
-    type: 'object',
-    properties: {
-      nonceMessage: {
-        type: 'string',
-        example:
-          'Sign this message to authenticate with your wallet: 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 at 2024-01-01T00:00:00Z',
-      },
+    example: {
+      nonceMessage:
+        'Sign this message to authenticate with your wallet: 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 at 2024-01-01T00:00:00Z',
     },
   })
-  data: {
-    nonceMessage: string;
-  };
+  data: any;
 }
 
 /**
@@ -49,57 +43,19 @@ export class ChallengeResponseDto extends BaseWalletResponseDto {
 export class LoginValidationResponseDto extends BaseWalletResponseDto {
   @ApiProperty({
     description: 'Authentication data including tokens and session information',
-    type: 'object',
-    properties: {
-      access_token: {
-        type: 'string',
-        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-      session_token: {
-        type: 'string',
-        example: 'session_123456789',
-      },
-      _id: {
-        type: 'string',
-        example: '507f1f77bcf86cd799439011',
-      },
-      user_id: {
-        type: 'string',
-        example: '507f1f77bcf86cd799439012',
-      },
-      device_fingerprint_id: {
-        type: 'string',
-        example: '507f1f77bcf86cd799439013',
-      },
-      app: {
-        type: 'string',
-        example: 'web-app',
-      },
-      expires_at: {
-        type: 'number',
-        example: 1640995200,
-      },
-      is_active: {
-        type: 'boolean',
-        example: true,
-      },
-      last_used_at: {
-        type: 'number',
-        example: 1640995200,
-      },
+    example: {
+      access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      session_token: 'session_123456789',
+      _id: '507f1f77bcf86cd799439011',
+      user_id: '507f1f77bcf86cd799439012',
+      device_fingerprint_id: '507f1f77bcf86cd799439013',
+      app: 'web-app',
+      expires_at: 1640995200,
+      is_active: true,
+      last_used_at: 1640995200,
     },
   })
-  data: {
-    access_token: string;
-    session_token: string;
-    _id: string;
-    user_id: string;
-    device_fingerprint_id: string;
-    app: string;
-    expires_at: number;
-    is_active: boolean;
-    last_used_at: number;
-  };
+  data: any;
 }
 
 /**
@@ -111,7 +67,7 @@ export class LinkValidationResponseDto extends BaseWalletResponseDto {
     example: null,
     nullable: true,
   })
-  data?: null;
+  data?: any;
 }
 
 /**
@@ -123,7 +79,7 @@ export class UnlinkWalletResponseDto extends BaseWalletResponseDto {
     example: null,
     nullable: true,
   })
-  data?: null;
+  data?: any;
 }
 
 /**
@@ -135,7 +91,7 @@ export class PrimaryWalletResponseDto extends BaseWalletResponseDto {
     example: null,
     nullable: true,
   })
-  data?: null;
+  data?: any;
 }
 
 /**
@@ -144,40 +100,17 @@ export class PrimaryWalletResponseDto extends BaseWalletResponseDto {
 export class WalletsListResponseDto extends BaseWalletResponseDto {
   @ApiProperty({
     description: 'Array of wallet documents',
-    type: 'array',
-    items: {
-      type: 'object',
-      properties: {
-        _id: {
-          type: 'string',
-          example: '507f1f77bcf86cd799439011',
-        },
-        user_id: {
-          type: 'string',
-          example: '507f1f77bcf86cd799439012',
-        },
-        address: {
-          type: 'string',
-          example: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
-        },
-        name_service: {
-          type: 'string',
-          example: 'vitalik.eth',
-        },
-        is_primary: {
-          type: 'boolean',
-          example: true,
-        },
+    example: [
+      {
+        _id: '507f1f77bcf86cd799439011',
+        user_id: '507f1f77bcf86cd799439012',
+        address: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+        name_service: 'vitalik.eth',
+        is_primary: true,
       },
-    },
+    ],
   })
-  data: Array<{
-    _id: string;
-    user_id: string;
-    address: string;
-    name_service: string;
-    is_primary: boolean;
-  }>;
+  data: any[];
 }
 
 /**
@@ -186,37 +119,15 @@ export class WalletsListResponseDto extends BaseWalletResponseDto {
 export class PrimaryWalletDataResponseDto extends BaseWalletResponseDto {
   @ApiProperty({
     description: 'Primary wallet document',
-    type: 'object',
-    properties: {
-      _id: {
-        type: 'string',
-        example: '507f1f77bcf86cd799439011',
-      },
-      user_id: {
-        type: 'string',
-        example: '507f1f77bcf86cd799439012',
-      },
-      address: {
-        type: 'string',
-        example: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
-      },
-      name_service: {
-        type: 'string',
-        example: 'vitalik.eth',
-      },
-      is_primary: {
-        type: 'boolean',
-        example: true,
-      },
+    example: {
+      _id: '507f1f77bcf86cd799439011',
+      user_id: '507f1f77bcf86cd799439012',
+      address: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+      name_service: 'vitalik.eth',
+      is_primary: true,
     },
   })
-  data: {
-    _id: string;
-    user_id: string;
-    address: string;
-    name_service: string;
-    is_primary: boolean;
-  };
+  data: any;
 }
 
 /**
@@ -225,17 +136,11 @@ export class PrimaryWalletDataResponseDto extends BaseWalletResponseDto {
 export class HealthCheckResponseDto extends BaseWalletResponseDto {
   @ApiProperty({
     description: 'Health status information',
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        example: 'ok',
-      },
+    example: {
+      status: 'ok',
     },
   })
-  data: {
-    status: string;
-  };
+  data: any;
 }
 
 /**
@@ -265,7 +170,7 @@ export class WalletErrorResponseDto {
     example: null,
     nullable: true,
   })
-  data?: null;
+  data?: any;
 
   @ApiProperty({
     description: 'Technical error details (optional)',
@@ -301,10 +206,7 @@ export class ServiceUnavailableResponseDto {
   @ApiProperty({
     description:
       'Empty data array for list endpoints or null for single object endpoints',
-    oneOf: [
-      { type: 'array', items: {}, example: [] },
-      { type: 'null', example: null },
-    ],
+    example: [],
   })
-  data: any[] | null;
+  data: any;
 }
