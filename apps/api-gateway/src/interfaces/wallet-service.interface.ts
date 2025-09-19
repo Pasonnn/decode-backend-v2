@@ -39,3 +39,7 @@ export interface ValidatePrimaryWalletChallengeRequest {
 export interface UnsetPrimaryWalletRequest {
   address: string;
 }
+
+export interface GetPrimaryWalletByUserIdRequest {
+  user_id: string;
+}

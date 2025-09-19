@@ -18,6 +18,7 @@ import {
   GeneratePrimaryWalletChallengeRequest,
   ValidatePrimaryWalletChallengeRequest,
   UnsetPrimaryWalletRequest,
+  GetPrimaryWalletByUserIdRequest,
 } from '../../interfaces/wallet-service.interface';
 
 @Injectable()
@@ -43,7 +44,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/auth/challenge', data, config);
+    return this.post('/wallets/auth/challenge', data, config);
   }
 
   async validateLoginChallenge(
@@ -55,7 +56,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/auth/validation', data, config);
+    return this.post('/wallets/auth/validation', data, config);
   }
   // Link Endpoints
 
@@ -68,7 +69,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/link/challenge', data, config);
+    return this.post('/wallets/link/challenge', data, config);
   }
 
   async validateLinkChallenge(
@@ -80,7 +81,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/link/validation', data, config);
+    return this.post('/wallets/link/validation', data, config);
   }
 
   async unlinkWallet(
@@ -92,7 +93,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/link/unlink', data, config);
+    return this.post('/wallets/link/unlink', data, config);
   }
 
   async getWallets(authorization: string): Promise<Response<WalletDoc[]>> {
@@ -101,7 +102,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.get('/link/me', config);
+    return this.get('/wallets/link/me', config);
   }
 
   async getWalletsByUserId(
@@ -113,7 +114,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.get(`/link/${data.user_id}`, config);
+    return this.get(`/wallets/link/${data.user_id}`, config);
   }
   // Primary Endpoints
   async generatePrimaryWalletChallenge(
@@ -125,7 +126,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/primary/challenge', data, config);
+    return this.post('/wallets/primary/challenge', data, config);
   }
 
   async validatePrimaryWalletChallenge(
@@ -137,7 +138,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/primary/validation', data, config);
+    return this.post('/wallets/primary/validation', data, config);
   }
 
   async unsetPrimaryWallet(
@@ -149,7 +150,7 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post('/primary/unset', data, config);
+    return this.post('/wallets/primary/unset', data, config);
   }
 
   async getPrimaryWallet(authorization: string): Promise<Response<WalletDoc>> {
@@ -158,6 +159,21 @@ export class WalletServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.get('/primary/me', config);
+    const response = await this.get('/wallets/primary/me', config);
+    console.log('wallet service response', response);
+    return response as Response<WalletDoc>;
+  }
+
+  async getPrimaryWalletByUserId(
+    data: GetPrimaryWalletByUserIdRequest,
+    authorization: string,
+  ): Promise<Response<WalletDoc>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    const response = await this.get(`/wallets/primary/${data.user_id}`, config);
+    return response as Response<WalletDoc>;
   }
 }

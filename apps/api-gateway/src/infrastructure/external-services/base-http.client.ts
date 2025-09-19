@@ -18,8 +18,16 @@ export abstract class BaseHttpClient {
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
     try {
+      const requestConfig: AxiosRequestConfig = {
+        timeout: 10000, // 10 second timeout
+        ...config,
+      };
+
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
-        this.httpService.get<Response<T>>(`${this.baseURL}${url}`, config),
+        this.httpService.get<Response<T>>(
+          `${this.baseURL}${url}`,
+          requestConfig,
+        ),
       );
       return response.data;
     } catch (error) {
@@ -33,11 +41,16 @@ export abstract class BaseHttpClient {
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
     try {
+      const requestConfig: AxiosRequestConfig = {
+        timeout: 10000, // 10 second timeout
+        ...config,
+      };
+
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
         this.httpService.post<Response<T>>(
           `${this.baseURL}${url}`,
           data,
-          config,
+          requestConfig,
         ),
       );
       return response.data;
@@ -52,11 +65,16 @@ export abstract class BaseHttpClient {
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
     try {
+      const requestConfig: AxiosRequestConfig = {
+        timeout: 10000, // 10 second timeout
+        ...config,
+      };
+
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
         this.httpService.put<Response<T>>(
           `${this.baseURL}${url}`,
           data,
-          config,
+          requestConfig,
         ),
       );
       return response.data;
@@ -70,8 +88,16 @@ export abstract class BaseHttpClient {
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
     try {
+      const requestConfig: AxiosRequestConfig = {
+        timeout: 10000, // 10 second timeout
+        ...config,
+      };
+
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
-        this.httpService.delete<Response<T>>(`${this.baseURL}${url}`, config),
+        this.httpService.delete<Response<T>>(
+          `${this.baseURL}${url}`,
+          requestConfig,
+        ),
       );
       return response.data;
     } catch (error) {
@@ -80,18 +106,39 @@ export abstract class BaseHttpClient {
   }
 
   private handleError(error: any, method: string, url: string): never {
-    this.logger.error(
-      `HTTP ${method} ${this.baseURL}${url} failed: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const fullUrl = `${this.baseURL}${url}`;
+
+    this.logger.error(`HTTP ${method} ${fullUrl} failed: ${errorMessage}`);
 
     // Preserve AxiosError to maintain status codes and response data
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (error?.response) {
+      // Log additional details for debugging
+
+      this.logger.error(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        `Response status: ${error.response.status}, Response data: ${JSON.stringify(error.response.data)}`,
+      );
       throw error; // Re-throw the original AxiosError
     }
 
-    throw new Error(
-      `Network error: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    // Handle timeout errors specifically
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (error?.code === 'ECONNABORTED') {
+      throw new Error(
+        `Request timeout: ${method} ${fullUrl} exceeded 10 seconds`,
+      );
+    }
+
+    // Handle network errors
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
+      throw new Error(
+        `Service unavailable: ${method} ${fullUrl} - service may be down`,
+      );
+    }
+
+    throw new Error(`Network error: ${errorMessage}`);
   }
 }

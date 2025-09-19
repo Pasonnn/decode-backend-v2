@@ -45,7 +45,7 @@ import {
   UserResponseDto,
   UserResponseWithoutEmailDto,
 } from './dto/user-response.dto';
-import type { UserDoc } from '../../infrastructure/external-services/user-service.client';
+import type { UserDoc } from '../../interfaces/user-doc.interface';
 
 @ApiTags('User Management')
 @Controller('users')

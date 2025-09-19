@@ -43,7 +43,7 @@ export class UsersService {
   async getUserProfile(
     data: GetUserProfileRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserDoc>> {
     try {
       this.logger.log(`Getting profile for user: ${data.user_id}`);
       // Get user basic
@@ -56,20 +56,39 @@ export class UsersService {
         return user_profile_response;
       }
       const user_profile_data = user_profile_response.data;
-      // Get user primary wallet
-      const user_primary_wallet_response: Response<WalletDoc> =
-        await this.walletServiceClient.getPrimaryWallet(authorization);
 
-      if (
-        !user_primary_wallet_response.success ||
-        !user_primary_wallet_response.data
-      ) {
-        this.logger.error(
-          `Failed to get primary wallet for user: ${data.user_id}: ${user_primary_wallet_response.message}`,
+      // Get user primary wallet with graceful degradation
+      let user_primary_wallet_data: WalletDoc | undefined = undefined;
+      let walletServiceAvailable = true;
+
+      try {
+        const user_primary_wallet_response: Response<WalletDoc> =
+          await this.walletServiceClient.getPrimaryWallet(authorization);
+
+        if (
+          user_primary_wallet_response.success &&
+          user_primary_wallet_response.data
+        ) {
+          user_primary_wallet_data = user_primary_wallet_response.data;
+          this.logger.log(
+            `Successfully fetched primary wallet for user: ${data.user_id}`,
+          );
+        } else {
+          this.logger.warn(
+            `Primary wallet not found for user: ${data.user_id}`,
+          );
+        }
+      } catch (walletError) {
+        walletServiceAvailable = false;
+        this.logger.warn(
+          `Wallet service unavailable for user ${data.user_id}: ${
+            walletError instanceof Error
+              ? walletError.message
+              : String(walletError)
+          }`,
         );
-        return user_primary_wallet_response;
       }
-      const user_primary_wallet_data = user_primary_wallet_response.data;
+
       const user_profile_data_with_primary_wallet: UserDoc = {
         ...user_profile_data,
         primary_wallet: user_primary_wallet_data,
@@ -77,10 +96,14 @@ export class UsersService {
 
       // TODO: User Relationship Fetching
 
+      const responseMessage = walletServiceAvailable
+        ? MESSAGES.SUCCESS.PROFILE_FETCHED
+        : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)`;
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: MESSAGES.SUCCESS.PROFILE_FETCHED,
+        message: responseMessage,
         data: user_profile_data_with_primary_wallet,
       };
     } catch (error) {
@@ -96,7 +119,7 @@ export class UsersService {
   /**
    * Get current user profile (requires authorization)
    */
-  async getMyProfile(authorization: string): Promise<Response> {
+  async getMyProfile(authorization: string): Promise<Response<UserDoc>> {
     try {
       this.logger.log('Getting current user profile');
       const get_my_profile_response: Response<UserDoc> =
@@ -109,30 +132,56 @@ export class UsersService {
         return get_my_profile_response;
       }
 
-      const get_my_primary_wallet_response: Response<WalletDoc> =
-        await this.walletServiceClient.getPrimaryWallet(authorization);
+      // Get user primary wallet with graceful degradation
+      let user_primary_wallet_data: WalletDoc | undefined = undefined;
+      let walletServiceAvailable = true;
 
-      if (
-        !get_my_primary_wallet_response.success ||
-        !get_my_primary_wallet_response.data
-      ) {
-        this.logger.error(
-          `Failed to get current user primary wallet: ${get_my_primary_wallet_response.message}`,
+      try {
+        const get_my_primary_wallet_response: Response<WalletDoc> =
+          await this.walletServiceClient.getPrimaryWallet(authorization);
+
+        if (
+          get_my_primary_wallet_response.success &&
+          get_my_primary_wallet_response.data
+        ) {
+          user_primary_wallet_data = get_my_primary_wallet_response.data;
+          this.logger.log(
+            'Successfully fetched primary wallet for current user',
+          );
+        } else {
+          this.logger.warn('Primary wallet not found for current user');
+        }
+      } catch (walletError) {
+        walletServiceAvailable = false;
+        this.logger.warn(
+          `Wallet service unavailable for current user: ${
+            walletError instanceof Error
+              ? walletError.message
+              : String(walletError)
+          }`,
         );
-        return get_my_primary_wallet_response;
       }
 
       const get_my_profile_data_with_primary_wallet: UserDoc = {
         ...get_my_profile_response.data,
-        primary_wallet: get_my_primary_wallet_response.data,
+        primary_wallet: user_primary_wallet_data,
       };
 
+      this.logger.debug(
+        'get_my_profile_data_with_primary_wallet',
+        get_my_profile_data_with_primary_wallet,
+      );
+
       // TODO: User Relationship Fetching (Following, Followers Number Only)
+
+      const responseMessage = walletServiceAvailable
+        ? MESSAGES.SUCCESS.PROFILE_FETCHED
+        : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)`;
 
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: MESSAGES.SUCCESS.PROFILE_FETCHED,
+        message: responseMessage,
         data: get_my_profile_data_with_primary_wallet,
       };
     } catch (error) {
