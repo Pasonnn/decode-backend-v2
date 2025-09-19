@@ -75,6 +75,18 @@ export class LinkService {
     try {
       const { address, signature, user_id } = input;
       const address_lowercase = address.toLowerCase();
+      // Check if wallet is already linked
+      const existingWallet = await this.walletExists({
+        address: address_lowercase,
+      });
+      if (existingWallet) {
+        return {
+          success: false,
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: MESSAGES.WALLET_LINK.WALLET_ALREADY_LINKED,
+        };
+      }
+      // Validate signature
       const signatureIsValid = await this.cryptoUtils.validateNonceMessage({
         address: address_lowercase,
         signature,
@@ -120,12 +132,8 @@ export class LinkService {
         address: address_lowercase,
         user_id,
       });
-      if (!validUnlinkWallet) {
-        return {
-          success: false,
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: MESSAGES.WALLET_LINK.WALLET_NOT_LINKED,
-        };
+      if (!validUnlinkWallet.success) {
+        return validUnlinkWallet;
       }
       const deletedWallet = await this.walletModel.deleteOne({
         address: address_lowercase,
@@ -240,7 +248,7 @@ export class LinkService {
   private async validUnlinkWallet(input: {
     address: string;
     user_id: string;
-  }): Promise<boolean> {
+  }): Promise<Response> {
     const { address, user_id } = input;
     const address_lowercase = address.toLowerCase();
     const wallet = await this.walletModel.findOne({
@@ -248,15 +256,31 @@ export class LinkService {
       user_id: new Types.ObjectId(user_id),
     });
     if (!wallet) {
-      return false;
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.WALLET_LINK.WALLET_NOT_LINKED,
+      };
     }
     if (wallet.is_primary) {
-      return false;
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_CANNOT_UNLINK,
+      };
     }
     if (wallet.user_id.toString() !== user_id) {
-      return false;
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.WALLET_LINK.WALLET_NOT_LINKED,
+      };
     }
-    return true;
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      message: MESSAGES.SUCCESS.WALLET_VERIFIED,
+    };
   }
 
   private async walletExists(input: { address: string }): Promise<boolean> {

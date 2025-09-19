@@ -12,6 +12,7 @@ import { WalletDoc } from '../interfaces/wallet-doc.interface';
 // Utils
 import { CryptoUtils } from '../utils/crypto.utils';
 import { MESSAGES } from '../constants/messages.constants';
+import { WALLET_CONSTANTS } from '../constants/wallet.constants';
 
 @Injectable()
 export class PrimaryService {
@@ -28,11 +29,12 @@ export class PrimaryService {
     try {
       const { user_id, address } = input;
       const address_lowercase = address.toLowerCase();
+      // Check if wallet is already primary
       const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
         address: address_lowercase,
         user_id,
       });
-      if (!check_valid_primary_wallet.success) {
+      if (check_valid_primary_wallet.success) {
         return {
           success: false,
           statusCode: HttpStatus.BAD_REQUEST,
@@ -41,10 +43,7 @@ export class PrimaryService {
       }
       const nonceMessage = await this.cryptoUtils.generateNonceMessage({
         address: address_lowercase,
-        message: `Welcome to Decode Network! To set your wallet (${address.slice(0, 6)}...${address.slice(-4)}) as primary, please sign this message with your wallet.
-          This cryptographic signature proves you control your wallet without revealing any sensitive information.
-          By signing this message, you are requesting access to your wallet.
-          This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.`,
+        message: WALLET_CONSTANTS.CHALLENGE.NONCE.MESSAGE_TEMPLATE.PRIMARY,
       });
       if (!nonceMessage) {
         return {
@@ -79,17 +78,19 @@ export class PrimaryService {
     try {
       const { address, signature, user_id } = input;
       const address_lowercase = address.toLowerCase();
+      // Check if wallet is already primary
       const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
         address: address_lowercase,
         user_id,
       });
-      if (!check_valid_primary_wallet.success) {
+      if (check_valid_primary_wallet.success) {
         return {
           success: false,
           statusCode: HttpStatus.BAD_REQUEST,
           message: check_valid_primary_wallet.message,
         };
       }
+      // Validate signature
       const signatureIsValid = await this.cryptoUtils.validateNonceMessage({
         address: address_lowercase,
         signature,
@@ -101,6 +102,7 @@ export class PrimaryService {
           message: MESSAGES.PRIMARY_WALLET.PRIMARY_CHALLENGE_VALIDATION_FAILED,
         };
       }
+      // Set primary wallet
       const setPrimaryWallet = await this.setPrimaryWallet({
         user_id,
         address: address_lowercase,
@@ -130,6 +132,7 @@ export class PrimaryService {
     try {
       const { user_id, address } = input;
       const address_lowercase = address.toLowerCase();
+      // Check if wallet is already primary
       const check_valid_primary_wallet = await this.checkValidPrimaryWallet({
         address: address_lowercase,
         user_id,
@@ -141,6 +144,7 @@ export class PrimaryService {
           message: check_valid_primary_wallet.message,
         };
       }
+      // Unset primary wallet
       const unsetPrimaryWallet = await this.walletModel.findOneAndUpdate(
         {
           user_id: new Types.ObjectId(user_id),
@@ -211,7 +215,7 @@ export class PrimaryService {
         address: address_lowercase,
         user_id,
       });
-      if (!check_valid_primary_wallet.success) {
+      if (check_valid_primary_wallet.success) {
         return {
           success: false,
           statusCode: HttpStatus.BAD_REQUEST,
@@ -255,11 +259,11 @@ export class PrimaryService {
     const { address, user_id } = input;
     const address_lowercase = address.toLowerCase();
     const is_user_primary_wallet = await this.userPrimaryWallet({ user_id });
-    if (is_user_primary_wallet) {
+    if (!is_user_primary_wallet) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,
-        message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_EXISTS,
+        message: MESSAGES.PRIMARY_WALLET.PRIMARY_WALLET_NOT_SET,
       };
     }
     const wallet = await this.getWallet({ address: address_lowercase });

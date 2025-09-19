@@ -48,10 +48,9 @@ export class CryptoUtils {
         return false;
       }
       const address_lower = address.toLowerCase();
-      const recovered_address = ethers.verifyMessage(
-        nonce_message_value,
-        signature,
-      );
+      const recovered_address = ethers
+        .verifyMessage(nonce_message_value, signature)
+        .toLowerCase();
       if (recovered_address !== address_lower) {
         this.logger.error(
           `Recovered address does not match address: ${address}`,

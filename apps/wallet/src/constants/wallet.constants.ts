@@ -39,9 +39,9 @@ export const WALLET_CONSTANTS = {
       MESSAGE_TEMPLATE: {
         LOGIN:
           'Welcome to Decode Wallet! To ensure the security of your wallet and verify your identity, please sign this message with your wallet. This cryptographic signature proves you control your wallet without revealing any sensitive information. By signing this message, you are requesting access to your wallet. This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.',
-        LINK: 'Welcome to Decode Network! To link your wallet to your account ({user_id}), please sign this message with your wallet. This cryptographic signature proves you control your wallet without revealing any sensitive information. By signing this message, you are requesting access to your wallet. This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.',
+        LINK: 'Welcome to Decode Network! To link your wallet to your account, please sign this message with your wallet. This cryptographic signature proves you control your wallet without revealing any sensitive information. By signing this message, you are requesting access to your wallet. This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.',
         PRIMARY:
-          'Welcome to Decode Network! To set your wallet ({address}) as primary, please sign this message with your wallet. This cryptographic signature proves you control your wallet without revealing any sensitive information. By signing this message, you are requesting access to your wallet. This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.',
+          'Welcome to Decode Network! To set your wallet as primary, please sign this message with your wallet. This cryptographic signature proves you control your wallet without revealing any sensitive information. By signing this message, you are requesting access to your wallet. This challenge expires in 5 minutes for your security. Please do not share this message or your signature with anyone.',
       },
     },
     // Signature validation
