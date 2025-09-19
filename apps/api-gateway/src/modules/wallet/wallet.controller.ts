@@ -16,6 +16,8 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiBody,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 
 // Services
@@ -30,6 +32,16 @@ import {
   PrimaryWalletChallengeDto,
   PrimaryWalletChallengeValidationDto,
   UnsetPrimaryWalletDto,
+  ChallengeResponseDto,
+  LoginValidationResponseDto,
+  LinkValidationResponseDto,
+  UnlinkWalletResponseDto,
+  PrimaryWalletResponseDto,
+  WalletsListResponseDto,
+  PrimaryWalletDataResponseDto,
+  HealthCheckResponseDto,
+  WalletErrorResponseDto,
+  ServiceUnavailableResponseDto,
 } from './dto';
 
 // Guards and Decorators
@@ -43,6 +55,25 @@ import type { WalletDoc } from '../../interfaces/wallet-doc.interface';
 @ApiTags('Wallet Management')
 @Controller('wallets')
 @ApiBearerAuth('JWT-auth')
+@ApiExtraModels(
+  LoginChallengeDto,
+  LoginChallengeValidationDto,
+  LinkChallengeDto,
+  LinkChallengeValidationDto,
+  PrimaryWalletChallengeDto,
+  PrimaryWalletChallengeValidationDto,
+  UnsetPrimaryWalletDto,
+  ChallengeResponseDto,
+  LoginValidationResponseDto,
+  LinkValidationResponseDto,
+  UnlinkWalletResponseDto,
+  PrimaryWalletResponseDto,
+  WalletsListResponseDto,
+  PrimaryWalletDataResponseDto,
+  HealthCheckResponseDto,
+  WalletErrorResponseDto,
+  ServiceUnavailableResponseDto,
+)
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
@@ -50,24 +81,20 @@ export class WalletController {
 
   @Get('healthz')
   @Public()
-  @ApiOperation({ summary: 'Check wallet service health' })
+  @ApiOperation({
+    summary: 'Check wallet service health',
+    description:
+      'Returns the health status of the wallet service. This endpoint is public and does not require authentication.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Wallet service is healthy',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        statusCode: { type: 'number', example: 200 },
-        message: { type: 'string', example: 'Wallet service is healthy' },
-        data: {
-          type: 'object',
-          properties: {
-            status: { type: 'string', example: 'ok' },
-          },
-        },
-      },
-    },
+    type: HealthCheckResponseDto,
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Service unavailable',
+    type: ServiceUnavailableResponseDto,
   })
   checkHealth(): Response<{ status: string }> {
     return this.walletService.checkHealth();
@@ -79,12 +106,31 @@ export class WalletController {
   @Public()
   @ApiOperation({
     summary: 'Generate login challenge for wallet authentication',
+    description:
+      'Generates a challenge message that users must sign with their wallet to authenticate. This endpoint is public and does not require authentication.',
+  })
+  @ApiBody({
+    type: LoginChallengeDto,
+    description: 'Wallet address to generate challenge for',
+    examples: {
+      example1: {
+        summary: 'Generate challenge for wallet',
+        value: {
+          address: '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 200,
     description: 'Login challenge generated successfully',
+    type: ChallengeResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid wallet address' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid wallet address',
+    type: WalletErrorResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async generateLoginChallenge(
     @Body() body: LoginChallengeDto,
@@ -104,8 +150,13 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Login challenge validated successfully',
+    type: LoginValidationResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid challenge or signature' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid challenge or signature',
+    type: WalletErrorResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async validateLoginChallenge(
     @Body() body: LoginChallengeValidationDto,
@@ -131,9 +182,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Link challenge generated successfully',
+    type: ChallengeResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid wallet address' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid wallet address',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async generateLinkChallenge(
     @Body() body: LinkChallengeDto,
@@ -151,9 +211,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Link challenge validated successfully',
+    type: LinkValidationResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid challenge or signature' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid challenge or signature',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async validateLinkChallenge(
     @Body() body: LinkChallengeValidationDto,
@@ -174,9 +243,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Wallets retrieved successfully',
-    type: [Object],
+    type: WalletsListResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Service unavailable',
+    type: ServiceUnavailableResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async getWallets(
     @Headers('authorization') authorization: string,
@@ -190,9 +268,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Wallets retrieved successfully',
-    type: [Object],
+    type: WalletsListResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Service unavailable',
+    type: ServiceUnavailableResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async getWalletsByUserId(
     @Param('user_id') userId: string,
@@ -210,9 +297,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Wallet unlinked successfully',
+    type: UnlinkWalletResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid wallet address' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid wallet address',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async unlinkWallet(
     @Param('address') address: string,
@@ -232,9 +328,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Primary wallet challenge generated successfully',
+    type: ChallengeResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid wallet address' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid wallet address',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async generatePrimaryWalletChallenge(
     @Body() body: PrimaryWalletChallengeDto,
@@ -252,9 +357,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Primary wallet challenge validated successfully',
+    type: PrimaryWalletResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid challenge or signature' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid challenge or signature',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async validatePrimaryWalletChallenge(
     @Body() body: PrimaryWalletChallengeValidationDto,
@@ -275,9 +389,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Primary wallet unset successfully',
+    type: PrimaryWalletResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid wallet address' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid wallet address',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async unsetPrimaryWallet(
     @Body() body: UnsetPrimaryWalletDto,
@@ -296,9 +419,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Primary wallet retrieved successfully',
-    type: Object,
+    type: PrimaryWalletDataResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Service unavailable',
+    type: ServiceUnavailableResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async getPrimaryWallet(
     @Headers('authorization') authorization: string,
@@ -312,9 +444,18 @@ export class WalletController {
   @ApiResponse({
     status: 200,
     description: 'Primary wallet retrieved successfully',
-    type: Object,
+    type: PrimaryWalletDataResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: WalletErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Service unavailable',
+    type: ServiceUnavailableResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
   async getPrimaryWalletByUserId(
     @Param('user_id') userId: string,

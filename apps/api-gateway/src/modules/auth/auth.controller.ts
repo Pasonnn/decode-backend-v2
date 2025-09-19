@@ -13,6 +13,8 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
@@ -56,13 +58,130 @@ import { AUTH_CONSTANTS } from 'apps/auth/src/constants/auth.constants';
 
 @ApiTags('Authentication')
 @Controller('auth')
+@ApiExtraModels(
+  LoginDto,
+  FingerprintEmailVerificationDto,
+  ResendDeviceFingerprintEmailVerificationDto,
+  RegisterInfoDto,
+  VerifyEmailDto,
+  SendEmailVerificationDto,
+  RefreshTokenDto,
+  LogoutDto,
+  ValidateAccessDto,
+  ValidateSsoTokenDto,
+  CreateSsoTokenDto,
+  RevokeSessionDto,
+  ChangePasswordDto,
+  InitiateForgotPasswordDto,
+  VerifyEmailForgotPasswordDto,
+  ChangeForgotPasswordDto,
+  ExistUserByEmailOrUsernameDto,
+  InfoByAccessTokenDto,
+  InfoByUserIdDto,
+  InfoByEmailOrUsernameDto,
+  RevokeDeviceFingerprintDto,
+)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ status: 200, description: 'Login successful' })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  @ApiResponse({ status: 429, description: 'Too many login attempts' })
+  @ApiOperation({
+    summary: 'User login',
+    description:
+      'Authenticate user with email/username and password. Returns access token and refresh token upon successful authentication.',
+  })
+  @ApiBody({
+    type: LoginDto,
+    description: 'User login credentials',
+    examples: {
+      example1: {
+        summary: 'Login with email',
+        value: {
+          email_or_username: 'user@example.com',
+          password: 'securePassword123',
+          fingerprint_hashed: 'a1b2c3d4e5f6...',
+          browser: 'Chrome 120.0.0.0',
+          device: 'Windows 10',
+        },
+      },
+      example2: {
+        summary: 'Login with username',
+        value: {
+          email_or_username: 'johndoe',
+          password: 'securePassword123',
+          fingerprint_hashed: 'a1b2c3d4e5f6...',
+          browser: 'Chrome 120.0.0.0',
+          device: 'Windows 10',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'Login successful' },
+        data: {
+          type: 'object',
+          properties: {
+            access_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIs...',
+            },
+            refresh_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIs...',
+            },
+            user: {
+              type: 'object',
+              properties: {
+                user_id: { type: 'string', example: 'user123' },
+                email: { type: 'string', example: 'user@example.com' },
+                username: { type: 'string', example: 'johndoe' },
+                display_name: { type: 'string', example: 'John Doe' },
+              },
+            },
+            session_token: { type: 'string', example: 'session123' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid credentials',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 401 },
+        message: {
+          type: 'string',
+          example: 'Invalid email/username or password',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Too many login attempts',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 429 },
+        message: {
+          type: 'string',
+          example: 'Too many login attempts. Please try again later.',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @Post('login')
   @Public()
   @AuthRateLimit.login()
@@ -71,13 +190,83 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @ApiOperation({ summary: 'User registration' })
+  @ApiOperation({
+    summary: 'User registration',
+    description:
+      'Register a new user account with email verification. An email verification code will be sent to the provided email address.',
+  })
+  @ApiBody({
+    type: RegisterInfoDto,
+    description: 'User registration information',
+    examples: {
+      example1: {
+        summary: 'Register new user',
+        value: {
+          email: 'user@example.com',
+          username: 'johndoe',
+          password: 'securePassword123',
+          display_name: 'John Doe',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 201,
     description: 'Registration initiated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 201 },
+        message: {
+          type: 'string',
+          example:
+            'Registration initiated successfully. Please check your email for verification code.',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            user_id: { type: 'string', example: 'user123' },
+            email: { type: 'string', example: 'user@example.com' },
+            username: { type: 'string', example: 'johndoe' },
+            verification_sent: { type: 'boolean', example: true },
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Invalid registration data' })
-  @ApiResponse({ status: 409, description: 'User already exists' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid registration data',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 400 },
+        message: {
+          type: 'string',
+          example: 'Invalid registration data provided',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'User already exists',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 409 },
+        message: {
+          type: 'string',
+          example: 'User with this email or username already exists',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @Post('register/email-verification')
   @Public()
   @AuthRateLimit.register()
@@ -86,9 +275,59 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
-  @ApiOperation({ summary: 'Verify email registration' })
-  @ApiResponse({ status: 200, description: 'Email verified successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid verification code' })
+  @ApiOperation({
+    summary: 'Verify email registration',
+    description:
+      'Verify email address using the verification code sent during registration.',
+  })
+  @ApiBody({
+    type: VerifyEmailDto,
+    description: 'Email verification code',
+    examples: {
+      example1: {
+        summary: 'Verify email with code',
+        value: {
+          code: '123456',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Email verified successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'Email verified successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            user_id: { type: 'string', example: 'user123' },
+            email_verified: { type: 'boolean', example: true },
+            verified_at: { type: 'string', example: '2024-01-01T00:00:00Z' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid verification code',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 400 },
+        message: {
+          type: 'string',
+          example: 'Invalid or expired verification code',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @Post('register/verify-email')
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -143,9 +382,65 @@ export class AuthController {
     return this.authService.resendDeviceFingerprintEmailVerification(dto);
   }
 
-  @ApiOperation({ summary: 'Refresh session token' })
-  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
-  @ApiResponse({ status: 401, description: 'Invalid session token' })
+  @ApiOperation({
+    summary: 'Refresh session token',
+    description:
+      'Refresh the access token using a valid refresh token. Returns a new access token and refresh token.',
+  })
+  @ApiBody({
+    type: RefreshTokenDto,
+    description: 'Refresh token for generating new access token',
+    examples: {
+      example1: {
+        summary: 'Refresh token',
+        value: {
+          refresh_token: 'eyJhbGciOiJIUzI1NiIs...',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Token refreshed successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'Token refreshed successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            access_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIs...',
+            },
+            refresh_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIs...',
+            },
+            expires_in: { type: 'number', example: 3600 },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid session token',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 401 },
+        message: {
+          type: 'string',
+          example: 'Invalid or expired refresh token',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @Post('session/refresh')
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -155,9 +450,58 @@ export class AuthController {
     return this.authService.refreshToken(refreshTokenDto);
   }
 
-  @ApiOperation({ summary: 'User logout' })
-  @ApiResponse({ status: 200, description: 'Logout successful' })
-  @ApiResponse({ status: 400, description: 'Logout failed' })
+  @ApiOperation({
+    summary: 'User logout',
+    description:
+      'Logout user by invalidating the session token. This endpoint is public and does not require authentication.',
+  })
+  @ApiBody({
+    type: LogoutDto,
+    description: 'Session token to logout',
+    examples: {
+      example1: {
+        summary: 'Logout with session token',
+        value: {
+          session_token: 'session123',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Logout successful',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'Logout successful' },
+        data: {
+          type: 'object',
+          properties: {
+            logged_out: { type: 'boolean', example: true },
+            session_invalidated: { type: 'boolean', example: true },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Logout failed',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 400 },
+        message: {
+          type: 'string',
+          example: 'Invalid session token or logout failed',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @Post('session/logout')
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -185,9 +529,60 @@ export class AuthController {
   ): Promise<Response> {
     return this.authService.revokeSession(dto.session_id, authorization);
   }
-  @ApiOperation({ summary: 'Get current user info' })
-  @ApiResponse({ status: 200, description: 'User info retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiOperation({
+    summary: 'Get current user info',
+    description:
+      'Retrieve information about the currently authenticated user from the JWT token.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User info retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'User information retrieved successfully',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            userId: { type: 'string', example: 'user123' },
+            email: { type: 'string', example: 'user@example.com' },
+            username: { type: 'string', example: 'johndoe' },
+            displayName: { type: 'string', example: 'John Doe' },
+            roles: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['user'],
+            },
+            permissions: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['read', 'write'],
+            },
+            iat: { type: 'number', example: 1640995200 },
+            exp: { type: 'number', example: 1640998800 },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 401 },
+        message: { type: 'string', example: 'Unauthorized access' },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @ApiBearerAuth('JWT-auth')
   @Get('user/current')
   @UseGuards(AuthGuardWithFingerprint)
@@ -283,12 +678,74 @@ export class AuthController {
     return this.authService.validateSsoToken(validateSsoTokenDto.sso_token);
   }
 
-  @ApiOperation({ summary: 'Change password' })
-  @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid password data' })
+  @ApiOperation({
+    summary: 'Change password',
+    description:
+      'Change the password for the authenticated user. Requires the current password for verification.',
+  })
+  @ApiBody({
+    type: ChangePasswordDto,
+    description: 'Password change information',
+    examples: {
+      example1: {
+        summary: 'Change password',
+        value: {
+          old_password: 'currentPassword123',
+          new_password: 'newSecurePassword456',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'Password changed successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            password_changed: { type: 'boolean', example: true },
+            changed_at: { type: 'string', example: '2024-01-01T00:00:00Z' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid password data',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 400 },
+        message: {
+          type: 'string',
+          example: 'Invalid password format or requirements not met',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized or incorrect current password',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 401 },
+        message: {
+          type: 'string',
+          example: 'Incorrect current password or unauthorized access',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
   })
   @ApiBearerAuth('JWT-auth')
   @Post('password/change')
@@ -305,12 +762,68 @@ export class AuthController {
     );
   }
 
-  @ApiOperation({ summary: 'Initiate forgot password' })
+  @ApiOperation({
+    summary: 'Initiate forgot password',
+    description:
+      "Initiate the forgot password process by sending a verification code to the user's email. This endpoint is public and does not require authentication.",
+  })
+  @ApiBody({
+    type: InitiateForgotPasswordDto,
+    description: 'Email or username to initiate password reset',
+    examples: {
+      example1: {
+        summary: 'Initiate forgot password with email',
+        value: {
+          email_or_username: 'user@example.com',
+        },
+      },
+      example2: {
+        summary: 'Initiate forgot password with username',
+        value: {
+          email_or_username: 'johndoe',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Forgot password process initiated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Password reset code sent to your email',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            reset_initiated: { type: 'boolean', example: true },
+            email_sent: { type: 'boolean', example: true },
+            expires_in: { type: 'number', example: 900 },
+          },
+        },
+      },
+    },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 404 },
+        message: {
+          type: 'string',
+          example: 'User not found with the provided email or username',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @Post('password/forgot/initiate')
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -460,8 +973,50 @@ export class AuthController {
 
   // Health Check Endpoint
 
-  @ApiOperation({ summary: 'Health check' })
-  @ApiResponse({ status: 200, description: 'Service is healthy' })
+  @ApiOperation({
+    summary: 'Health check',
+    description:
+      'Check the health status of the authentication service. This endpoint is public and does not require authentication.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Service is healthy',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Authentication service is healthy',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', example: 'ok' },
+            timestamp: { type: 'string', example: '2024-01-01T00:00:00Z' },
+            service: { type: 'string', example: 'auth-service' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Service unavailable',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        statusCode: { type: 'number', example: 503 },
+        message: {
+          type: 'string',
+          example: 'Authentication service is temporarily unavailable',
+        },
+        data: { type: 'null', example: null },
+      },
+    },
+  })
   @Get('healthz')
   @Public()
   @HttpCode(HttpStatus.OK)
