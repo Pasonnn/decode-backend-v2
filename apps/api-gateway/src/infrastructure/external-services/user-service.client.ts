@@ -2,80 +2,28 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { BaseHttpClient } from './base-http.client';
-import { Response } from '../../interfaces/response.interface';
 import { AxiosRequestConfig } from 'axios';
 
+// Response and Doc Interfaces
+import { Response } from '../../interfaces/response.interface';
+import { UserDoc } from '../../interfaces/user-doc.interface';
+
 // User Service Interfaces
-export interface GetUserProfileRequest {
-  user_id: string;
-}
-
-export interface UpdateUserDisplayNameRequest {
-  display_name: string;
-}
-
-export interface UpdateUserBioRequest {
-  bio: string;
-}
-
-export interface UpdateUserAvatarRequest {
-  avatar_ipfs_hash: string;
-}
-
-export interface UpdateUserRoleRequest {
-  role: string;
-}
-export interface VerifyUsernameCodeRequest {
-  code: string;
-}
-
-export interface ChangeUsernameRequest {
-  new_username: string;
-  code: string;
-}
-
-export interface VerifyEmailCodeRequest {
-  code: string;
-}
-
-export interface NewEmailInitiateRequest {
-  new_email: string;
-  code: string;
-}
-
-export interface VerifyNewEmailCodeRequest {
-  code: string;
-}
-
-export interface SearchUsersRequest {
-  email_or_username?: string;
-  page?: number;
-  limit?: number;
-  fields?: string[];
-  sortBy?: string;
-  sortOrder?: string;
-}
-
-export interface SearchUsernameRequest {
-  username: string;
-}
-
-export interface SearchEmailRequest {
-  email: string;
-}
-
-export interface UserDoc {
-  _id: string;
-  user_id?: string;
-  email: string;
-  username: string;
-  role: string;
-  display_name: string;
-  bio: string;
-  avatar_ipfs_hash: string;
-  last_login: Date;
-}
-
+import {
+  GetUserProfileRequest,
+  UpdateUserDisplayNameRequest,
+  UpdateUserBioRequest,
+  UpdateUserAvatarRequest,
+  UpdateUserRoleRequest,
+  VerifyUsernameCodeRequest,
+  ChangeUsernameRequest,
+  VerifyEmailCodeRequest,
+  NewEmailInitiateRequest,
+  VerifyNewEmailCodeRequest,
+  SearchUsersRequest,
+  SearchUsernameRequest,
+  SearchEmailRequest,
+} from '../../interfaces/user-service.interface';
 @Injectable()
 export class UserServiceClient extends BaseHttpClient {
   constructor(

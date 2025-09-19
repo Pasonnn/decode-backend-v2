@@ -75,6 +75,17 @@ export class LinkService {
     try {
       const { address, signature, user_id } = input;
       const address_lowercase = address.toLowerCase();
+      // Check if amount of wallets is exceeded
+      const countWallets = await this.countWallets({
+        user_id: user_id,
+      });
+      if (countWallets >= WALLET_CONSTANTS.LIMITS.MAX_WALLETS_PER_USER) {
+        return {
+          success: false,
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: MESSAGES.WALLET_LINK.MAX_WALLETS_EXCEEDED,
+        };
+      }
       // Check if wallet is already linked
       const existingWallet = await this.walletExists({
         address: address_lowercase,
@@ -290,5 +301,13 @@ export class LinkService {
       address: address_lowercase,
     });
     return wallet ? true : false;
+  }
+
+  private async countWallets(input: { user_id: string }): Promise<number> {
+    const { user_id } = input;
+    const count = await this.walletModel.countDocuments({
+      user_id: new Types.ObjectId(user_id),
+    });
+    return count;
   }
 }

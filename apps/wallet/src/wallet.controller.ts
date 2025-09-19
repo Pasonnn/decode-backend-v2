@@ -85,7 +85,7 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('link')
+  @Get('link/me')
   async getWallets(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
     return this.linkService.getWallets({ user_id: user.userId });
   }
@@ -99,7 +99,7 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard)
-  @Delete('link')
+  @Delete('link/unlink')
   async unlinkWallet(
     @Body() dto: UnlinkWalletDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -148,10 +148,18 @@ export class WalletController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('primary')
+  @Get('primary/me')
   async getPrimaryWallet(
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     return this.primaryService.getPrimaryWallet({ user_id: user.userId });
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('primary/:user_id')
+  async getPrimaryWalletByUserId(
+    @Param('user_id') user_id: string,
+  ): Promise<Response> {
+    return this.primaryService.getPrimaryWallet({ user_id });
   }
 }

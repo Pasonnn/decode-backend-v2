@@ -1,6 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { UserServiceClient } from '../../infrastructure/external-services/user-service.client';
+import { WalletServiceClient } from '../../infrastructure/external-services/wallet-service.client';
+
+// Response and Doc Interfaces
 import { Response } from '../../interfaces/response.interface';
+import { UserDoc } from '../../interfaces/user-doc.interface';
+import { WalletDoc } from '../../interfaces/wallet-doc.interface';
 
 // Import the interfaces from the client
 import type {
@@ -17,14 +22,18 @@ import type {
   SearchUsersRequest,
   SearchUsernameRequest,
   SearchEmailRequest,
-  UserDoc,
-} from '../../infrastructure/external-services/user-service.client';
+} from '../../interfaces/user-service.interface';
+
+import { MESSAGES } from 'apps/wallet/src/constants/messages.constants';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly userServiceClient: UserServiceClient) {}
+  constructor(
+    private readonly userServiceClient: UserServiceClient,
+    private readonly walletServiceClient: WalletServiceClient,
+  ) {}
 
   // ==================== PROFILE METHODS ====================
 
@@ -34,25 +43,46 @@ export class UsersService {
   async getUserProfile(
     data: GetUserProfileRequest,
     authorization: string,
-  ): Promise<Response<UserDoc>> {
+  ): Promise<Response> {
     try {
       this.logger.log(`Getting profile for user: ${data.user_id}`);
-      const response = await this.userServiceClient.getUserProfile(
-        data,
-        authorization,
-      );
-
-      if (response.success) {
-        this.logger.log(
-          `Successfully retrieved profile for user: ${data.user_id}`,
-        );
-      } else {
+      // Get user basic
+      const user_profile_response: Response<UserDoc> =
+        await this.userServiceClient.getUserProfile(data, authorization);
+      if (!user_profile_response.success || !user_profile_response.data) {
         this.logger.error(
-          `Failed to get profile for user: ${data.user_id}: ${response.message}`,
+          `Failed to get profile for user: ${data.user_id}: ${user_profile_response.message}`,
         );
+        return user_profile_response;
       }
+      const user_profile_data = user_profile_response.data;
+      // Get user primary wallet
+      const user_primary_wallet_response: Response<WalletDoc> =
+        await this.walletServiceClient.getPrimaryWallet(authorization);
 
-      return response;
+      if (
+        !user_primary_wallet_response.success ||
+        !user_primary_wallet_response.data
+      ) {
+        this.logger.error(
+          `Failed to get primary wallet for user: ${data.user_id}: ${user_primary_wallet_response.message}`,
+        );
+        return user_primary_wallet_response;
+      }
+      const user_primary_wallet_data = user_primary_wallet_response.data;
+      const user_profile_data_with_primary_wallet: UserDoc = {
+        ...user_profile_data,
+        primary_wallet: user_primary_wallet_data,
+      };
+
+      // TODO: User Relationship Fetching
+
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.PROFILE_FETCHED,
+        data: user_profile_data_with_primary_wallet,
+      };
     } catch (error) {
       this.logger.error(
         `Failed to get profile for user ${data.user_id}: ${
@@ -66,20 +96,45 @@ export class UsersService {
   /**
    * Get current user profile (requires authorization)
    */
-  async getMyProfile(authorization: string): Promise<Response<UserDoc>> {
+  async getMyProfile(authorization: string): Promise<Response> {
     try {
       this.logger.log('Getting current user profile');
-      const response = await this.userServiceClient.getMyProfile(authorization);
+      const get_my_profile_response: Response<UserDoc> =
+        await this.userServiceClient.getMyProfile(authorization);
 
-      if (!response.success) {
+      if (!get_my_profile_response.success || !get_my_profile_response.data) {
         this.logger.error(
-          `Failed to get current user profile: ${response.message}`,
+          `Failed to get current user profile: ${get_my_profile_response.message}`,
         );
-      } else {
-        this.logger.log('Successfully retrieved current user profile');
+        return get_my_profile_response;
       }
 
-      return response;
+      const get_my_primary_wallet_response: Response<WalletDoc> =
+        await this.walletServiceClient.getPrimaryWallet(authorization);
+
+      if (
+        !get_my_primary_wallet_response.success ||
+        !get_my_primary_wallet_response.data
+      ) {
+        this.logger.error(
+          `Failed to get current user primary wallet: ${get_my_primary_wallet_response.message}`,
+        );
+        return get_my_primary_wallet_response;
+      }
+
+      const get_my_profile_data_with_primary_wallet: UserDoc = {
+        ...get_my_profile_response.data,
+        primary_wallet: get_my_primary_wallet_response.data,
+      };
+
+      // TODO: User Relationship Fetching (Following, Followers Number Only)
+
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.PROFILE_FETCHED,
+        data: get_my_profile_data_with_primary_wallet,
+      };
     } catch (error) {
       this.logger.error(
         `Failed to get current user profile: ${

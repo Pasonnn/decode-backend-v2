@@ -183,6 +183,7 @@ export const MESSAGES = {
 
   // Success Messages
   SUCCESS: {
+    PROFILE_FETCHED: 'Profile fetched successfully',
     // Authentication Success
     LOGIN_SUCCESSFUL: 'Wallet login successful',
     LOGIN_CHALLENGE_GENERATED: 'Login challenge generated successfully',
