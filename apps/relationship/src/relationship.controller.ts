@@ -220,7 +220,7 @@ export class RelationshipController {
 
   // ==================== SUGGEST ENDPOINTS ====================
 
-  @Get('suggest/followings-of-followings')
+  @Get('suggest')
   @UseGuards(AuthGuard)
   async getSuggestions(
     @Query() query: GetSuggestionsPaginatedDto,

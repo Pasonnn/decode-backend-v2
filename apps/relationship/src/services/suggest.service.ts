@@ -11,27 +11,6 @@ import { NodeResponse } from '../interfaces/node-response.interface';
 
 // Service Import
 import { UserService } from './user.service';
-
-/**
- * SuggestService - Friend Suggestion Algorithm Service
- *
- * This service implements a sophisticated friend suggestion algorithm that combines
- * graph-based relationship analysis with Redis caching for optimal performance.
- *
- * Algorithm Overview:
- * 1. Second-degree connections: Friends of friends (2 hops away)
- * 2. Third-degree connections: Friends of friends of friends (3 hops away)
- * 3. Intelligent pagination that transitions from 2nd to 3rd degree suggestions
- * 4. Redis-based deduplication to prevent showing already suggested users
- *
- * Performance Optimizations:
- * - Redis caching with 5-minute TTL to store previously suggested users
- * - Pagination-aware algorithm that calculates optimal transition points
- * - Graph database queries optimized for relationship traversal
- *
- * @author Development Team
- * @since 1.0.0
- */
 @Injectable()
 export class SuggestService {
   private readonly logger = new Logger(SuggestService.name);
@@ -46,50 +25,6 @@ export class SuggestService {
     this.userService = userService;
   }
 
-  /**
-   * Retrieves paginated friend suggestions for a user using a multi-tier algorithm
-   *
-   * Algorithm Flow:
-   * 1. Fetches suggestions from Neo4j using a hybrid 2nd/3rd degree approach
-   * 2. Retrieves cached suggestions from Redis to avoid duplicates
-   * 3. Filters out already suggested users using set difference operation
-   * 4. Updates Redis cache with new suggestions (5-minute TTL)
-   * 5. Returns filtered, paginated results
-   *
-   * Caching Strategy:
-   * - Key: `suggestions:${user_id}`
-   * - TTL: 5 minutes (300 seconds)
-   * - Purpose: Prevent duplicate suggestions across pagination requests
-   *
-   * Performance Considerations:
-   * - O(n) filtering operation where n = number of new suggestions
-   * - Redis operations are O(1) for get/set
-   * - Neo4j queries use indexed user_id fields for optimal traversal
-   *
-   * Error Handling:
-   * - Graceful degradation on Neo4j failures
-   * - Redis failures don't block suggestions (cache miss scenario)
-   * - Comprehensive logging for debugging and monitoring
-   *
-   * @param input - Request parameters
-   * @param input.user_id - Target user ID for generating suggestions
-   * @param input.page - Page number (0-based indexing)
-   * @param input.limit - Number of suggestions per page
-   *
-   * @returns Promise<PaginationResponse<UserNeo4jDoc[]>> - Paginated suggestion results
-   *
-   * @example
-   * ```typescript
-   * const suggestions = await suggestService.getSuggestionsPaginated({
-   *   user_id: 'user123',
-   *   page: 0,
-   *   limit: 10
-   * });
-   * ```
-   *
-   * @throws {Error} When Neo4j infrastructure fails
-   * @throws {Error} When Redis infrastructure is unavailable
-   */
   async getSuggestionsPaginated(input: {
     user_id: string;
     page: number;
@@ -98,9 +33,7 @@ export class SuggestService {
     const { user_id, page, limit } = input;
 
     try {
-      // Step 1: Fetch fresh suggestions from Neo4j using hybrid 2nd/3rd degree algorithm
-      // This method intelligently transitions from 2nd to 3rd degree connections
-      // based on available data and pagination requirements
+      // Step 1: Get fresh suggestions from Neo4j with priority ordering
       const suggestions: PaginationResponse<NodeResponse<UserNeo4jDoc>[]> =
         await this.neo4jInfrastructure.getFriendsSuggestions({
           user_id: user_id,
@@ -120,42 +53,32 @@ export class SuggestService {
       const new_suggestion_users: NodeResponse<UserNeo4jDoc>[] =
         suggestions.data.users;
 
-      // Step 2: Retrieve cached suggestions to implement deduplication
-      // Cache key format: suggestions:${user_id}
-      // This prevents showing the same user multiple times across different pages
-      const cached_suggestion_users =
-        ((await this.redisInfrastructure.get(
-          `suggestions:${user_id}`,
-        )) as NodeResponse<UserNeo4jDoc>[]) || []; // Default to empty array if cache miss
+      // Step 2: Get previously suggested users from Redis cache for deduplication
+      // This prevents showing the same user across different pages
+      const cache_key = `suggestions:${user_id}`;
+      const cached_suggestion_user_ids =
+        await this.getCachedSuggestionUserIds(cache_key);
 
-      // Step 3: Filter out already suggested users using set difference
-      // Time complexity: O(n*m) where n = new suggestions, m = cached suggestions
-      // TODO: Consider using Set data structure for O(1) lookup performance
+      // Step 3: Filter out already suggested users
       const not_cached_suggestion_users = new_suggestion_users.filter(
-        (user) =>
-          !cached_suggestion_users.some(
-            (cachedUser) =>
-              cachedUser.properties.user_id === user.properties.user_id,
-          ),
+        (user) => !cached_suggestion_user_ids.has(user.properties.user_id),
       );
 
-      // Step 4: Update Redis cache with combined suggestions
-      // TTL: 5 minutes to balance freshness with performance
-      // This ensures users don't see the same suggestions repeatedly
-      await this.redisInfrastructure.set(
-        `suggestions:${user_id}`,
-        [...cached_suggestion_users, ...not_cached_suggestion_users],
-        5 * 60, // 5 minutes TTL
-      );
+      // Step 4: Update Redis cache with new suggestions
+      if (not_cached_suggestion_users.length > 0) {
+        await this.updateCachedSuggestionUserIds(
+          cache_key,
+          not_cached_suggestion_users.map((user) => user.properties.user_id),
+        );
+      }
 
-      // Step 5: Filter out already suggested users with needed information
+      // Step 5: Filter users with additional information (blocked status, etc.)
       const suggestion_users = await this.userService.filterUsers({
         users: not_cached_suggestion_users,
         from_user_id: user_id,
       });
 
       // Step 6: Return filtered, paginated results
-      // Note: The total count reflects filtered results, not original Neo4j count
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -163,7 +86,7 @@ export class SuggestService {
         data: {
           users: suggestion_users,
           meta: {
-            total: suggestion_users.length,
+            total: suggestions.data.meta.total,
             page: page,
             limit: limit,
             is_last_page: suggestions.data.meta.is_last_page,
@@ -182,6 +105,58 @@ export class SuggestService {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: `Failed to get suggestions`,
       };
+    }
+  }
+
+  /**
+   * Get cached suggestion user IDs from Redis
+   * Returns a Set for O(1) lookup performance
+   */
+  private async getCachedSuggestionUserIds(
+    cache_key: string,
+  ): Promise<Set<string>> {
+    try {
+      const cached_ids = (await this.redisInfrastructure.get(
+        cache_key,
+      )) as unknown;
+      if (Array.isArray(cached_ids)) {
+        return new Set(cached_ids as string[]);
+      }
+      return new Set();
+    } catch (error) {
+      this.logger.warn(
+        `Failed to get cached suggestions: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return new Set();
+    }
+  }
+
+  /**
+   * Update Redis cache with new suggestion user IDs
+   * Appends new IDs to existing cache to maintain deduplication across pages
+   */
+  private async updateCachedSuggestionUserIds(
+    cache_key: string,
+    new_user_ids: string[],
+  ): Promise<void> {
+    try {
+      // Get existing cached IDs
+      const existing_ids = await this.getCachedSuggestionUserIds(cache_key);
+
+      // Add new IDs to existing set (automatically deduplicates)
+      new_user_ids.forEach((id) => existing_ids.add(id));
+
+      // Convert back to array and store in Redis
+      const all_ids = Array.from(existing_ids);
+      await this.redisInfrastructure.set(cache_key, all_ids, 5 * 60); // 5 minutes TTL
+
+      this.logger.log(
+        `Updated suggestion cache for key ${cache_key} with ${new_user_ids.length} new suggestions`,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to update cached suggestions: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

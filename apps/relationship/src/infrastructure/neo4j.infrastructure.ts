@@ -284,6 +284,11 @@ export class Neo4jInfrastructure implements OnModuleInit {
 
   // ==================== SUGGEST ====================
 
+  /**
+   * Get friend suggestions with two-tier priority system:
+   * 1. Primary: Friends of friends (A follows B, B follows C → suggest C)
+   * 2. Secondary: Users who follow the same people (A follows E, D follows E → suggest D)
+   */
   async getFriendsSuggestions(input: {
     user_id: string;
     page: number;
@@ -292,57 +297,49 @@ export class Neo4jInfrastructure implements OnModuleInit {
     const session = this.getSession();
     const { user_id, page, limit } = input;
     try {
-      const second_degree_suggestions_count =
-        await this.secondDegreeSuggestionsCount({
-          user_id: user_id,
-        });
-      const third_degree_start_page = Math.ceil(
-        second_degree_suggestions_count / limit,
-      );
-      if (page < third_degree_start_page) {
-        const second_degree_suggestions: NodeResponse<UserNeo4jDoc>[] =
-          await this.secondDegreeSuggestions({
-            user_id: user_id,
-            page: page,
-            limit: limit,
-          });
+      // Get total count of all suggestions (primary + secondary)
+      const total_count = await this.getSuggestionsTotalCount({ user_id });
+
+      if (total_count === 0) {
         return {
           success: true,
           statusCode: HttpStatus.OK,
-          message: `Second degree suggestions fetched successfully`,
+          message: `No suggestions found`,
           data: {
-            users: second_degree_suggestions,
+            users: [],
             meta: {
-              total: second_degree_suggestions.length,
+              total: 0,
               page: page,
               limit: limit,
-              is_last_page: false,
-            },
-          },
-        };
-      } else {
-        const third_degree_suggestions: NodeResponse<UserNeo4jDoc>[] =
-          await this.thirdDegreeSuggestions({
-            user_id: user_id,
-            page: third_degree_start_page,
-            limit: limit,
-          });
-        const is_last_page = third_degree_suggestions.length < limit;
-        return {
-          success: true,
-          statusCode: HttpStatus.OK,
-          message: `Third degree suggestions fetched successfully`,
-          data: {
-            users: third_degree_suggestions,
-            meta: {
-              total: third_degree_suggestions.length,
-              page: third_degree_start_page,
-              limit: limit,
-              is_last_page: is_last_page,
+              is_last_page: true,
             },
           },
         };
       }
+
+      // Get paginated suggestions with priority ordering
+      const suggestions = await this.getPaginatedSuggestions({
+        user_id,
+        page,
+        limit,
+      });
+
+      const is_last_page = (page + 1) * limit >= total_count;
+
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: `Friend suggestions fetched successfully`,
+        data: {
+          users: suggestions,
+          meta: {
+            total: total_count,
+            page: page,
+            limit: limit,
+            is_last_page: is_last_page,
+          },
+        },
+      };
     } catch (error) {
       this.logger.error(
         `Failed to get friends suggestions: ${error instanceof Error ? error.message : String(error)}`,
@@ -357,90 +354,117 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
-  private async secondDegreeSuggestions(input: {
-    user_id: string;
-    page: number;
-    limit: number;
-  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
-    const session = this.getSession();
-    const { user_id, page, limit } = input;
-    try {
-      const query = `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
-      WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
-      RETURN DISTINCT fof
-      SKIP ${page * limit} LIMIT ${limit}`;
-      const result = await session.run(query);
-      if (result.records.length === 0) {
-        this.logger.log(
-          `No second degree suggestions found for user: ${user_id}`,
-        );
-        return [];
-      }
-      return result.records.map(
-        (record) => record.get('fof') as NodeResponse<UserNeo4jDoc>,
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to get second degree suggestions: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      return [];
-    } finally {
-      await session.close();
-    }
-  }
-
-  private async thirdDegreeSuggestions(input: {
-    user_id: string;
-    page: number;
-    limit: number;
-  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
-    const session = this.getSession();
-    const { user_id, page, limit } = input;
-    try {
-      const query = `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)-[:FOLLOWING]->(fofof)
-      WHERE NOT (me)-[:FOLLOWING]->(fofof) AND me <> fofof AND fof <> fofof
-      RETURN DISTINCT fofof
-      SKIP ${page * limit} LIMIT ${limit}`;
-      const result = await session.run(query);
-      if (result.records.length === 0) {
-        this.logger.log(
-          `No third degree suggestions found for user: ${user_id}`,
-        );
-        return [];
-      }
-      return result.records.map(
-        (record) => record.get('fofof') as NodeResponse<UserNeo4jDoc>,
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to get second degree suggestions: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      return [];
-    } finally {
-      await session.close();
-    }
-  }
-
-  private async secondDegreeSuggestionsCount(input: {
+  /**
+   * Get total count of all suggestions (primary + secondary)
+   */
+  private async getSuggestionsTotalCount(input: {
     user_id: string;
   }): Promise<number> {
     const session = this.getSession();
     const { user_id } = input;
     try {
-      const query = `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
-      WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
-      RETURN COUNT(DISTINCT fof.user_id)`;
+      const query = `
+        // Primary suggestions: Friends of friends
+        MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(friend)-[:FOLLOWING]->(primary_candidate)
+        WHERE NOT (me)-[:FOLLOWING]->(primary_candidate) AND me <> primary_candidate
+        WITH me, collect(DISTINCT primary_candidate.user_id) as primary_users, count(DISTINCT primary_candidate) as primary_count
+
+        // Secondary suggestions: Users who follow the same people
+        MATCH (me)-[:FOLLOWING]->(mutual_following)<-[:FOLLOWING]-(secondary_candidate)
+        WHERE NOT (me)-[:FOLLOWING]->(secondary_candidate)
+          AND me <> secondary_candidate
+          AND NOT secondary_candidate.user_id IN primary_users
+        WITH primary_count, count(DISTINCT secondary_candidate) as secondary_count
+
+        // Final result
+        RETURN primary_count + secondary_count AS total_count
+      `;
+
       const result = await session.run(query);
-      return result.records[0].get('count') as number;
+      return (result.records[0]?.get('total_count') as number) || 0;
     } catch (error) {
       this.logger.error(
-        `Failed to get second degree suggestions count: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to get suggestions total count: ${error instanceof Error ? error.message : String(error)}`,
       );
       return 0;
     } finally {
       await session.close();
     }
   }
+
+  /**
+   * Get paginated suggestions with priority ordering
+   * Primary suggestions (friends of friends) come first, then secondary suggestions
+   */
+  private async getPaginatedSuggestions(input: {
+    user_id: string;
+    page: number;
+    limit: number;
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
+    const session = this.getSession();
+    const { user_id, page, limit } = input;
+    try {
+      const query = `
+        // Primary suggestions: Friends of friends (Priority 1)
+        MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(friend)-[:FOLLOWING]->(primary_candidate)
+        WHERE NOT (me)-[:FOLLOWING]->(primary_candidate) AND me <> primary_candidate
+        WITH me, collect(DISTINCT {user: primary_candidate, priority: 1, mutual_count: 1}) as primary_suggestions
+
+        // Secondary suggestions: Users who follow the same people (Priority 2)
+        MATCH (me)-[:FOLLOWING]->(mutual_following)<-[:FOLLOWING]-(secondary_candidate)
+        WHERE NOT (me)-[:FOLLOWING]->(secondary_candidate) AND me <> secondary_candidate
+        WITH me, primary_suggestions,
+             collect(DISTINCT {user: secondary_candidate, priority: 2, mutual_count: 1}) as secondary_suggestions
+
+        // Combine and deduplicate suggestions
+        WITH primary_suggestions + secondary_suggestions as all_suggestions
+        UNWIND all_suggestions as suggestion
+        WITH suggestion.user as candidate, suggestion.priority as priority,
+             count(suggestion) as mutual_count
+
+        // Remove duplicates and order by priority (primary first), then by mutual count
+        RETURN DISTINCT candidate, priority, mutual_count
+        ORDER BY priority ASC, mutual_count DESC
+        SKIP ${page * limit} LIMIT ${limit}
+      `;
+
+      console.log(query);
+
+      const result = await session.run(query);
+
+      if (result.records.length === 0) {
+        this.logger.log(`No suggestions found for user: ${user_id}`);
+        return [];
+      }
+
+      return result.records.map((record) => {
+        const candidate = record.get('candidate') as NodeResponse<UserNeo4jDoc>;
+        const priority = record.get('priority') as number;
+        const mutual_count = record.get('mutual_count') as number;
+
+        return {
+          ...candidate,
+          properties: {
+            ...candidate.properties,
+            suggestion_priority: priority,
+            mutual_connections_count: mutual_count,
+            suggestion_reason:
+              priority === 1
+                ? `Suggested because they are followed by someone you follow`
+                : `Suggested because you both follow the same people`,
+          },
+        };
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to get paginated suggestions: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return [];
+    } finally {
+      await session.close();
+    }
+  }
+
   // ==================== MUTUAL ====================
 
   async getMutualFollowers(input: {
