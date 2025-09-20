@@ -64,8 +64,8 @@ export class BlockService {
         });
       if (user_to_following_response) {
         await this.followService.removeFollower({
-          user_id_from: user_id_to,
-          user_id_to: user_id_from,
+          user_id_from: user_id_from,
+          user_id_to: user_id_to,
         });
       }
       // Block user

@@ -83,27 +83,27 @@ export class RelationshipController {
     });
   }
 
-  @Delete('follow/unfollow')
+  @Delete('follow/unfollow/:user_id_to')
   @UseGuards(AuthGuard)
   async unfollow(
-    @Body() body: UnfollowDto,
+    @Param() params: UnfollowDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     return await this.followService.unfollowingUser({
       user_id_from: user.userId,
-      user_id_to: body.user_id_to,
+      user_id_to: params.user_id_to,
     });
   }
 
-  @Delete('follow/remove-follower')
+  @Delete('follow/remove-follower/:user_id_to')
   @UseGuards(AuthGuard)
   async removeFollower(
-    @Body() body: RemoveFollowerDto,
+    @Param() params: RemoveFollowerDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     return await this.followService.removeFollower({
       user_id_from: user.userId,
-      user_id_to: body.user_id_to,
+      user_id_to: params.user_id_to,
     });
   }
 
@@ -149,15 +149,15 @@ export class RelationshipController {
     });
   }
 
-  @Delete('block/unblocking')
+  @Delete('block/unblocking/:user_id_to')
   @UseGuards(AuthGuard)
   async unblock(
-    @Body() body: UnblockDto,
+    @Param() params: UnblockDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     return await this.blockService.unblockUser({
       user_id_from: user.userId,
-      user_id_to: body.user_id_to,
+      user_id_to: params.user_id_to,
     });
   }
 
@@ -176,15 +176,15 @@ export class RelationshipController {
 
   // ==================== MUTUAL ENDPOINTS ====================
 
-  @Post('mutual/followers')
+  @Get('mutual/followers/:user_id_to')
   @UseGuards(AuthGuard)
   async mutual(
-    @Body() body: MutualDto,
+    @Param() params: MutualDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     return await this.mutualService.getMutualFollowers({
       user_id_from: user.userId,
-      user_id_to: body.user_id_to,
+      user_id_to: params.user_id_to,
     });
   }
 
@@ -193,34 +193,34 @@ export class RelationshipController {
   @Get('search/followers')
   @UseGuards(AuthGuard)
   async searchFollowers(
-    @Param() params: SearchFollowersDto,
+    @Query() query: SearchFollowersDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     return await this.searchService.searchFollowers({
       user_id: user.userId,
-      params: params.params,
-      page: params.page,
-      limit: params.limit,
+      params: query.params,
+      page: query.page,
+      limit: query.limit,
     });
   }
 
-  @Get('search/following')
+  @Get('search/followings')
   @UseGuards(AuthGuard)
   async searchFollowing(
-    @Param() params: SearchFollowingDto,
+    @Query() query: SearchFollowingDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
     return await this.searchService.searchFollowing({
       user_id: user.userId,
-      params: params.params,
-      page: params.page,
-      limit: params.limit,
+      params: query.params,
+      page: query.page,
+      limit: query.limit,
     });
   }
 
   // ==================== SUGGEST ENDPOINTS ====================
 
-  @Get('suggest/followers')
+  @Get('suggest/followings-of-followings')
   @UseGuards(AuthGuard)
   async getSuggestions(
     @Query() query: GetSuggestionsPaginatedDto,

@@ -105,7 +105,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
       const result = await session.run(query);
       if (result.records.length === 0) {
         this.logger.log(
-          `Relationship not found: ${user_id_from} to ${user_id_to}`,
+          `Relationship not found: ${user_id_from} is not ${relationship_type} ${user_id_to}`,
         );
         return false;
       }
@@ -282,6 +282,8 @@ export class Neo4jInfrastructure implements OnModuleInit {
     }
   }
 
+  // ==================== SUGGEST ====================
+
   async getFriendsSuggestions(input: {
     user_id: string;
     page: number;
@@ -365,7 +367,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       const query = `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)
       WHERE NOT (me)-[:FOLLOWING]->(fof) AND me <> fof
-      RETURN DISTINCT fof.user_id, fof.username, fof.display_name, fof.avatar_ipfs_hash
+      RETURN DISTINCT fof
       SKIP ${page * limit} LIMIT ${limit}`;
       const result = await session.run(query);
       if (result.records.length === 0) {
@@ -397,7 +399,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       const query = `MATCH (me:User {user_id: "${user_id}"})-[:FOLLOWING]->(follower)-[:FOLLOWING]->(fof)-[:FOLLOWING]->(fofof)
       WHERE NOT (me)-[:FOLLOWING]->(fofof) AND me <> fofof AND fof <> fofof
-      RETURN DISTINCT fofof.user_id, fofof.username, fofof.display_name, fofof.avatar_ipfs_hash
+      RETURN DISTINCT fofof
       SKIP ${page * limit} LIMIT ${limit}`;
       const result = await session.run(query);
       if (result.records.length === 0) {
@@ -439,6 +441,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
       await session.close();
     }
   }
+  // ==================== MUTUAL ====================
 
   async getMutualFollowers(input: {
     user_id_from: string;
@@ -478,8 +481,8 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       const query = `MATCH (s:User)-[:FOLLOWING]->(t:User {user_id: "${user_id}"})
       WHERE (toLower(t.username) CONTAINS toLower("${params}")
-         OR toLower(t.display_name) CONTAINS toLower("${params}")
-         RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash
+         OR toLower(t.display_name) CONTAINS toLower("${params}"))
+         RETURN t
          SKIP ${page * limit} LIMIT ${limit}`;
       const result = await session.run(query);
       if (result.records.length === 0) {
@@ -510,8 +513,8 @@ export class Neo4jInfrastructure implements OnModuleInit {
     try {
       const query = `MATCH (s:User {user_id: "${user_id}"})-[:FOLLOWING]->(t:User)
       WHERE (toLower(t.username) CONTAINS toLower("${params}")
-         OR toLower(t.display_name) CONTAINS toLower("${params}")
-         RETURN t.user_id, t.username, t.display_name, t.avatar_ipfs_hash
+         OR toLower(t.display_name) CONTAINS toLower("${params}"))
+         RETURN t
          SKIP ${page * limit} LIMIT ${limit}`;
       const result = await session.run(query);
       if (result.records.length === 0) {

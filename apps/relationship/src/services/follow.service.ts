@@ -48,18 +48,6 @@ export class FollowService {
           message: `You cannot follow yourself`,
         };
       }
-      // Check if user blocked
-      const user_blocked_response = await this.blockService.checkIfUserBlocked({
-        user_id_from: user_id_from,
-        user_id_to: user_id_to,
-      });
-      if (user_blocked_response) {
-        return {
-          success: false,
-          statusCode: HttpStatus.FORBIDDEN,
-          message: `User blocked`,
-        };
-      }
       // Check if you are already following user to
       const user_following_response = await this.checkIfUserFollowing({
         user_id_from: user_id_from,
@@ -72,6 +60,20 @@ export class FollowService {
           message: `You are already following this user`,
         };
       }
+
+      // Check if user blocked
+      const user_blocked_response = await this.blockService.checkIfUserBlocked({
+        user_id_from: user_id_from,
+        user_id_to: user_id_to,
+      });
+      if (user_blocked_response) {
+        return {
+          success: false,
+          statusCode: HttpStatus.FORBIDDEN,
+          message: `You blocked this user`,
+        };
+      }
+
       // Following payload
       const following_payload = {
         user_id_from: user_id_from,
@@ -120,18 +122,6 @@ export class FollowService {
           message: `You cannot unfollow yourself`,
         };
       }
-      // Check if user blocked
-      const user_blocked_response = await this.blockService.checkIfUserBlocked({
-        user_id_from: user_id_from,
-        user_id_to: user_id_to,
-      });
-      if (user_blocked_response) {
-        return {
-          success: false,
-          statusCode: HttpStatus.FORBIDDEN,
-          message: `User blocked`,
-        };
-      }
       // Check if you are following user to
       const user_following_response = await this.checkIfUserFollowing({
         user_id_from: user_id_from,
@@ -144,6 +134,20 @@ export class FollowService {
           message: `You are not following this user`,
         };
       }
+
+      // Check if user blocked
+      const user_blocked_response = await this.blockService.checkIfUserBlocked({
+        user_id_from: user_id_from,
+        user_id_to: user_id_to,
+      });
+      if (user_blocked_response) {
+        return {
+          success: false,
+          statusCode: HttpStatus.FORBIDDEN,
+          message: `You blocked this user`,
+        };
+      }
+
       // Unfollowing payload
       const unfollowing_payload = {
         user_id_from: user_id_from,
