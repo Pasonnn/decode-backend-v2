@@ -6,6 +6,7 @@ import { AxiosRequestConfig } from 'axios';
 
 // Response and Doc Interfaces
 import { Response } from '../../interfaces/response.interface';
+import { UserRelationshipDoc } from '../../interfaces/user-relationship-doc.interface';
 
 // Relationship Service Interfaces
 import {
@@ -50,7 +51,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async getUser(
     data: GetUserRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserRelationshipDoc>> {
     const config = {
       headers: {
         Authorization: authorization,
@@ -64,7 +65,10 @@ export class RelationshipServiceClient extends BaseHttpClient {
   /**
    * Follow a user
    */
-  async follow(data: FollowRequest, authorization: string): Promise<Response> {
+  async follow(
+    data: FollowRequest,
+    authorization: string,
+  ): Promise<Response<void>> {
     const config = {
       headers: {
         Authorization: authorization,
@@ -79,7 +83,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async unfollow(
     data: UnfollowRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<void>> {
     const config = {
       headers: {
         Authorization: authorization,
@@ -97,7 +101,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async removeFollower(
     data: RemoveFollowerRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<void>> {
     const config = {
       headers: {
         Authorization: authorization,
@@ -115,7 +119,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async getFollowing(
     data: GetFollowingRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserRelationshipDoc[]>> {
     const queryParams = new URLSearchParams();
     if (data.page !== undefined) {
       queryParams.append('page', data.page.toString());
@@ -143,7 +147,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async getFollowers(
     data: GetFollowersRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserRelationshipDoc[]>> {
     const queryParams = new URLSearchParams();
     if (data.page !== undefined) {
       queryParams.append('page', data.page.toString());
@@ -170,7 +174,10 @@ export class RelationshipServiceClient extends BaseHttpClient {
   /**
    * Block a user
    */
-  async block(data: BlockRequest, authorization: string): Promise<Response> {
+  async block(
+    data: BlockRequest,
+    authorization: string,
+  ): Promise<Response<void>> {
     const config = {
       headers: {
         Authorization: authorization,
@@ -185,7 +192,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async unblock(
     data: UnblockRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<void>> {
     const config = {
       headers: {
         Authorization: authorization,
@@ -203,7 +210,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async getBlockedUsers(
     data: GetBlockedUsersRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserRelationshipDoc[]>> {
     const queryParams = new URLSearchParams();
     if (data.page !== undefined) {
       queryParams.append('page', data.page.toString());
@@ -233,7 +240,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async getMutualFollowers(
     data: MutualRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserRelationshipDoc[]>> {
     const config = {
       headers: {
         Authorization: authorization,
@@ -253,7 +260,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async searchFollowers(
     data: SearchFollowersRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserRelationshipDoc[]>> {
     const queryParams = new URLSearchParams();
     if (data.params) {
       queryParams.append('params', data.params);
@@ -284,7 +291,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async searchFollowing(
     data: SearchFollowingRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserRelationshipDoc[]>> {
     const queryParams = new URLSearchParams();
     if (data.params) {
       queryParams.append('params', data.params);
@@ -317,7 +324,7 @@ export class RelationshipServiceClient extends BaseHttpClient {
   async getSuggestions(
     data: GetSuggestionsRequest,
     authorization: string,
-  ): Promise<Response> {
+  ): Promise<Response<UserRelationshipDoc[]>> {
     const queryParams = new URLSearchParams();
     if (data.page !== undefined) {
       queryParams.append('page', data.page.toString());

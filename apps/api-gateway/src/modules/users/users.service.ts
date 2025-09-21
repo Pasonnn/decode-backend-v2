@@ -1,11 +1,13 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { UserServiceClient } from '../../infrastructure/external-services/user-service.client';
 import { WalletServiceClient } from '../../infrastructure/external-services/wallet-service.client';
+import { RelationshipServiceClient } from '../../infrastructure/external-services/relationship-service.client';
 
 // Response and Doc Interfaces
 import { Response } from '../../interfaces/response.interface';
 import { UserDoc } from '../../interfaces/user-doc.interface';
 import { WalletDoc } from '../../interfaces/wallet-doc.interface';
+import { UserRelationshipDoc } from '../../interfaces/user-relationship-doc.interface';
 
 // Import the interfaces from the client
 import type {
@@ -33,6 +35,7 @@ export class UsersService {
   constructor(
     private readonly userServiceClient: UserServiceClient,
     private readonly walletServiceClient: WalletServiceClient,
+    private readonly relationshipServiceClient: RelationshipServiceClient,
   ) {}
 
   // ==================== PROFILE METHODS ====================
@@ -59,52 +62,74 @@ export class UsersService {
 
       // Get user primary wallet with graceful degradation
       let user_primary_wallet_data: WalletDoc | undefined = undefined;
-      let walletServiceAvailable = true;
 
-      try {
-        const user_primary_wallet_response: Response<WalletDoc> =
-          await this.walletServiceClient.getPrimaryWallet(authorization);
+      const user_primary_wallet_response: Response<WalletDoc> =
+        await this.walletServiceClient.getPrimaryWallet(authorization);
 
-        if (
-          user_primary_wallet_response.success &&
-          user_primary_wallet_response.data
-        ) {
-          user_primary_wallet_data = user_primary_wallet_response.data;
-          this.logger.log(
-            `Successfully fetched primary wallet for user: ${data.user_id}`,
-          );
-        } else {
-          this.logger.warn(
-            `Primary wallet not found for user: ${data.user_id}`,
-          );
-        }
-      } catch (walletError) {
-        walletServiceAvailable = false;
-        this.logger.warn(
-          `Wallet service unavailable for user ${data.user_id}: ${
-            walletError instanceof Error
-              ? walletError.message
-              : String(walletError)
-          }`,
+      if (
+        user_primary_wallet_response.success &&
+        user_primary_wallet_response.data
+      ) {
+        user_primary_wallet_data = user_primary_wallet_response.data;
+        this.logger.log(
+          `Successfully fetched primary wallet for user: ${data.user_id}`,
         );
+      } else {
+        this.logger.warn(`Primary wallet not found for user: ${data.user_id}`);
       }
 
-      const user_profile_data_with_primary_wallet: UserDoc = {
+      const full_user_profile_data: UserDoc = {
         ...user_profile_data,
         primary_wallet: user_primary_wallet_data,
       };
 
-      // TODO: User Relationship Fetching
+      // User Relationship Fetching
+      const user_relationship_response: Response<UserRelationshipDoc> =
+        await this.relationshipServiceClient.getUser(data, authorization);
 
-      const responseMessage = walletServiceAvailable
+      if (
+        !user_relationship_response.success ||
+        !user_relationship_response.data
+      ) {
+        this.logger.error(
+          `Failed to get user relationship for user: ${data.user_id}: ${user_relationship_response.message}`,
+        );
+      } else {
+        this.logger.log(
+          `Successfully got user relationship for user: ${data.user_id}`,
+        );
+        // Attach user relationship data to user profile
+        full_user_profile_data.following_number =
+          user_relationship_response.data.following_number;
+        full_user_profile_data.followers_number =
+          user_relationship_response.data.followers_number;
+        full_user_profile_data.is_following =
+          user_relationship_response.data.is_following;
+        full_user_profile_data.is_follower =
+          user_relationship_response.data.is_follower;
+        full_user_profile_data.is_blocked =
+          user_relationship_response.data.is_blocked;
+        full_user_profile_data.is_blocked_by =
+          user_relationship_response.data.is_blocked_by;
+        full_user_profile_data.mutual_followers_number =
+          user_relationship_response.data.mutual_followers_number;
+        full_user_profile_data.mutual_followers_list =
+          user_relationship_response.data.mutual_followers_list;
+      }
+
+      // Construct response message
+      const responseMessage = user_primary_wallet_response.success
         ? MESSAGES.SUCCESS.PROFILE_FETCHED
-        : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)`;
+        : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)` +
+          (user_relationship_response.success
+            ? ''
+            : ` (User relationship data unavailable)`);
 
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: responseMessage,
-        data: user_profile_data_with_primary_wallet,
+        data: full_user_profile_data,
       };
     } catch (error) {
       this.logger.error(
@@ -134,55 +159,69 @@ export class UsersService {
 
       // Get user primary wallet with graceful degradation
       let user_primary_wallet_data: WalletDoc | undefined = undefined;
-      let walletServiceAvailable = true;
 
-      try {
-        const get_my_primary_wallet_response: Response<WalletDoc> =
-          await this.walletServiceClient.getPrimaryWallet(authorization);
+      const get_my_primary_wallet_response: Response<WalletDoc> =
+        await this.walletServiceClient.getPrimaryWallet(authorization);
 
-        if (
-          get_my_primary_wallet_response.success &&
-          get_my_primary_wallet_response.data
-        ) {
-          user_primary_wallet_data = get_my_primary_wallet_response.data;
-          this.logger.log(
-            'Successfully fetched primary wallet for current user',
-          );
-        } else {
-          this.logger.warn('Primary wallet not found for current user');
-        }
-      } catch (walletError) {
-        walletServiceAvailable = false;
-        this.logger.warn(
-          `Wallet service unavailable for current user: ${
-            walletError instanceof Error
-              ? walletError.message
-              : String(walletError)
-          }`,
-        );
+      if (
+        get_my_primary_wallet_response.success &&
+        get_my_primary_wallet_response.data
+      ) {
+        user_primary_wallet_data = get_my_primary_wallet_response.data;
+        this.logger.log('Successfully fetched primary wallet for current user');
+      } else {
+        this.logger.warn('Primary wallet not found for current user');
       }
 
-      const get_my_profile_data_with_primary_wallet: UserDoc = {
+      const full_user_profile_data: UserDoc = {
         ...get_my_profile_response.data,
         primary_wallet: user_primary_wallet_data,
       };
 
-      this.logger.debug(
-        'get_my_profile_data_with_primary_wallet',
-        get_my_profile_data_with_primary_wallet,
-      );
+      // User Relationship Fetching (Following, Followers Number Only)
+      const user_id = get_my_profile_response.data._id;
+      const user_relationship_response: Response<UserRelationshipDoc> =
+        await this.relationshipServiceClient.getUser(
+          {
+            user_id: user_id,
+          },
+          authorization,
+        );
 
-      // TODO: User Relationship Fetching (Following, Followers Number Only)
+      if (
+        !user_relationship_response.success ||
+        !user_relationship_response.data
+      ) {
+        this.logger.error(
+          `Failed to get user relationship for user: ${user_id}: ${user_relationship_response.message}`,
+        );
+      } else {
+        this.logger.log(
+          `Successfully got user relationship for user: ${user_id}`,
+        );
+        // Attach user relationship data to user profile
+        full_user_profile_data.following_number =
+          user_relationship_response.data.following_number;
+        full_user_profile_data.followers_number =
+          user_relationship_response.data.followers_number;
+        full_user_profile_data.is_following =
+          user_relationship_response.data.is_following;
+        full_user_profile_data.is_follower =
+          user_relationship_response.data.is_follower;
+      }
 
-      const responseMessage = walletServiceAvailable
+      const responseMessage = user_primary_wallet_data
         ? MESSAGES.SUCCESS.PROFILE_FETCHED
-        : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)`;
+        : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)` +
+          (user_relationship_response.success
+            ? ''
+            : ` (User relationship data unavailable)`);
 
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: responseMessage,
-        data: get_my_profile_data_with_primary_wallet,
+        data: full_user_profile_data,
       };
     } catch (error) {
       this.logger.error(

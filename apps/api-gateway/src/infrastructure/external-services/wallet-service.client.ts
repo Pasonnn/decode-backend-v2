@@ -159,7 +159,6 @@ export class WalletServiceClient extends BaseHttpClient {
       },
     };
     const response = await this.get('/wallets/primary/me', config);
-    console.log('wallet service response', response);
     return response as Response<WalletDoc>;
   }
 
