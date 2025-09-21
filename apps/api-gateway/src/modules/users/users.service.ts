@@ -888,6 +888,7 @@ export class UsersService {
         this.logger.log(
           `Successfully emitted create_user_request for user: ${user._id}`,
         );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         return true;
       } else if (
         user_neo4j.username !== user.username ||
@@ -905,6 +906,7 @@ export class UsersService {
         this.logger.log(
           `Successfully emitted update_user_request for user: ${user._id}`,
         );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         return true;
       } else {
         this.logger.log(`User Neo4j is up to date: ${user._id}`);

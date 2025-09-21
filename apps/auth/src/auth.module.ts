@@ -165,28 +165,42 @@ import jwtConfig from './config/jwt.config';
 
     // RabbitMQ client configuration for email service communication
     // Enables asynchronous email processing for verification codes and notifications
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'EMAIL_SERVICE', // Service identifier for dependency injection
-        transport: Transport.RMQ, // RabbitMQ transport protocol
-        options: {
-          urls: [process.env.RABBITMQ_URI || 'amqp://localhost:5672'], // RabbitMQ connection URLs
-          queue: 'email_queue', // Queue name for email messages
-          queueOptions: {
-            durable: true, // Persist queue across broker restarts
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ, // RabbitMQ transport protocol
+          options: {
+            urls: [
+              configService.get<string>('RABBITMQ_URI') ||
+                'amqp://localhost:5672',
+            ], // RabbitMQ connection URLs
+            queue: 'email_queue', // Queue name for email messages
+            queueOptions: {
+              durable: true, // Persist queue across broker restarts
+            },
           },
-        },
+        }),
+        inject: [ConfigService],
       },
       {
         name: 'NEO4JDB_SYNC_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URI || 'amqp://localhost:5672'],
-          queue: 'neo4j_sync_queue',
-          queueOptions: {
-            durable: true,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              configService.get<string>('RABBITMQ_URI') ||
+                'amqp://localhost:5672',
+            ],
+            queue: 'neo4j_sync_queue',
+            queueOptions: {
+              durable: true,
+            },
           },
-        },
+        }),
+        inject: [ConfigService],
       },
     ]),
   ],
