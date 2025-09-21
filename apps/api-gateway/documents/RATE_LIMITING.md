@@ -9,12 +9,14 @@ Rate limiting prevents abuse by limiting the number of requests a user can make 
 ## 🏗️ **Architecture**
 
 ### **Components:**
+
 1. **Rate Limit Decorators** - Define rate limiting rules on endpoints
 2. **Rate Limit Guard** - Enforces rate limiting rules
 3. **Rate Limit Service** - Redis-based implementation
 4. **Configuration** - Environment-based settings
 
 ### **Storage:**
+
 - **Redis** - Stores rate limit counters with automatic expiration
 - **Sliding Window** - More accurate than fixed windows
 - **Atomic Operations** - Prevents race conditions
@@ -157,14 +159,14 @@ export default registerAs('environment', () => ({
 
 ```typescript
 interface RateLimitOptions {
-  windowMs: number;           // Time window in milliseconds
-  max: number;                // Maximum requests per window
-  message?: string;           // Custom error message
+  windowMs: number; // Time window in milliseconds
+  max: number; // Maximum requests per window
+  message?: string; // Custom error message
   keyGenerator?: (request: any) => string; // Custom key generator
-  skipSuccessfulRequests?: boolean;        // Skip successful requests
-  skipFailedRequests?: boolean;            // Skip failed requests
-  standardHeaders?: boolean;               // RFC 6585 headers
-  legacyHeaders?: boolean;                 // X-RateLimit-* headers
+  skipSuccessfulRequests?: boolean; // Skip successful requests
+  skipFailedRequests?: boolean; // Skip failed requests
+  standardHeaders?: boolean; // RFC 6585 headers
+  legacyHeaders?: boolean; // X-RateLimit-* headers
   handler?: (request: any, response: any) => void; // Custom handler
 }
 ```
@@ -178,13 +180,13 @@ keyGenerator: (req) => {
     return `rate_limit:user:${req.user.userId}`;
   }
   return `rate_limit:ip:${req.ip}`;
-}
+};
 
 // Custom key generation
-keyGenerator: (req) => `api:${req.user?.userId || req.ip}:${req.path}`
+keyGenerator: (req) => `api:${req.user?.userId || req.ip}:${req.path}`;
 
 // Role-based key generation
-keyGenerator: (req) => `${req.user?.role || 'anonymous'}:${req.ip}`
+keyGenerator: (req) => `${req.user?.role || 'anonymous'}:${req.ip}`;
 ```
 
 ## 📊 **Response Headers**
@@ -192,6 +194,7 @@ keyGenerator: (req) => `${req.user?.role || 'anonymous'}:${req.ip}`
 When rate limiting is active, the following headers are added to responses:
 
 ### **Standard Headers (RFC 6585)**
+
 ```
 RateLimit-Limit: 100
 RateLimit-Remaining: 95
@@ -199,6 +202,7 @@ RateLimit-Reset: 2023-12-01T12:00:00.000Z
 ```
 
 ### **Legacy Headers**
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -252,16 +256,19 @@ const cleaned = await rateLimitService.cleanup();
 ## 🛡️ **Security Features**
 
 ### **Fail-Open Strategy**
+
 - If Redis is unavailable, requests are allowed
 - Prevents service disruption due to Redis issues
 - Logs errors for monitoring
 
 ### **IP Address Detection**
+
 - Supports `X-Forwarded-For` header
 - Supports `X-Real-IP` header
 - Falls back to connection remote address
 
 ### **User-Based Limiting**
+
 - Authenticated users get higher limits
 - User ID is used for key generation
 - Prevents IP-based evasion
@@ -269,6 +276,7 @@ const cleaned = await rateLimitService.cleanup();
 ## 🚀 **Best Practices**
 
 ### **1. Choose Appropriate Limits**
+
 ```typescript
 // Sensitive operations - strict limits
 @AuthRateLimit.login() // 5 attempts per 15 minutes
@@ -281,6 +289,7 @@ const cleaned = await rateLimitService.cleanup();
 ```
 
 ### **2. Use Descriptive Messages**
+
 ```typescript
 @RateLimit({
   windowMs: 900000,
@@ -290,6 +299,7 @@ const cleaned = await rateLimitService.cleanup();
 ```
 
 ### **3. Monitor and Adjust**
+
 ```typescript
 // Regular monitoring
 const stats = await rateLimitService.getStats();
@@ -300,6 +310,7 @@ await rateLimitService.cleanup();
 ```
 
 ### **4. Test Rate Limiting**
+
 ```bash
 # Test rate limiting
 for i in {1..10}; do
@@ -360,7 +371,9 @@ export class AuthController {
   @Get('me')
   @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.standard()
-  async getCurrentUser(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+  async getCurrentUser(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
     return { success: true, data: user };
   }
 
@@ -372,5 +385,3 @@ export class AuthController {
   }
 }
 ```
-
-This rate limiting system provides comprehensive protection against abuse while maintaining flexibility for different use cases.

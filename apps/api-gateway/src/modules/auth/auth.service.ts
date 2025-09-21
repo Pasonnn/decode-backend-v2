@@ -209,7 +209,7 @@ export class AuthService {
   /**
    * Refresh session token
    */
-  async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<Response> {
+  async refreshSession(refreshTokenDto: RefreshTokenDto): Promise<Response> {
     try {
       this.logger.log('Token refresh attempt');
 

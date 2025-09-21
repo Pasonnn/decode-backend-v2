@@ -5,10 +5,33 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ApiGatewayModule } from './api-gateway.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
+import { CorsMiddleware } from './common/middleware/cors.middleware';
+import { HelmetMiddleware } from './common/middleware/helmet.middleware';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
+import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
   const configService = app.get(ConfigService);
+
+  const corsMiddleware = new CorsMiddleware();
+  const helmetMiddleware = new HelmetMiddleware();
+  const requestLoggerMiddleware = new RequestLoggerMiddleware();
+  const requestIdMiddleware = new RequestIdMiddleware();
+
+  // Apply middleware
+  app.use(corsMiddleware.use.bind(corsMiddleware));
+  app.use(helmetMiddleware.use.bind(helmetMiddleware));
+  app.use(requestIdMiddleware.use.bind(requestIdMiddleware));
+  app.use(requestLoggerMiddleware.use.bind(requestLoggerMiddleware));
+
+  // Global interceptors
+  app.useGlobalInterceptors(
+    new RequestIdInterceptor(),
+    new ResponseTransformInterceptor(),
+  );
 
   // Global exception filters
   app.useGlobalFilters(

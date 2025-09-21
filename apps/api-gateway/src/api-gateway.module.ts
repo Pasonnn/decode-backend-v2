@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
+import { GuardsModule } from './common/guards/guards.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CacheModule } from './infrastructure/cache/cache.module';
     ConfigModule.forFeature(environmentConfig),
     HttpModule,
     CacheModule,
+    GuardsModule,
     HealthModule,
     AuthModule,
     UsersModule,

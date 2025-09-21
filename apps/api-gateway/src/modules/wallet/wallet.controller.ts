@@ -47,6 +47,10 @@ import {
 // Guards and Decorators
 import { Public } from '../../common/decorators/public.decorator';
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
+import {
+  UserRateLimit,
+  IPRateLimit,
+} from '../../common/decorators/rate-limit.decorator';
 
 // Interfaces
 import type { Response } from '../../interfaces/response.interface';
@@ -104,6 +108,7 @@ export class WalletController {
 
   @Post('auth/challenge')
   @Public()
+  @IPRateLimit.strict()
   @ApiOperation({
     summary: 'Generate login challenge for wallet authentication',
     description:
@@ -144,6 +149,7 @@ export class WalletController {
 
   @Post('auth/validation')
   @Public()
+  @IPRateLimit.strict()
   @ApiOperation({
     summary: 'Validate login challenge for wallet authentication',
   })
@@ -178,6 +184,7 @@ export class WalletController {
 
   @Post('link/challenge')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Generate link challenge for wallet linking' })
   @ApiResponse({
     status: 200,
@@ -207,6 +214,7 @@ export class WalletController {
 
   @Post('link/validation')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Validate link challenge for wallet linking' })
   @ApiResponse({
     status: 200,
@@ -239,6 +247,7 @@ export class WalletController {
 
   @Get('link/me')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @ApiOperation({ summary: 'Get wallets for current user' })
   @ApiResponse({
     status: 200,
@@ -264,6 +273,7 @@ export class WalletController {
 
   @Get('link/:user_id')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @ApiOperation({ summary: 'Get wallets by user ID' })
   @ApiResponse({
     status: 200,
@@ -293,6 +303,7 @@ export class WalletController {
 
   @Delete('link/unlink/:address')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Unlink wallet from user account' })
   @ApiResponse({
     status: 200,
@@ -324,6 +335,7 @@ export class WalletController {
 
   @Post('primary/challenge')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Generate primary wallet challenge' })
   @ApiResponse({
     status: 200,
@@ -353,6 +365,7 @@ export class WalletController {
 
   @Post('primary/validation')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Validate primary wallet challenge' })
   @ApiResponse({
     status: 200,
@@ -385,6 +398,7 @@ export class WalletController {
 
   @Patch('primary/unset')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Unset primary wallet' })
   @ApiResponse({
     status: 200,
@@ -415,6 +429,7 @@ export class WalletController {
 
   @Get('primary/me')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @ApiOperation({ summary: 'Get primary wallet for current user' })
   @ApiResponse({
     status: 200,
@@ -440,6 +455,7 @@ export class WalletController {
 
   @Get('primary/:user_id')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @ApiOperation({ summary: 'Get primary wallet by user ID' })
   @ApiResponse({
     status: 200,

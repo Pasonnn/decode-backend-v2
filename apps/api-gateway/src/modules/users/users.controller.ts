@@ -38,6 +38,10 @@ import {
 import { Public } from '../../common/guards/auth.guard';
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
 import { Roles, UserRole } from '../../common/decorators/roles.decorator';
+import {
+  UserRateLimit,
+  AdminRateLimit,
+} from '../../common/decorators/rate-limit.decorator';
 
 // Interfaces
 import type { Response } from '../../interfaces/response.interface';
@@ -85,6 +89,7 @@ export class UsersController {
 
   @Get('profile/me')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({
     status: 200,
@@ -119,6 +124,7 @@ export class UsersController {
   }
 
   @Put('profile/display-name')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Update user display name' })
   @ApiResponse({
     status: 200,
@@ -139,6 +145,7 @@ export class UsersController {
   }
 
   @Put('profile/bio')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Update user bio' })
   @ApiResponse({
     status: 200,
@@ -159,6 +166,7 @@ export class UsersController {
   }
 
   @Put('profile/avatar')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Update user avatar' })
   @ApiResponse({
     status: 200,
@@ -182,6 +190,7 @@ export class UsersController {
 
   @Put('profile/role')
   @Roles('admin' as UserRole)
+  @AdminRateLimit.standard()
   @ApiOperation({ summary: 'Update user role (admin only)' })
   @ApiResponse({
     status: 200,
@@ -202,6 +211,7 @@ export class UsersController {
   // ==================== USERNAME ENDPOINTS ====================
 
   @Post('username/change/initiate')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Initiate username change process' })
   @ApiResponse({
     status: 200,
@@ -216,6 +226,7 @@ export class UsersController {
   }
 
   @Post('username/change/verify-email')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Verify username change email code' })
   @ApiResponse({
     status: 200,
@@ -235,6 +246,7 @@ export class UsersController {
   }
 
   @Post('username/change/complete')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Complete username change' })
   @ApiResponse({
     status: 200,
@@ -259,6 +271,7 @@ export class UsersController {
   // ==================== EMAIL ENDPOINTS ====================
 
   @Post('email/change/initiate')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Initiate email change process' })
   @ApiResponse({
     status: 200,
@@ -273,6 +286,7 @@ export class UsersController {
   }
 
   @Post('email/change/verify-email')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Verify email change code' })
   @ApiResponse({
     status: 200,
@@ -292,6 +306,7 @@ export class UsersController {
   }
 
   @Post('email/change/new-email-initiate')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Initiate new email change' })
   @ApiResponse({
     status: 200,
@@ -314,6 +329,7 @@ export class UsersController {
   }
 
   @Post('email/change/new-email-verify')
+  @UserRateLimit.strict()
   @ApiOperation({ summary: 'Verify new email code' })
   @ApiResponse({
     status: 200,
@@ -336,6 +352,7 @@ export class UsersController {
 
   @Get('search')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @ApiOperation({ summary: 'Search users by username or email' })
   @ApiResponse({
     status: 200,
@@ -353,6 +370,7 @@ export class UsersController {
 
   @Get('search/existing-username')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @ApiOperation({ summary: 'Check if username exists' })
   @ApiResponse({
     status: 200,
@@ -370,6 +388,7 @@ export class UsersController {
 
   @Get('search/existing-email')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @ApiOperation({ summary: 'Check if email exists' })
   @ApiResponse({
     status: 200,

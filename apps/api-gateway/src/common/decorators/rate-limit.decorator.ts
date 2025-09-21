@@ -60,15 +60,25 @@ export const AuthRateLimit = {
   register: () =>
     RateLimit({
       windowMs: 60 * 60 * 1000, // 1 hour
-      max: 3,
+      max: 5,
       message: 'Too many registration attempts, please try again later.',
       keyGenerator: (req: any) => `auth:register:${req.ip as string}`,
+    }),
+
+  sendEmailVerification: () =>
+    RateLimit({
+      windowMs: 60 * 60 * 1000, // 1 hour
+      max: 10,
+      message:
+        'Too many send email verification attempts, please try again later.',
+      keyGenerator: (req: any) =>
+        `auth:sendEmailVerification:${req.ip as string}`,
     }),
 
   forgotPassword: () =>
     RateLimit({
       windowMs: 60 * 60 * 1000, // 1 hour
-      max: 3,
+      max: 5,
       message: 'Too many password reset attempts, please try again later.',
       keyGenerator: (req: any) => `auth:forgot:${req.ip as string}`,
     }),
@@ -76,7 +86,7 @@ export const AuthRateLimit = {
   verifyEmail: () =>
     RateLimit({
       windowMs: 5 * 60 * 1000, // 5 minutes
-      max: 5,
+      max: 10,
       message: 'Too many email verification attempts, please try again later.',
       keyGenerator: (req: any) => `auth:verify:${req.ip as string}`,
     }),

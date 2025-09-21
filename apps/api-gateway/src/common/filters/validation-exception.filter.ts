@@ -7,6 +7,11 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+// Extend Request interface to include requestId
+interface RequestWithId extends Request {
+  requestId?: string;
+}
+
 export interface ValidationErrorResponse {
   success: false;
   statusCode: number;
@@ -21,6 +26,7 @@ export interface ValidationErrorResponse {
   };
   timestamp: string;
   path: string;
+  requestId?: string | null;
 }
 
 @Catch(BadRequestException)
@@ -30,7 +36,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
   catch(exception: BadRequestException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<RequestWithId>();
 
     const exceptionResponse = exception.getResponse();
     let validationDetails: Array<{
@@ -77,6 +83,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
       },
       timestamp: new Date().toISOString(),
       path: request.url,
+      requestId: request.requestId || null,
     };
 
     // Send the response

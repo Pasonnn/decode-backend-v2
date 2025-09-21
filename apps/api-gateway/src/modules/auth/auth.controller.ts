@@ -16,7 +16,9 @@ import {
   ApiBody,
   ApiExtraModels,
 } from '@nestjs/swagger';
+// Services Import
 import { AuthService } from './auth.service';
+// DTOs Import
 import {
   LoginDto,
   FingerprintEmailVerificationDto,
@@ -48,12 +50,22 @@ import {
   InfoByEmailOrUsernameDto,
 } from './dto/info.dto';
 import { RevokeDeviceFingerprintDto } from './dto/device-fingerprint.dto';
+// Interfaces Import
 import { Response } from '../../interfaces/response.interface';
+
+// Guards Import
 import { Public } from '../../common/guards/auth.guard';
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
-import { AuthRateLimit } from '../../common/decorators/rate-limit.decorator';
+
+// Decorators Import
+import {
+  AuthRateLimit,
+  UserRateLimit,
+} from '../../common/decorators/rate-limit.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+
+// Constants Import
 import { AUTH_CONSTANTS } from 'apps/auth/src/constants/auth.constants';
 
 @ApiTags('Authentication')
@@ -330,6 +342,7 @@ export class AuthController {
   })
   @Post('register/verify-email')
   @Public()
+  @AuthRateLimit.verifyEmail()
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto): Promise<Response> {
     return this.authService.verifyEmail(verifyEmailDto);
@@ -344,6 +357,7 @@ export class AuthController {
   @Post('register/send-email-verification')
   @Public()
   @HttpCode(HttpStatus.OK)
+  @AuthRateLimit.sendEmailVerification()
   async sendEmailVerification(
     @Body() sendEmailVerificationDto: SendEmailVerificationDto,
   ): Promise<Response> {
@@ -360,6 +374,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid fingerprint data' })
   @Post('login/fingerprint/email-verification')
   @Public()
+  @AuthRateLimit.sendEmailVerification()
   @HttpCode(HttpStatus.OK)
   async verifyFingerprint(
     @Body() fingerprintDto: FingerprintEmailVerificationDto,
@@ -375,6 +390,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid data' })
   @Post('login/fingerprint/resend-email-verification')
   @Public()
+  @AuthRateLimit.sendEmailVerification()
   @HttpCode(HttpStatus.OK)
   async resendDeviceFingerprintEmailVerification(
     @Body() dto: ResendDeviceFingerprintEmailVerificationDto,
@@ -443,11 +459,12 @@ export class AuthController {
   })
   @Post('session/refresh')
   @Public()
+  @UserRateLimit.burst()
   @HttpCode(HttpStatus.OK)
-  async refreshToken(
+  async refreshSession(
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<Response> {
-    return this.authService.refreshToken(refreshTokenDto);
+    return this.authService.refreshSession(refreshTokenDto);
   }
 
   @ApiOperation({
@@ -504,6 +521,7 @@ export class AuthController {
   })
   @Post('session/logout')
   @Public()
+  @UserRateLimit.burst()
   @HttpCode(HttpStatus.OK)
   async logout(
     @Body() logoutDto: LogoutDto,
@@ -522,6 +540,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Post('session/revoke')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @HttpCode(HttpStatus.OK)
   async revokeSession(
     @Body() dto: RevokeSessionDto,
@@ -586,6 +605,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Get('user/current')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   getCurrentUser(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
     return Promise.resolve({
@@ -605,6 +625,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Get('session/active')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async getActiveSessions(
     @CurrentUser() user: AuthenticatedUser,
@@ -622,6 +643,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Post('session/revoke-all')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.burst()
   @HttpCode(HttpStatus.OK)
   async revokeAllSessions(
     @Headers('authorization') authorization: string,
@@ -637,6 +659,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid access token' })
   @Post('session/validate-access')
   @Public()
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async validateAccess(
     @Body() validateAccessDto: ValidateAccessDto,
@@ -654,6 +677,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Post('sso/create')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async createSsoToken(
     @Body() dto: CreateSsoTokenDto,
@@ -671,6 +695,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid SSO token' })
   @Post('sso/validate')
   @Public()
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async validateSsoToken(
     @Body() validateSsoTokenDto: ValidateSsoTokenDto,
@@ -750,6 +775,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Post('password/change')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @HttpCode(HttpStatus.OK)
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
@@ -826,6 +852,8 @@ export class AuthController {
   })
   @Post('password/forgot/initiate')
   @Public()
+  @AuthRateLimit.forgotPassword()
+  @UserRateLimit.strict()
   @HttpCode(HttpStatus.OK)
   async initiateForgotPassword(
     @Body() initiateForgotPasswordDto: InitiateForgotPasswordDto,
@@ -841,6 +869,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @Post('password/forgot/verify-email')
   @Public()
+  @UserRateLimit.strict()
   @HttpCode(HttpStatus.OK)
   async verifyEmailForgotPassword(
     @Body() verifyEmailDto: VerifyEmailForgotPasswordDto,
@@ -850,6 +879,7 @@ export class AuthController {
 
   @Post('password/forgot/change')
   @Public()
+  @UserRateLimit.strict()
   @HttpCode(HttpStatus.OK)
   async changeForgotPassword(
     @Body() changeForgotPasswordDto: ChangeForgotPasswordDto,
@@ -865,6 +895,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'User does not exist' })
   @Post('info/exist-by-email-or-username')
   @Public()
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async existUserByEmailOrUsername(
     @Body() dto: ExistUserByEmailOrUsernameDto,
@@ -883,6 +914,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Get('fingerprints')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async getDeviceFingerprints(
     @Headers('authorization') authorization: string,
@@ -900,6 +932,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Post('fingerprints/revoke')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
   @HttpCode(HttpStatus.OK)
   async revokeDeviceFingerprint(
     @Body() dto: RevokeDeviceFingerprintDto,
@@ -921,6 +954,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid access token' })
   @Post('info/by-access-token')
   @Public()
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async getUserInfoByAccessToken(
     @Body() dto: InfoByAccessTokenDto,
@@ -942,6 +976,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Post('info/by-user-id')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async getUserInfoByUserId(
     @Body() dto: InfoByUserIdDto,
@@ -960,6 +995,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @Post('info/by-email-or-username')
   @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async getUserInfoByEmailOrUsername(
     @Body() dto: InfoByEmailOrUsernameDto,
@@ -1019,6 +1055,7 @@ export class AuthController {
   })
   @Get('healthz')
   @Public()
+  @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async checkHealth(): Promise<Response> {
     return this.authService.checkHealth();

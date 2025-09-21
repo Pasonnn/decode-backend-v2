@@ -9,6 +9,11 @@ import {
 import { Request, Response } from 'express';
 import { AxiosError } from 'axios';
 
+// Extend Request interface to include requestId
+interface RequestWithId extends Request {
+  requestId?: string;
+}
+
 export interface ErrorResponse {
   success: false;
   statusCode: number;
@@ -16,6 +21,7 @@ export interface ErrorResponse {
   error?: string | Record<string, unknown>;
   timestamp: string;
   path: string;
+  requestId?: string | null;
 }
 
 @Catch()
@@ -25,7 +31,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<RequestWithId>();
 
     let status: number;
     let message: string;
@@ -102,6 +108,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error,
       timestamp: new Date().toISOString(),
       path: request.url,
+      requestId: request.requestId || null,
     };
 
     // Send the response
