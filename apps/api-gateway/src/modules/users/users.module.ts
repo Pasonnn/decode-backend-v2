@@ -19,7 +19,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         name: 'NEO4JDB_SYNC_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          urls: [process.env.RABBITMQ_URI || 'amqp://localhost:5672'],
           queue: 'neo4j_sync_queue',
           queueOptions: {
             durable: true,
@@ -36,12 +36,14 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     RelationshipServiceClient,
     AuthGuard,
     AuthGuardWithFingerprint,
+    ClientsModule,
   ],
   exports: [
     UserServiceClient,
     UsersService,
     WalletServiceClient,
     RelationshipServiceClient,
+    ClientsModule,
   ],
 })
 export class UsersModule {}

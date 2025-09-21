@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.createMicroservice(Neo4jDbSyncModule, {
     transport: Transport.RMQ,
     options: {
-      urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+      urls: [process.env.RABBITMQ_URI || 'amqp://localhost:5672'],
       queue: 'neo4j_sync_queue', // Single queue for both operations
       queueOptions: {
         durable: true,

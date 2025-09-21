@@ -16,13 +16,11 @@ export class RabbitMQInfrastructure {
   ) {
     this.client = ClientProxyFactory.create({
       options: {
-        urls: [this.configService.get('RABBITMQ_URL', 'amqp://localhost:5672')],
+        urls: [this.configService.get('RABBITMQ_URI', 'amqp://localhost:5672')],
         queue: 'neo4j_sync_queue',
         queueOptions: {
           durable: true,
         },
-        noAck: false,
-        prefetchCount: 1,
       },
     });
   }

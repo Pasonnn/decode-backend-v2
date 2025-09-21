@@ -170,7 +170,7 @@ import jwtConfig from './config/jwt.config';
         name: 'EMAIL_SERVICE', // Service identifier for dependency injection
         transport: Transport.RMQ, // RabbitMQ transport protocol
         options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'], // RabbitMQ connection URLs
+          urls: [process.env.RABBITMQ_URI || 'amqp://localhost:5672'], // RabbitMQ connection URLs
           queue: 'email_queue', // Queue name for email messages
           queueOptions: {
             durable: true, // Persist queue across broker restarts
@@ -181,7 +181,7 @@ import jwtConfig from './config/jwt.config';
         name: 'NEO4JDB_SYNC_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          urls: [process.env.RABBITMQ_URI || 'amqp://localhost:5672'],
           queue: 'neo4j_sync_queue',
           queueOptions: {
             durable: true,

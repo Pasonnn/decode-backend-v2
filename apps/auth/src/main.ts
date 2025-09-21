@@ -59,7 +59,7 @@ import { ValidationExceptionFilter } from './common/filters/validation-exception
  * - AUTH_HOST: Host address for the service (default: 0.0.0.0)
  * - MONGO_URI: MongoDB connection string
  * - REDIS_URI: Redis connection string
- * - RABBITMQ_URL: RabbitMQ connection string for email service
+ * - RABBITMQ_URI: RabbitMQ connection string for email service
  * - JWT_ACCESS_TOKEN_SECRET: Secret key for access token signing
  * - JWT_SESSION_TOKEN_SECRET: Secret key for session token signing
  *
