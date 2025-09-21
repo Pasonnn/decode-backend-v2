@@ -58,6 +58,8 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('auth', 'Authentication and authorization endpoints')
     .addTag('users', 'User management endpoints')
+    .addTag('wallet', 'Wallet management endpoints')
+    .addTag('relationship', 'Relationship management endpoints')
     .addTag('email', 'Email service endpoints')
     .addTag('health', 'Health check endpoints')
     .addBearerAuth(

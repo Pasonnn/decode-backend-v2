@@ -9,6 +9,7 @@ import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { RelationshipModule } from './modules/relationship/relationship.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { GuardsModule } from './common/guards/guards.module';
 
@@ -27,6 +28,7 @@ import { GuardsModule } from './common/guards/guards.module';
     AuthModule,
     UsersModule,
     WalletModule,
+    RelationshipModule,
   ],
 })
 export class ApiGatewayModule {}
