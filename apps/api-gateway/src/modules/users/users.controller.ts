@@ -219,13 +219,16 @@ export class UsersController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuardWithFingerprint)
   async changeUsernameInitiate(
     @Headers('authorization') authorization: string,
   ): Promise<Response<void>> {
+    console.log('changeUsernameInitiate', authorization);
     return await this.usersService.changeUsernameInitiate(authorization);
   }
 
   @Post('username/change/verify-email')
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Verify username change email code' })
   @ApiResponse({
@@ -246,6 +249,7 @@ export class UsersController {
   }
 
   @Post('username/change/complete')
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Complete username change' })
   @ApiResponse({
@@ -271,6 +275,7 @@ export class UsersController {
   // ==================== EMAIL ENDPOINTS ====================
 
   @Post('email/change/initiate')
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Initiate email change process' })
   @ApiResponse({
@@ -286,6 +291,7 @@ export class UsersController {
   }
 
   @Post('email/change/verify-email')
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Verify email change code' })
   @ApiResponse({
@@ -306,6 +312,7 @@ export class UsersController {
   }
 
   @Post('email/change/new-email-initiate')
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Initiate new email change' })
   @ApiResponse({
@@ -329,6 +336,7 @@ export class UsersController {
   }
 
   @Post('email/change/new-email-verify')
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Verify new email code' })
   @ApiResponse({

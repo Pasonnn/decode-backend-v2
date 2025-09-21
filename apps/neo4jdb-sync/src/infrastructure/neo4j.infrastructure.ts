@@ -109,25 +109,14 @@ export class Neo4jInfrastructure implements OnModuleInit {
   async updateUserNode(user: UserDoc): Promise<boolean> {
     const session = this.getSession();
     try {
-      // Find user node
-      const result = await session.run(
-        `MATCH (u:User {user_id: $user_id})
-        RETURN u`,
-        {
-          user_id: user._id.toString(),
-        },
-      );
-      if (result.records.length === 0) {
-        this.logger.log(`User node not found: ${user._id}`);
-        return false;
-      }
       // Update user node
-      const query = `MATCH (u:User {user_id: "${user._id.toString()}"})
+      const update_query = `MATCH (u:User {user_id: "${user._id.toString()}"})
         SET u.username = "${user.username}",
         u.role = "${user.role}",
         u.display_name = "${user.display_name}",
         u.avatar_ipfs_hash = "${user.avatar_ipfs_hash}"`;
-      await session.run(query);
+      console.log('update_query', update_query);
+      await session.run(update_query);
       this.logger.log(`User node updated successfully: ${user._id}`);
       return true;
     } catch (error) {

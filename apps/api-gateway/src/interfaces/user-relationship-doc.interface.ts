@@ -1,6 +1,8 @@
 export interface UserRelationshipDoc {
   _id: string;
   user_id: string;
+  username: string;
+  email: string;
   role: string;
   display_name: string;
   avatar_ipfs_hash: string;

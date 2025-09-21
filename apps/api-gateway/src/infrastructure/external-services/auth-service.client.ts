@@ -154,6 +154,7 @@ export class AuthServiceClient extends BaseHttpClient {
     return this.post('/auth/password/change', data, config);
   }
 
+  // Forgot Password Endpoints
   async emailVerificationChangePassword(
     data: EmailVerificationChangePasswordRequest,
   ): Promise<Response> {

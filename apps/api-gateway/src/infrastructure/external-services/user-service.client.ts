@@ -141,7 +141,7 @@ export class UserServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post<void>('/users/username/change/initiate', config);
+    return this.post<void>('/users/username/change/initiate', {}, config);
   }
 
   /**
@@ -185,7 +185,7 @@ export class UserServiceClient extends BaseHttpClient {
         Authorization: authorization,
       },
     };
-    return this.post<void>('/users/email/change/initiate', config);
+    return this.post<void>('/users/email/change/initiate', {}, config);
   }
 
   /**

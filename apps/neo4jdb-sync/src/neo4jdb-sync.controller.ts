@@ -24,6 +24,7 @@ export class Neo4jdbSyncController {
 
   @MessagePattern('update_user_request')
   async updateUser(user: UpdateUserDto): Promise<Response<UserNeo4jDoc>> {
+    console.log('updateUser', user);
     await this.rabbitMQInfrastructure.processUpdateUserRequest(user);
     return {
       success: true,

@@ -1,7 +1,8 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Inject } from '@nestjs/common';
 import { UserServiceClient } from '../../infrastructure/external-services/user-service.client';
 import { WalletServiceClient } from '../../infrastructure/external-services/wallet-service.client';
 import { RelationshipServiceClient } from '../../infrastructure/external-services/relationship-service.client';
+import { ClientProxy } from '@nestjs/microservices';
 
 // Response and Doc Interfaces
 import { Response } from '../../interfaces/response.interface';
@@ -27,6 +28,7 @@ import type {
 } from '../../interfaces/user-service.interface';
 
 import { MESSAGES } from 'apps/wallet/src/constants/messages.constants';
+import { UserNeo4jDoc } from 'apps/neo4jdb-sync/src/interfaces/user-neo4j-doc.interface';
 
 @Injectable()
 export class UsersService {
@@ -36,6 +38,8 @@ export class UsersService {
     private readonly userServiceClient: UserServiceClient,
     private readonly walletServiceClient: WalletServiceClient,
     private readonly relationshipServiceClient: RelationshipServiceClient,
+    @Inject('NEO4JDB_SYNC_SERVICE')
+    private readonly neo4jdbUpdateUserService: ClientProxy,
   ) {}
 
   // ==================== PROFILE METHODS ====================
@@ -63,19 +67,32 @@ export class UsersService {
       // Get user primary wallet with graceful degradation
       let user_primary_wallet_data: WalletDoc | undefined = undefined;
 
-      const user_primary_wallet_response: Response<WalletDoc> =
-        await this.walletServiceClient.getPrimaryWallet(authorization);
+      try {
+        const user_primary_wallet_response: Response<WalletDoc> =
+          await this.walletServiceClient.getPrimaryWalletByUserId(
+            { user_id: data.user_id },
+            authorization,
+          );
 
-      if (
-        user_primary_wallet_response.success &&
-        user_primary_wallet_response.data
-      ) {
-        user_primary_wallet_data = user_primary_wallet_response.data;
-        this.logger.log(
-          `Successfully fetched primary wallet for user: ${data.user_id}`,
+        if (
+          user_primary_wallet_response.success &&
+          user_primary_wallet_response.data
+        ) {
+          user_primary_wallet_data = user_primary_wallet_response.data;
+          this.logger.log(
+            `Successfully fetched primary wallet for user: ${data.user_id}`,
+          );
+        } else {
+          this.logger.warn(
+            `Primary wallet not found for user: ${data.user_id}`,
+          );
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to fetch primary wallet for user ${data.user_id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
-      } else {
-        this.logger.warn(`Primary wallet not found for user: ${data.user_id}`);
       }
 
       const full_user_profile_data: UserDoc = {
@@ -83,45 +100,67 @@ export class UsersService {
         primary_wallet: user_primary_wallet_data,
       };
 
-      // User Relationship Fetching
-      const user_relationship_response: Response<UserRelationshipDoc> =
-        await this.relationshipServiceClient.getUser(data, authorization);
+      // Get user relationship data with graceful degradation
+      let user_relationship_data: UserRelationshipDoc | undefined = undefined;
 
-      if (
-        !user_relationship_response.success ||
-        !user_relationship_response.data
-      ) {
-        this.logger.error(
-          `Failed to get user relationship for user: ${data.user_id}: ${user_relationship_response.message}`,
+      try {
+        let user_relationship_response: Response<UserRelationshipDoc> =
+          await this.relationshipServiceClient.getUser(data, authorization);
+
+        // Compare and sync to Neo4j
+        const is_synced = await this.syncNeo4jUser(
+          user_profile_data,
+          user_relationship_response.data as UserNeo4jDoc,
         );
-      } else {
-        this.logger.log(
-          `Successfully got user relationship for user: ${data.user_id}`,
+
+        if (is_synced) {
+          user_relationship_response =
+            await this.relationshipServiceClient.getUser(data, authorization);
+        }
+
+        if (
+          user_relationship_response.success &&
+          user_relationship_response.data
+        ) {
+          user_relationship_data = user_relationship_response.data;
+          this.logger.log(
+            `Successfully got user relationship for user: ${data.user_id}`,
+          );
+
+          // Attach user relationship data to user profile
+          full_user_profile_data.following_number =
+            user_relationship_data.following_number;
+          full_user_profile_data.followers_number =
+            user_relationship_data.followers_number;
+          full_user_profile_data.is_following =
+            user_relationship_data.is_following;
+          full_user_profile_data.is_follower =
+            user_relationship_data.is_follower;
+          full_user_profile_data.is_blocked = user_relationship_data.is_blocked;
+          full_user_profile_data.is_blocked_by =
+            user_relationship_data.is_blocked_by;
+          full_user_profile_data.mutual_followers_number =
+            user_relationship_data.mutual_followers_number;
+          full_user_profile_data.mutual_followers_list =
+            user_relationship_data.mutual_followers_list;
+        } else {
+          this.logger.warn(
+            `Relationship data not found for user: ${data.user_id}`,
+          );
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to fetch relationship data for user ${data.user_id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
-        // Attach user relationship data to user profile
-        full_user_profile_data.following_number =
-          user_relationship_response.data.following_number;
-        full_user_profile_data.followers_number =
-          user_relationship_response.data.followers_number;
-        full_user_profile_data.is_following =
-          user_relationship_response.data.is_following;
-        full_user_profile_data.is_follower =
-          user_relationship_response.data.is_follower;
-        full_user_profile_data.is_blocked =
-          user_relationship_response.data.is_blocked;
-        full_user_profile_data.is_blocked_by =
-          user_relationship_response.data.is_blocked_by;
-        full_user_profile_data.mutual_followers_number =
-          user_relationship_response.data.mutual_followers_number;
-        full_user_profile_data.mutual_followers_list =
-          user_relationship_response.data.mutual_followers_list;
       }
 
       // Construct response message
-      const responseMessage = user_primary_wallet_response.success
+      const responseMessage = user_primary_wallet_data
         ? MESSAGES.SUCCESS.PROFILE_FETCHED
         : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)` +
-          (user_relationship_response.success
+          (user_relationship_data
             ? ''
             : ` (User relationship data unavailable)`);
 
@@ -160,17 +199,27 @@ export class UsersService {
       // Get user primary wallet with graceful degradation
       let user_primary_wallet_data: WalletDoc | undefined = undefined;
 
-      const get_my_primary_wallet_response: Response<WalletDoc> =
-        await this.walletServiceClient.getPrimaryWallet(authorization);
+      try {
+        const get_my_primary_wallet_response: Response<WalletDoc> =
+          await this.walletServiceClient.getPrimaryWallet(authorization);
 
-      if (
-        get_my_primary_wallet_response.success &&
-        get_my_primary_wallet_response.data
-      ) {
-        user_primary_wallet_data = get_my_primary_wallet_response.data;
-        this.logger.log('Successfully fetched primary wallet for current user');
-      } else {
-        this.logger.warn('Primary wallet not found for current user');
+        if (
+          get_my_primary_wallet_response.success &&
+          get_my_primary_wallet_response.data
+        ) {
+          user_primary_wallet_data = get_my_primary_wallet_response.data;
+          this.logger.log(
+            'Successfully fetched primary wallet for current user',
+          );
+        } else {
+          this.logger.warn('Primary wallet not found for current user');
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to fetch primary wallet for current user: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
 
       const full_user_profile_data: UserDoc = {
@@ -178,42 +227,68 @@ export class UsersService {
         primary_wallet: user_primary_wallet_data,
       };
 
-      // User Relationship Fetching (Following, Followers Number Only)
-      const user_id = get_my_profile_response.data._id;
-      const user_relationship_response: Response<UserRelationshipDoc> =
-        await this.relationshipServiceClient.getUser(
-          {
-            user_id: user_id,
-          },
-          authorization,
+      // Get user relationship data with graceful degradation
+      let user_relationship_data: UserRelationshipDoc | undefined = undefined;
+
+      try {
+        const user_id = get_my_profile_response.data._id;
+        let user_relationship_response: Response<UserRelationshipDoc> =
+          await this.relationshipServiceClient.getUser(
+            {
+              user_id: user_id,
+            },
+            authorization,
+          );
+
+        // Compare and sync to Neo4j
+        const is_synced = await this.syncNeo4jUser(
+          get_my_profile_response.data,
+          user_relationship_response.data as UserNeo4jDoc,
         );
 
-      if (
-        !user_relationship_response.success ||
-        !user_relationship_response.data
-      ) {
-        this.logger.error(
-          `Failed to get user relationship for user: ${user_id}: ${user_relationship_response.message}`,
+        if (is_synced) {
+          user_relationship_response =
+            await this.relationshipServiceClient.getUser(
+              {
+                user_id: user_id,
+              },
+              authorization,
+            );
+        }
+
+        if (
+          user_relationship_response.success &&
+          user_relationship_response.data
+        ) {
+          user_relationship_data = user_relationship_response.data;
+          this.logger.log(
+            `Successfully got user relationship for user: ${user_id}`,
+          );
+
+          // Attach user relationship data to user profile
+          full_user_profile_data.following_number =
+            user_relationship_data.following_number;
+          full_user_profile_data.followers_number =
+            user_relationship_data.followers_number;
+          full_user_profile_data.is_following =
+            user_relationship_data.is_following;
+          full_user_profile_data.is_follower =
+            user_relationship_data.is_follower;
+        } else {
+          this.logger.warn(`Relationship data not found for user: ${user_id}`);
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to fetch relationship data for current user: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
-      } else {
-        this.logger.log(
-          `Successfully got user relationship for user: ${user_id}`,
-        );
-        // Attach user relationship data to user profile
-        full_user_profile_data.following_number =
-          user_relationship_response.data.following_number;
-        full_user_profile_data.followers_number =
-          user_relationship_response.data.followers_number;
-        full_user_profile_data.is_following =
-          user_relationship_response.data.is_following;
-        full_user_profile_data.is_follower =
-          user_relationship_response.data.is_follower;
       }
 
       const responseMessage = user_primary_wallet_data
         ? MESSAGES.SUCCESS.PROFILE_FETCHED
         : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)` +
-          (user_relationship_response.success
+          (user_relationship_data
             ? ''
             : ` (User relationship data unavailable)`);
 
@@ -601,13 +676,107 @@ export class UsersService {
         authorization,
       );
 
-      if (!response.success) {
+      if (!response.success || !response.data) {
         this.logger.error(`Failed to search users: ${response.message}`);
       } else {
         this.logger.log(
           `Successfully found ${response.data?.length || 0} users`,
         );
       }
+
+      // User Relationship Fetching (Following, Followers Number Only)
+      const users_data = response.data;
+      if (users_data && users_data.length > 0) {
+        // Map through users to fetch wallet and relationship data
+        const enriched_users = await Promise.all(
+          users_data.map(async (user) => {
+            // Get user primary wallet with graceful degradation
+            let user_primary_wallet_data: WalletDoc | undefined = undefined;
+
+            try {
+              const get_primary_wallet_response: Response<WalletDoc> =
+                await this.walletServiceClient.getPrimaryWalletByUserId(
+                  { user_id: user._id },
+                  authorization,
+                );
+
+              if (
+                get_primary_wallet_response.success &&
+                get_primary_wallet_response.data
+              ) {
+                user_primary_wallet_data = get_primary_wallet_response.data;
+                this.logger.log(
+                  `Successfully fetched primary wallet for user: ${user._id}`,
+                );
+              } else {
+                this.logger.warn(
+                  `Primary wallet not found for user: ${user._id}`,
+                );
+              }
+            } catch (error) {
+              this.logger.warn(
+                `Failed to fetch primary wallet for user ${user._id}: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              );
+            }
+
+            // Get user relationship data with graceful degradation
+            let user_relationship_data: UserRelationshipDoc | undefined =
+              undefined;
+
+            try {
+              const user_relationship_response: Response<UserRelationshipDoc> =
+                await this.relationshipServiceClient.getUser(
+                  { user_id: user._id },
+                  authorization,
+                );
+
+              if (
+                user_relationship_response.success &&
+                user_relationship_response.data
+              ) {
+                user_relationship_data = user_relationship_response.data;
+                this.logger.log(
+                  `Successfully fetched relationship data for user: ${user._id}`,
+                );
+              } else {
+                this.logger.warn(
+                  `Relationship data not found for user: ${user._id}`,
+                );
+              }
+            } catch (error) {
+              this.logger.warn(
+                `Failed to fetch relationship data for user ${user._id}: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              );
+            }
+
+            // Enrich user data with wallet and relationship information
+            const enriched_user: UserDoc = {
+              ...user,
+              primary_wallet: user_primary_wallet_data,
+              following_number: user_relationship_data?.following_number,
+              followers_number: user_relationship_data?.followers_number,
+              is_following: user_relationship_data?.is_following,
+              is_follower: user_relationship_data?.is_follower,
+              is_blocked: user_relationship_data?.is_blocked,
+              is_blocked_by: user_relationship_data?.is_blocked_by,
+              mutual_followers_number:
+                user_relationship_data?.mutual_followers_number,
+              mutual_followers_list:
+                user_relationship_data?.mutual_followers_list,
+            };
+
+            return enriched_user;
+          }),
+        );
+
+        // Update response data with enriched users
+        response.data = enriched_users;
+      }
+
       return response;
     } catch (error) {
       this.logger.error(
@@ -701,5 +870,37 @@ export class UsersService {
       message: 'User service is healthy',
       data: { status: 'ok' },
     };
+  }
+
+  private async syncNeo4jUser(
+    user: UserDoc,
+    user_neo4j: UserNeo4jDoc,
+  ): Promise<boolean> {
+    try {
+      if (!user_neo4j) {
+        this.logger.log(`User Neo4j not found: ${user._id}`);
+        await this.neo4jdbUpdateUserService
+          .emit('create_user_request', user)
+          .toPromise();
+        return true;
+      } else if (
+        user_neo4j.username !== user.username ||
+        user_neo4j.role !== user.role ||
+        user_neo4j.display_name !== user.display_name ||
+        user_neo4j.avatar_ipfs_hash !== user.avatar_ipfs_hash
+      ) {
+        this.logger.log(`Find difference, syncing user to Neo4j: ${user._id}`);
+        await this.neo4jdbUpdateUserService
+          .emit('update_user_request', user)
+          .toPromise();
+        return true;
+      } else {
+        this.logger.log(`User Neo4j is up to date: ${user._id}`);
+        return false;
+      }
+    } catch (error) {
+      this.logger.error(`Failed to sync user to Neo4j: ${error}`);
+      return false;
+    }
   }
 }
