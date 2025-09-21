@@ -879,9 +879,15 @@ export class UsersService {
     try {
       if (!user_neo4j) {
         this.logger.log(`User Neo4j not found: ${user._id}`);
+        this.logger.log(
+          `Attempting to emit create_user_request for user: ${user._id}`,
+        );
         await this.neo4jdbUpdateUserService
           .emit('create_user_request', user)
           .toPromise();
+        this.logger.log(
+          `Successfully emitted create_user_request for user: ${user._id}`,
+        );
         return true;
       } else if (
         user_neo4j.username !== user.username ||
@@ -890,9 +896,15 @@ export class UsersService {
         user_neo4j.avatar_ipfs_hash !== user.avatar_ipfs_hash
       ) {
         this.logger.log(`Find difference, syncing user to Neo4j: ${user._id}`);
+        this.logger.log(
+          `Attempting to emit update_user_request for user: ${user._id}`,
+        );
         await this.neo4jdbUpdateUserService
           .emit('update_user_request', user)
           .toPromise();
+        this.logger.log(
+          `Successfully emitted update_user_request for user: ${user._id}`,
+        );
         return true;
       } else {
         this.logger.log(`User Neo4j is up to date: ${user._id}`);
@@ -900,6 +912,7 @@ export class UsersService {
       }
     } catch (error) {
       this.logger.error(`Failed to sync user to Neo4j: ${error}`);
+      this.logger.error(`Error details: ${JSON.stringify(error)}`);
       return false;
     }
   }

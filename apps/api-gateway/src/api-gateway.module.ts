@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import configuration from './config/configuration';
 import environmentConfig from './config/environment.config';
@@ -30,17 +30,24 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     UsersModule,
     WalletModule,
     RelationshipModule,
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'NEO4JDB_SYNC_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URI || 'amqp://localhost:5672'],
-          queue: 'neo4j_sync_queue',
-          queueOptions: {
-            durable: true,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              configService.get<string>('RABBITMQ_URI') ||
+                'amqp://localhost:5672',
+            ],
+            queue: 'neo4j_sync_queue',
+            queueOptions: {
+              durable: true,
+            },
           },
-        },
+        }),
+        inject: [ConfigService],
       },
     ]),
   ],
