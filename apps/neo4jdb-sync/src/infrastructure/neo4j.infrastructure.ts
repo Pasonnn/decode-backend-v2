@@ -115,7 +115,6 @@ export class Neo4jInfrastructure implements OnModuleInit {
         u.role = "${user.role}",
         u.display_name = "${user.display_name}",
         u.avatar_ipfs_hash = "${user.avatar_ipfs_hash}"`;
-      console.log('update_query', update_query);
       await session.run(update_query);
       this.logger.log(`User node updated successfully: ${user._id}`);
       return true;

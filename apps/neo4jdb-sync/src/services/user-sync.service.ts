@@ -63,7 +63,6 @@ export class UserSyncService {
       const user_exists_response = await this.neo4jInfrastructure.findUserNode(
         user._id,
       );
-      console.log('user_exists_response', user_exists_response);
       if (!user_exists_response) {
         const create_user_response = await this.createUser(user);
         if (!create_user_response.success) {
@@ -74,7 +73,6 @@ export class UserSyncService {
       // Update user
       const update_user_node_response =
         await this.neo4jInfrastructure.updateUserNode(user);
-      console.log('update_user_node_response', update_user_node_response);
       if (!update_user_node_response) {
         return {
           success: false,

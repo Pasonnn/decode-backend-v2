@@ -41,7 +41,6 @@ export class FollowService {
     try {
       // Check if you are following yourself
       if (user_id_from === user_id_to) {
-        console.log('You are following yourself');
         return {
           success: false,
           statusCode: HttpStatus.FORBIDDEN,
@@ -274,7 +273,6 @@ export class FollowService {
         await this.neo4jInfrastructure.findUserFromRelationshipPaginated(
           following_users_payload,
         );
-      console.log(following_users_response);
       if (!following_users_response) {
         return {
           success: false,

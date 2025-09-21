@@ -428,8 +428,6 @@ export class Neo4jInfrastructure implements OnModuleInit {
         SKIP ${page * limit} LIMIT ${limit}
       `;
 
-      console.log(query);
-
       const result = await session.run(query);
 
       if (result.records.length === 0) {

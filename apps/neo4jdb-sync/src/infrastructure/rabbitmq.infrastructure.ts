@@ -70,7 +70,6 @@ export class RabbitMQInfrastructure {
   async processUpdateUserRequest(request: UpdateUserDto): Promise<void> {
     const startTime = Date.now();
     this.logger.log(`Processing update user request ${request._id}`);
-    console.log('processUpdateUserRequest', request);
     try {
       await this.userSyncService.updateUser(request);
       const duration = Date.now() - startTime;

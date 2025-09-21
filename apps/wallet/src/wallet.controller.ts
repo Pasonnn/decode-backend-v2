@@ -137,7 +137,6 @@ export class WalletController {
     @Body() dto: UnsetPrimaryWalletDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {
-    console.log('unsetPrimaryWallet', dto);
     return this.primaryService.unsetPrimaryWallet({
       user_id: user.userId,
       address: dto.address,
