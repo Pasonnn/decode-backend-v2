@@ -8,12 +8,10 @@ module.exports = {
       name: 'auth',
       script: 'dist/apps/auth/main.js',
     },
-    /**
     {
       name: 'email-worker',
       script: 'dist/apps/email-worker/main.js',
     },
-    */
     {
       name: 'user',
       script: 'dist/apps/user/main.js',
