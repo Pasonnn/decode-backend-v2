@@ -96,7 +96,7 @@ async function bootstrap() {
   const port = process.env.AUTH_PORT ?? 4001;
   const host = process.env.AUTH_HOST
     ? process.env.AUTH_HOST.replace('http://', '').replace('https://', '')
-    : '0.0.0.0';
+    : 'localhost';
 
   // Start the server and listen for incoming requests
   await app.listen(port, host);

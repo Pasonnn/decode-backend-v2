@@ -27,7 +27,7 @@ async function bootstrap() {
   const port = process.env.WALLET_PORT ?? 4003;
   const host = process.env.WALLET_HOST
     ? process.env.WALLET_HOST.replace('http://', '').replace('https://', '')
-    : '0.0.0.0';
+    : 'localhost';
   await app.listen(port, host);
   console.info(`[WalletService] Wallet service is running on ${host}:${port}`);
 }

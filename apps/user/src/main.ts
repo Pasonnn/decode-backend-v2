@@ -27,7 +27,7 @@ async function bootstrap() {
   const port = process.env.USER_PORT ?? 4002;
   const host = process.env.USER_HOST
     ? process.env.USER_HOST.replace('http://', '').replace('https://', '')
-    : '0.0.0.0';
+    : 'localhost';
   await app.listen(port, host);
   console.info(`[UserService] User service is running on ${host}:${port}`);
 }

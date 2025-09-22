@@ -23,7 +23,7 @@ async function bootstrap() {
         'https://',
         '',
       )
-    : '0.0.0.0';
+    : 'localhost';
   await app.listen(port, host);
   console.info(
     `[RelationshipService] Relationship service is running on ${host}:${port}`,
