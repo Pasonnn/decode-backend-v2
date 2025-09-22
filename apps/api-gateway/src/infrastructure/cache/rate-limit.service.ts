@@ -16,20 +16,32 @@ export class RateLimitService {
   private readonly keyPrefix: string;
 
   constructor(private readonly configService: ConfigService) {
+    // Use REDIS_URI like other services for consistency
+    const redisUri = this.configService.get<string>('REDIS_URI');
+
+    // Fallback to individual config if REDIS_URI is not available
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const redisConfig = this.configService.get('environment.redis');
 
-    this.redis = new Redis({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      host: redisConfig?.host as string,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      port: redisConfig?.port as number,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      password: redisConfig?.password as string,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      db: redisConfig?.db as number,
-      maxRetriesPerRequest: 3,
-    });
+    if (redisUri) {
+      // Use REDIS_URI (preferred method)
+      this.redis = new Redis(redisUri, {
+        maxRetriesPerRequest: 3,
+      });
+    } else {
+      // Fallback to individual config parameters
+      this.redis = new Redis({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        host: redisConfig?.host as string,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        port: redisConfig?.port as number,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        password: redisConfig?.password as string,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        db: redisConfig?.db as number,
+        maxRetriesPerRequest: 3,
+      });
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     this.keyPrefix = redisConfig?.keyPrefix as string;

@@ -82,6 +82,8 @@ export default registerAs('environment', () => ({
     password: process.env.REDIS_PASSWORD || undefined,
     db: parseInt(process.env.REDIS_DB || '0', 10),
     keyPrefix: process.env.REDIS_KEY_PREFIX || 'rate_limit:',
+    // Also support REDIS_URI for consistency with other services
+    uri: process.env.REDIS_URI,
   },
 
   // Environment settings
