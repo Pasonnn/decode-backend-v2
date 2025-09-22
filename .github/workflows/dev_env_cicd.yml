@@ -35,9 +35,9 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ DEV_SECRET.DROPLET_IP }}
-          username: ${{ DEV_SECRET.DROPLET_USER }}
-          password: ${{ DEV_SECRET.DROPLET_PASS }}
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          password: ${{ secrets.DROPLET_PASS }}
           script: |
             cd ~/decode-backend-v2
             git reset --hard
