@@ -22,5 +22,6 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {}
-  }
+  },
+  "exclude": ["ecosystem.config.js", "node_modules", "dist"]
 }
