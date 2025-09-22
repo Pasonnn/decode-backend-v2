@@ -41,7 +41,6 @@ export default registerAs('jwt', () => ({
   secret: {
     accessToken: process.env.JWT_ACCESS_TOKEN_SECRET,
     sessionToken: process.env.JWT_SESSION_TOKEN_SECRET,
-    emailVerification: process.env.JWT_EMAIL_VERIFICATION_SECRET,
   },
 
   // Token Configuration
