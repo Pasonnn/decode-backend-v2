@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { EmailService } from './services/email-worker.service';
 import { RabbitMQService } from './services/rabbitmq.service';
@@ -6,18 +6,26 @@ import type { EmailRequestDto } from './dto/email.dto';
 
 @Controller('email-worker')
 export class EmailWorkerController {
+  private readonly logger = new Logger(EmailWorkerController.name);
   constructor(
     private readonly emailService: EmailService,
     private readonly rabbitMQService: RabbitMQService,
-  ) {}
+  ) {
+    this.logger = new Logger(EmailWorkerController.name);
+  }
 
   // This is the main message handler for RabbitMQ
   @MessagePattern('email_request')
   async handleEmailRequest(request: EmailRequestDto) {
     try {
       await this.rabbitMQService.processEmailRequest(request);
+      this.logger.log(`Email request processed: ${request.type}`);
       return { success: true, message: 'Email processed successfully' };
     } catch (error) {
+      this.logger.error(
+        `Email request processing failed: ${request.type}`,
+        error instanceof Error ? error.stack : String(error),
+      );
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
