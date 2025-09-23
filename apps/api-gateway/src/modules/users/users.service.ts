@@ -270,10 +270,6 @@ export class UsersService {
             user_relationship_data.following_number;
           full_user_profile_data.followers_number =
             user_relationship_data.followers_number;
-          full_user_profile_data.is_following =
-            user_relationship_data.is_following;
-          full_user_profile_data.is_follower =
-            user_relationship_data.is_follower;
         } else {
           this.logger.warn(`Relationship data not found for user: ${user_id}`);
         }
