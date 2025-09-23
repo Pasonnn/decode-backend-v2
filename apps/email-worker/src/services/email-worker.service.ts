@@ -20,6 +20,7 @@ export class EmailService {
         'smtp.gmail.com',
       port: this.configService.get<number>('SMTP_PORT', 587) || 587,
       secure: false, // true for 465, false for other ports
+      requireTLS: true,
       auth: {
         user: this.configService.get<string>('SMTP_USER') || '',
         pass: this.configService.get<string>('SMTP_PASS') || '',
