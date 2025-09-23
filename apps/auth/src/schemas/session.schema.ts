@@ -37,11 +37,16 @@ import { Document, Types } from 'mongoose';
 @Schema({ timestamps: true, collection: 'sessions' })
 export class Session extends Document {
   /** Reference to the user who owns this session */
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, type: Types.ObjectId, ref: 'User', index: true })
   user_id: Types.ObjectId;
 
   /** Reference to the device fingerprint associated with this session */
-  @Prop({ required: true, index: true })
+  @Prop({
+    required: true,
+    type: Types.ObjectId,
+    ref: 'DeviceFingerprint',
+    index: true,
+  })
   device_fingerprint_id: Types.ObjectId;
 
   /** JWT session token for authentication and refresh */
