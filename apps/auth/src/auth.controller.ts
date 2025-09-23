@@ -62,7 +62,7 @@ import {
   ValidateSsoTokenDto,
   CreateSsoTokenDto,
   RevokeSessionDto,
-  ValidateWalletPassTokenDto,
+  CreateWalletSessionDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
@@ -323,18 +323,19 @@ export class AuthController {
     return validate_access_response;
   }
 
-  @Post('session/validate-wallet-pass-token')
+  @Post('services/response/create-wallet-session')
   @Public()
-  async validateWalletPassToken(
-    @Body() dto: ValidateWalletPassTokenDto,
-    @Headers('User-Agent') userAgent: string,
+  async createWalletSession(
+    @Body() dto: CreateWalletSessionDto,
   ): Promise<Response> {
-    const validate_wallet_pass_token_response =
-      await this.sessionService.validateWalletPassToken({
-        wallet_pass_token: dto.wallet_pass_token,
-        user_agent: userAgent,
+    const create_wallet_session_response =
+      await this.sessionService.createWalletSession({
+        user_id: dto.user_id,
+        device_fingerprint_hashed: dto.device_fingerprint_hashed,
+        browser: dto.browser,
+        device: dto.device,
       });
-    return validate_wallet_pass_token_response;
+    return create_wallet_session_response;
   }
 
   /**

@@ -111,7 +111,7 @@ export class ServicesResponseService {
     }
   }
 
-  async getInfoByUsernameOrEmail(input: {
+  async getInfoByEmailOrUsername(input: {
     email_or_username: string;
   }): Promise<Response<UserDoc>> {
     const { email_or_username } = input;

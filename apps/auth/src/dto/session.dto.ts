@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class RefreshSessionDto {
   @IsNotEmpty()
@@ -38,12 +38,22 @@ export class ValidateAccessDto {
   access_token: string;
 }
 
-export class ValidateWalletPassTokenDto {
+export class CreateWalletSessionDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(6)
-  @MinLength(6)
-  wallet_pass_token: string;
+  user_id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  device_fingerprint_hashed: string;
+
+  @IsNotEmpty()
+  @IsString()
+  browser: string;
+
+  @IsNotEmpty()
+  @IsString()
+  device: string;
 }
 
 export class CreateSsoTokenDto {

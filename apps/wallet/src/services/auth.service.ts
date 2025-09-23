@@ -144,47 +144,30 @@ export class AuthService {
           message: MESSAGES.AUTH.ONLY_PRIMARY_WALLET_ALLOWED,
         };
       }
-      // Generate a Wallet Pass Token and Store it in Redis
-      const wallet_pass_token = await this.storeWalletPassToken({
-        user_id: wallet.user_id.toString(),
-        fingerprint_hashed,
-        browser,
-        device,
-      });
-      if (!wallet_pass_token) {
-        this.logger.error(
-          `Wallet Authenticate wallet pass token storage failed for address ${address}`,
-        );
-        return {
-          success: false,
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: MESSAGES.CHALLENGE.CHALLENGE_VALIDATION_FAILED,
-        };
-      }
-      // Validate the Wallet Pass Token with Auth Service
-      const validate_wallet_pass_token_response =
-        await this.authServiceClient.validateWalletPassToken({
-          wallet_pass_token,
+      // Create wallet session
+      const create_wallet_session_response =
+        await this.authServiceClient.createWalletSession({
+          user_id: wallet.user_id.toString(),
+          device_fingerprint_hashed: fingerprint_hashed,
+          browser,
+          device,
         });
-      if (!validate_wallet_pass_token_response.success) {
+      if (!create_wallet_session_response.success) {
         this.logger.error(
-          `Wallet Authenticate wallet pass token validation failed with Auth Service for address ${address}`,
+          `Wallet Authenticate wallet session creation failed with Auth Service for address ${address}`,
         );
-        return validate_wallet_pass_token_response;
+        return create_wallet_session_response;
       }
-      this.logger.log(
-        `Wallet Authenticate wallet pass token validated with Auth Service for address ${address}`,
-      );
       // Response with session data (including access token and session token)
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.CHALLENGE_VALIDATED,
-        data: validate_wallet_pass_token_response.data,
+        data: create_wallet_session_response.data,
       };
     } catch (error) {
       this.logger.error(
-        `Wallet Authenticate wallet pass token validation failed with Auth Service for address ${address}`,
+        `Wallet Authenticate wallet session creation failed with Auth Service for address ${address}`,
         error,
       );
       return {
@@ -208,41 +191,5 @@ export class AuthService {
   private isPrimaryWallet(input: { wallet: WalletDoc }): boolean {
     const { wallet } = input;
     return wallet.is_primary;
-  }
-
-  private async storeWalletPassToken(input: {
-    user_id: string;
-    fingerprint_hashed: string;
-    browser: string;
-    device: string;
-  }): Promise<string | null> {
-    const { user_id, fingerprint_hashed, browser, device } = input;
-    try {
-      // Generate a Wallet Pass Token
-      const wallet_pass_token = this.cryptoUtils.generateWalletPassToken();
-      // Store the Wallet Pass Token in Redis
-      const wallet_pass_token_key = `${WALLET_CONSTANTS.REDIS.KEYS.WALLET_PASS_TOKEN}:${wallet_pass_token}`;
-      const wallet_pass_token_value = JSON.stringify({
-        user_id: user_id,
-        fingerprint_hashed,
-        browser,
-        device,
-      });
-      await this.redisInfrastructure.set(
-        wallet_pass_token_key,
-        wallet_pass_token_value,
-        WALLET_CONSTANTS.CACHE.WALLET_PASS_TOKEN_TTL,
-      );
-      this.logger.log(
-        `Wallet Authenticate wallet pass token stored in Redis for user ${user_id}`,
-      );
-      return wallet_pass_token;
-    } catch (error) {
-      this.logger.error(
-        `Wallet Authenticate wallet pass token storage failed for user ${user_id}`,
-        error,
-      );
-      return null;
-    }
   }
 }

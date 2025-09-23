@@ -106,9 +106,7 @@ export const MESSAGES = {
     SSO_TOKEN_VALIDATION_ERROR: 'Error validating SSO token',
     SESSION_VALIDATION_ERROR: 'Error validating session',
     SESSION_REVOKING_ERROR: 'Error revoking session',
-    INVALID_USER_AGENT: 'Invalid user agent',
-    WALLET_PASS_TOKEN_VALIDATION_ERROR: 'Error validating wallet pass token',
-    WALLET_PASS_TOKEN_INVALID: 'Wallet pass token is invalid',
+    WALLET_SESSION_CREATION_ERROR: 'Error creating wallet session',
   },
 
   // Password Errors
@@ -240,8 +238,8 @@ export const MESSAGES = {
     USER_FOUND: 'User found',
     DEVICE_FINGERPRINT_FETCHED: 'Device fingerprint fetched',
     DEVICE_FINGERPRINT_REVOKED: 'Device fingerprint revoked',
-    WALLET_PASS_TOKEN_VALIDATED_WITH_NEW_DEVICE_FINGERPRINT:
-      'Wallet pass token validated with new device fingerprint',
-    WALLET_PASS_TOKEN_VALIDATED: 'Wallet pass token validated',
+    WALLET_SESSION_CREATED_WITH_NEW_DEVICE_FINGERPRINT:
+      'Wallet session created with new device fingerprint',
+    WALLET_SESSION_CREATED: 'Wallet session created',
   },
 };
