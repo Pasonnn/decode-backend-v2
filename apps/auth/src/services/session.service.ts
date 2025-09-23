@@ -40,7 +40,6 @@ import { Session } from '../schemas/session.schema';
 
 // Interfaces Import
 import { SessionDoc } from '../interfaces/session-doc.interface';
-import { WalletPassTokenDoc } from '../interfaces/wallet-pass-token-doc.interface';
 
 // Interfaces Import
 import { Response } from '../interfaces/response.interface';

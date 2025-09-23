@@ -35,14 +35,7 @@
  */
 
 // Core NestJS modules for HTTP request handling and security
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  UseGuards,
-  Headers,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 
 // DTOs Import
 import {
@@ -92,6 +85,7 @@ import { SsoService } from './services/sso.service';
 
 // Guards Import
 import { AuthGuard, Public } from './common/guards/auth.guard';
+import { WalletServiceGuard } from './common/guards/service.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './common/guards/auth.guard';
 import { InitiateForgotPasswordDto } from 'apps/api-gateway/src/modules/auth/dto/password.dto';
@@ -324,7 +318,7 @@ export class AuthController {
   }
 
   @Post('services/response/create-wallet-session')
-  @Public()
+  @UseGuards(WalletServiceGuard)
   async createWalletSession(
     @Body() dto: CreateWalletSessionDto,
   ): Promise<Response> {

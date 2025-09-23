@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -11,18 +11,11 @@ export class ServicesJwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly logger: Logger,
     private readonly service_name: string = configService.get<string>(
       'jwt.services.auth',
     ) || 'auth',
-  ) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: configService.get<string>('jwt.secret.servicesToken') || '',
-      issuer: configService.get<string>('jwt.servicesToken.issuer') || '',
-      audience: configService.get<string>('jwt.servicesToken.audience') || '',
-    });
-  }
+  ) {}
 
   validate(payload: ServicesJwtPayload) {
     // This method is called by Passport after JWT verification
@@ -32,23 +25,29 @@ export class ServicesJwtStrategy extends PassportStrategy(Strategy) {
     };
   }
 
-  createServicesToken(service: string): string {
+  createUserServicesToken(service: string): string {
     const payload: ServicesJwtPayload = { service: service };
     return this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.secret.servicesToken'),
       expiresIn: this.configService.get<string>('jwt.servicesToken.expiresIn'),
       issuer: this.configService.get<string>('jwt.servicesToken.issuer'),
-      audience: this.configService.get<string>('jwt.servicesToken.audience'),
+      audience: this.configService.get<string>(
+        'jwt.servicesToken.userAudience',
+      ),
     });
   }
 
-  validateServicesToken(services_token: string): Response<ServicesJwtPayload> {
+  validateWalletServicesToken(
+    services_token: string,
+  ): Response<ServicesJwtPayload> {
     try {
       const payload = this.jwtService.verify<ServicesJwtPayload>(
         services_token,
         {
           secret: this.configService.get<string>('jwt.secret.servicesToken'),
-          issuer: this.configService.get<string>('jwt.servicesToken.issuer'),
+          issuer: this.configService.get<string>(
+            'jwt.servicesToken.walletIssuer',
+          ),
           audience: this.configService.get<string>(
             'jwt.servicesToken.audience',
           ),
@@ -61,6 +60,7 @@ export class ServicesJwtStrategy extends PassportStrategy(Strategy) {
           message: 'Invalid services token',
         };
       }
+      this.logger.log(`Services token validated successfully`);
       return {
         success: true,
         statusCode: 200,

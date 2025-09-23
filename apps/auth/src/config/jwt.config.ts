@@ -87,7 +87,9 @@ export default registerAs('jwt', () => ({
     expiresIn: '5s', // 5 seconds
     algorithm: 'HS256',
     issuer: 'decode-auth-service',
-    audience: 'decode-service',
+    audience: 'decode-auth-service',
+    walletIssuer: 'decode-wallet-service',
+    userAudience: 'decode-user-service',
   },
 
   services: {
