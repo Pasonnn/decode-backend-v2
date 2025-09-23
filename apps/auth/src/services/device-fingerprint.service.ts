@@ -308,7 +308,7 @@ export class DeviceFingerprintService {
       const existing_untrusted_device_fingerprint =
         await this.deviceFingerprintModel.findOne({
           $and: [
-            { user_id: user_id },
+            { user_id: new Types.ObjectId(user_id) },
             { fingerprint_hashed: fingerprint_hashed },
             { is_trusted: false },
           ],
@@ -325,7 +325,7 @@ export class DeviceFingerprintService {
         };
       }
       const device_fingerprint = await this.deviceFingerprintModel.create({
-        user_id: user_id,
+        user_id: new Types.ObjectId(user_id),
         fingerprint_hashed: fingerprint_hashed,
         browser: browser,
         device: device,

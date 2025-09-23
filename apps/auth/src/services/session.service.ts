@@ -540,7 +540,7 @@ export class SessionService {
           user_id: wallet_pass_token_value.user_id,
           device_fingerprint_id:
             create_trusted_device_fingerprint_response.data._id,
-          app: 'decode',
+          app: 'decode by wallet',
         });
         if (!create_session_response.success) {
           return create_session_response;
@@ -558,7 +558,7 @@ export class SessionService {
         const create_session_response = await this.createSession({
           user_id: wallet_pass_token_value.user_id,
           device_fingerprint_id: check_device_fingerprint_response.data._id,
-          app: 'decode',
+          app: 'decode by wallet',
         });
         if (!create_session_response.success) {
           return create_session_response;
