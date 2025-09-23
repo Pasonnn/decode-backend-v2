@@ -27,6 +27,15 @@ import {
   SearchEmailDto,
 } from './dto/search.dto';
 import { VerifyEmailCodeDto, ChangeEmailDto } from './dto/email.dto';
+import {
+  CheckUserExistsByEmailOrUsernameDto,
+  CreateUserDto,
+  ChangePasswordDto,
+  GetInfoByEmailOrUsernameDto,
+  GetInfoByUserIdDto,
+  GetInfoWithPasswordByUserIdDto,
+  UpdateUserLastLoginDto,
+} from './dto/services-response.dto';
 
 // Guards and Decorators
 import { AuthGuard } from './common/guards/auth.guard';
@@ -38,6 +47,7 @@ import { UserDoc } from './interfaces/user-doc.interface';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { USER_CONSTANTS } from './constants/user.constants';
+import { ServicesResponseService } from './services/services-response.service';
 
 @ApiTags('User Management')
 @Controller('users')
@@ -49,6 +59,7 @@ export class UserController {
     private readonly usernameService: UsernameService,
     private readonly searchService: SearchService,
     private readonly emailService: EmailService,
+    private readonly servicesResponseService: ServicesResponseService,
   ) {}
 
   // ==================== PROFILE ENDPOINTS ====================
@@ -234,6 +245,72 @@ export class UserController {
   ): Promise<Response<void>> {
     return await this.searchService.searchExistingEmail({
       email: query.email,
+    });
+  }
+
+  // ==================== SERVICES RESPONSE ENDPOINTS ====================
+
+  @Get('services/response/check-user-exists')
+  async checkUserExists(
+    @Query() query: CheckUserExistsByEmailOrUsernameDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.checkUserExistsByEmailOrUsername({
+      email_or_username: query.email_or_username,
+    });
+  }
+
+  @Post('services/response/create-user')
+  async createUser(@Body() body: CreateUserDto): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.createUser({
+      email: body.email,
+      username: body.username,
+      password_hashed: body.password_hashed,
+    });
+  }
+
+  @Put('services/response/change-password')
+  async changePassword(
+    @Body() body: ChangePasswordDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.changePassword({
+      user_id: body.user_id,
+      password_hashed: body.password_hashed,
+    });
+  }
+
+  @Get('services/response/get-info-by-email-or-username')
+  async getInfoByEmailOrUsername(
+    @Query() query: GetInfoByEmailOrUsernameDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.getInfoByEmailOrUsername({
+      email_or_username: query.email_or_username,
+    });
+  }
+
+  @Get('services/response/get-info-by-user-id')
+  async getInfoByUserId(
+    @Query() query: GetInfoByUserIdDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.getInfoByUserId({
+      user_id: query.user_id,
+    });
+  }
+
+  @Get('services/response/get-info-with-password-by-user-id')
+  async getInfoWithPasswordByUserId(
+    @Query() query: GetInfoWithPasswordByUserIdDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.getInfoWithPasswordByUserId({
+      user_id: query.user_id,
+    });
+  }
+
+  @Put('services/response/update-user-last-login')
+  async updateUserLastLogin(
+    @Body() body: UpdateUserLastLoginDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.updateUserLastLogin({
+      user_id: body.user_id,
     });
   }
 }
