@@ -40,8 +40,10 @@ jobs:
           password: ${{ secrets.DROPLET_PASS }}
           script: |
             cd ~/decode-backend-v2
-            git reset --hard
-            git pull origin main
+            git fetch origin
+            git checkout main
+            git reset --hard origin/main
+            git clean -fd
             npm ci
             npm run build:all
             pm2 restart ecosystem.config.js --update-env
