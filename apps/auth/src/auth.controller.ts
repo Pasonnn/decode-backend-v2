@@ -317,7 +317,7 @@ export class AuthController {
     return validate_access_response;
   }
 
-  @Post('services/response/create-wallet-session')
+  @Post('services/session/create-wallet-session')
   @UseGuards(WalletServiceGuard)
   async createWalletSession(
     @Body() dto: CreateWalletSessionDto,

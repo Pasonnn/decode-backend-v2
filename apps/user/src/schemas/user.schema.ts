@@ -76,6 +76,14 @@ export class User extends Document {
   /** Timestamp of user's last login - updated on each successful login */
   @Prop({ required: false, default: new Date() })
   last_login: Date;
+
+  /** Timestamp of user's last username change - updated on each username change */
+  @Prop({ required: false, default: new Date() })
+  last_username_change: Date;
+
+  /** Timestamp of user's last email change - updated on each email change */
+  @Prop({ required: false, default: new Date() })
+  last_email_change: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

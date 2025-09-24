@@ -13,6 +13,7 @@ import { ProfileService } from './services/profile.service';
 import { UsernameService } from './services/username.service';
 import { SearchService } from './services/search.service';
 import { EmailService } from './services/email.service';
+import { ServicesResponseService } from './services/services-response.service';
 
 // Infrastructure Import
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
@@ -92,13 +93,14 @@ import configuration from './config/configuration';
     UsernameService,
     SearchService,
     EmailService,
-
+    ServicesResponseService,
     // Infrastructure
     RedisInfrastructure,
   ],
   exports: [
     // Export services that might be used by other modules
     RedisInfrastructure,
+    ServicesResponseService,
   ],
 })
 export class UserModule {}

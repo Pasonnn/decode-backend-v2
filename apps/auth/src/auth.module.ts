@@ -57,11 +57,13 @@ import { SsoService } from './services/sso.service';
 
 // Strategies and Infrastructure Import
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { ServicesJwtStrategy } from './strategies/services-jwt.strategy';
 import { SessionStrategy } from './strategies/session.strategy';
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
 
 // Guards Import
 import { AuthGuard } from './common/guards/auth.guard';
+import { WalletServiceGuard } from './common/guards/service.guard';
 
 // Utils Import
 import { PasswordUtils } from './utils/password.utils';
@@ -151,7 +153,6 @@ import jwtConfig from './config/jwt.config';
       }),
       inject: [ConfigService],
     }),
-
     // Redis module configuration for caching and temporary data storage
     // Used for storing verification codes, session data, and rate limiting information
     RedisModule.forRootAsync({
@@ -222,9 +223,11 @@ import jwtConfig from './config/jwt.config';
     // Authentication strategies for different token types
     JwtStrategy, // JWT access token validation strategy
     SessionStrategy, // Session token validation strategy
+    ServicesJwtStrategy, // Service JWT token validation strategy
 
     // Security guards for route protection
     AuthGuard, // Main authentication and authorization guard
+    WalletServiceGuard, // Service JWT token validation guard
 
     // Infrastructure services for external system integration
     RedisInfrastructure, // Redis operations and caching utilities

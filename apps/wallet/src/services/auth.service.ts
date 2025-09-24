@@ -19,9 +19,6 @@ import { MESSAGES } from '../constants/messages.constants';
 // External Services
 import { AuthServiceClient } from '../infrastructure/external-services/auth-service.client';
 
-// Infrastructure
-import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
-
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -29,7 +26,6 @@ export class AuthService {
     private readonly cryptoUtils: CryptoUtils,
     @InjectModel(Wallet.name) private walletModel: Model<Wallet>,
     private readonly authServiceClient: AuthServiceClient,
-    private readonly redisInfrastructure: RedisInfrastructure,
   ) {}
 
   async generateLoginChallenge(input: { address: string }): Promise<Response> {

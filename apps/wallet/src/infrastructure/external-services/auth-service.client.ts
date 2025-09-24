@@ -28,7 +28,7 @@ export class AuthServiceClient extends BaseHttpClient {
   async createWalletSession(
     data: createWalletSessionRequest,
   ): Promise<Response> {
-    const services_token = this.servicesJwtStrategy.createServicesToken('auth');
+    const services_token = this.servicesJwtStrategy.createAuthServicesToken();
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -36,6 +36,10 @@ export class AuthServiceClient extends BaseHttpClient {
         Authorization: `Bearer ${services_token}`,
       },
     };
-    return await this.post('/auth/session/wallet/create', data, config);
+    return await this.post(
+      '/auth/services/session/create-wallet-session',
+      data,
+      config,
+    );
   }
 }

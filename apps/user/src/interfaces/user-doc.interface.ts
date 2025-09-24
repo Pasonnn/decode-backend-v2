@@ -8,4 +8,6 @@ export type UserDoc = {
   bio: string;
   avatar_ipfs_hash: string;
   last_login: Date;
+  last_username_change: Date;
+  last_email_change: Date;
 };

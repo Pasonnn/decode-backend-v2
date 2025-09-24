@@ -92,13 +92,6 @@ export default registerAs('jwt', () => ({
     userAudience: 'decode-user-service',
   },
 
-  services: {
-    apiGateway: 'api-gateway',
-    wallet: 'wallet',
-    user: 'user',
-    auth: 'auth',
-  },
-
   // Security Settings
   security: {
     blacklistEnabled: true,
