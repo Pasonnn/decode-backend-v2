@@ -223,7 +223,6 @@ export class UsersController {
   async changeUsernameInitiate(
     @Headers('authorization') authorization: string,
   ): Promise<Response<void>> {
-    console.log('changeUsernameInitiate', authorization);
     return await this.usersService.changeUsernameInitiate(authorization);
   }
 

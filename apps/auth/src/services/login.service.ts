@@ -120,7 +120,6 @@ export class LoginService {
           user_id: user._id,
           fingerprint_hashed,
         });
-      console.log(checkDeviceFingerprintResponse);
       if (
         !checkDeviceFingerprintResponse.success ||
         !checkDeviceFingerprintResponse.data

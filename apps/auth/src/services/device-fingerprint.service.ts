@@ -451,7 +451,6 @@ export class DeviceFingerprintService {
       user_id: string;
       fingerprint_hashed: string;
     };
-    console.log(device_fingerprint_data);
     if (!device_fingerprint_data) {
       return {
         success: false,

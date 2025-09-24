@@ -420,7 +420,6 @@ export class WalletController {
     @Body() body: UnsetPrimaryWalletDto,
     @Headers('authorization') authorization: string,
   ): Promise<Response> {
-    console.log('unsetPrimaryWallet', body);
     return await this.walletService.unsetPrimaryWallet(
       { address: body.address },
       authorization,
