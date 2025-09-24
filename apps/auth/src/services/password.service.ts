@@ -48,7 +48,7 @@ export class PasswordService {
     // Check if old password is correct
     const check_password_response = this.checkPassword(
       old_password,
-      getUserInfoResponse.data.password_hashed,
+      getUserInfoResponse.data.password_hashed || '',
     );
     if (!check_password_response.success) {
       return check_password_response;

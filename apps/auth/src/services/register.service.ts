@@ -388,9 +388,16 @@ export class RegisterService {
         createdAt: 0,
       },
     );
+    if (!created_user) {
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Failed to create user',
+      };
+    }
     // Sync user to Neo4j
     await this.neo4jdbCreateUserService
-      .emit('create_user_request', created_user as UserDoc)
+      .emit('create_user_request', created_user.toObject() as UserDoc)
       .toPromise();
     // Return success response
     return {

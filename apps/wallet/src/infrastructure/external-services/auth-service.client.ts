@@ -29,6 +29,7 @@ export class AuthServiceClient extends BaseHttpClient {
     data: createWalletSessionRequest,
   ): Promise<Response> {
     const services_token = this.servicesJwtStrategy.createAuthServicesToken();
+    console.log('services_token', services_token);
     const config = {
       headers: {
         'Content-Type': 'application/json',

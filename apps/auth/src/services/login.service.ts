@@ -113,7 +113,7 @@ export class LoginService {
       }
       const checkPasswordResponse = this.passwordService.checkPassword(
         password,
-        getUserInfoResponse.data.password_hashed,
+        getUserInfoResponse.data.password_hashed || '',
       );
       if (!checkPasswordResponse.success) {
         return checkPasswordResponse;

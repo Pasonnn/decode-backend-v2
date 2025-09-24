@@ -48,7 +48,7 @@ export class InfoService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
-      data: user as UserDoc,
+      data: user.toObject() as UserDoc,
     };
   }
 
@@ -86,7 +86,7 @@ export class InfoService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
-      data: user as UserDoc,
+      data: user.toObject() as UserDoc,
     };
   }
 
@@ -107,7 +107,7 @@ export class InfoService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
-      data: user as UserDoc,
+      data: user.toObject() as UserDoc,
     };
   }
 
@@ -133,7 +133,7 @@ export class InfoService {
         createdAt: 0,
       });
       if (user) {
-        users.push(user as UserDoc);
+        users.push(user.toObject() as UserDoc);
       }
     }
 

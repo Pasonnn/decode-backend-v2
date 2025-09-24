@@ -70,7 +70,7 @@ export class ServicesJwtStrategy extends PassportStrategy(Strategy) {
           (this.configService.get<string>('jwt.servicesToken.walletIssuer') ||
             'decode-wallet-service') ||
         payload.to_service !=
-          (this.configService.get<string>('jwt.servicesToken.authAudience') ||
+          (this.configService.get<string>('jwt.servicesToken.audience') ||
             'decode-auth-service')
       ) {
         return {
