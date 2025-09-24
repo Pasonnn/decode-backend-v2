@@ -32,25 +32,6 @@
  *
  * @interface JwtPayload
  */
-export interface JwtPayload {
-  /** Unique identifier for the authenticated user */
-  user_id: string;
-
-  /** Optional session token reference for session management */
-  session_token?: string;
-
-  /** Issued at timestamp (standard JWT claim) */
-  iat?: number;
-
-  /** Expiration timestamp (standard JWT claim) */
-  exp?: number;
-
-  /** Issuer identifier (standard JWT claim) */
-  iss?: string;
-
-  /** Audience identifier (standard JWT claim) */
-  aud?: string;
-}
 
 export interface ServicesJwtPayload {
   from_service: string;

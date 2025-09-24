@@ -27,10 +27,21 @@ import {
   SearchEmailDto,
 } from './dto/search.dto';
 import { VerifyEmailCodeDto, ChangeEmailDto } from './dto/email.dto';
+import {
+  CheckUserExistsByEmailOrUsernameDto,
+  CreateUserDto,
+  ChangePasswordDto,
+  GetInfoByEmailOrUsernameDto,
+  GetInfoByUserIdDto,
+  GetInfoWithPasswordByUserEmailOrUsernameDto,
+  UpdateUserLastLoginDto,
+  GetInfoWithPasswordByUserIdDto,
+} from './dto/user-services-response.dto';
 
 // Guards and Decorators
 import { AuthGuard } from './common/guards/auth.guard';
 import { Roles, UserRole } from './common/decorators/roles.decorator';
+import { AuthServiceGuard } from './common/guards/service.guard';
 
 // Interfaces
 import { Response } from './interfaces/response.interface';
@@ -38,10 +49,10 @@ import { UserDoc } from './interfaces/user-doc.interface';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { USER_CONSTANTS } from './constants/user.constants';
+import { ServicesResponseService } from './services/services-response.service';
 
 @ApiTags('User Management')
 @Controller('users')
-@UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class UserController {
   constructor(
@@ -49,6 +60,7 @@ export class UserController {
     private readonly usernameService: UsernameService,
     private readonly searchService: SearchService,
     private readonly emailService: EmailService,
+    private readonly servicesResponseService: ServicesResponseService,
   ) {}
 
   // ==================== PROFILE ENDPOINTS ====================
@@ -234,6 +246,90 @@ export class UserController {
   ): Promise<Response<void>> {
     return await this.searchService.searchExistingEmail({
       email: query.email,
+    });
+  }
+
+  // ==================== SERVICES RESPONSE ENDPOINTS ====================
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/check-user-exists')
+  async checkUserExistsByEmailOrUsername(
+    @Query() query: CheckUserExistsByEmailOrUsernameDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.checkUserExistsByEmailOrUsername({
+      email_or_username: query.email_or_username,
+    });
+  }
+
+  @UseGuards(AuthServiceGuard)
+  @Post('services/user/create-user')
+  async createUser(@Body() body: CreateUserDto): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.createUser({
+      email: body.email,
+      username: body.username,
+      password_hashed: body.password_hashed,
+    });
+  }
+
+  @UseGuards(AuthServiceGuard)
+  @Put('services/user/change-password')
+  async changePassword(
+    @Body() body: ChangePasswordDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.changePassword({
+      user_id: body.user_id,
+      password_hashed: body.password_hashed,
+    });
+  }
+
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/get-info-by-email-or-username')
+  async getInfoByEmailOrUsername(
+    @Query() query: GetInfoByEmailOrUsernameDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.getInfoByEmailOrUsername({
+      email_or_username: query.email_or_username,
+    });
+  }
+
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/get-info-by-user-id')
+  async getInfoByUserId(
+    @Query() query: GetInfoByUserIdDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.getInfoByUserId({
+      user_id: query.user_id,
+    });
+  }
+
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/get-info-with-password-by-user-email-or-username')
+  async getInfoWithPasswordByUserEmailOrUsername(
+    @Query() query: GetInfoWithPasswordByUserEmailOrUsernameDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.getInfoWithPasswordByUserEmailOrUsername(
+      {
+        email_or_username: query.email_or_username,
+      },
+    );
+  }
+
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/get-info-with-password-by-user-id')
+  async getInfoWithPasswordByUserId(
+    @Query() query: GetInfoWithPasswordByUserIdDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.getInfoWithPasswordByUserId({
+      user_id: query.user_id,
+    });
+  }
+
+  @UseGuards(AuthServiceGuard)
+  @Put('services/user/update-user-last-login')
+  async updateUserLastLogin(
+    @Body() body: UpdateUserLastLoginDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.updateUserLastLogin({
+      user_id: body.user_id,
     });
   }
 }

@@ -7,19 +7,19 @@ import { Response } from '../interfaces/response.interface';
 // Models
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from '../schemas/user.schema';
 import { DeviceFingerprint } from '../schemas/device-fingerprint.schema';
 
 // Constants Import
 import { MESSAGES } from '../constants/error-messages.constants';
 import { SessionService } from './session.service';
+import { UserServiceClient } from '../infrastructure/external-services/auth-service.client';
 
 @Injectable()
 export class InfoService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(DeviceFingerprint.name)
     private deviceFingerprintModel: Model<DeviceFingerprint>,
+    private readonly userServiceClient: UserServiceClient,
     @Inject(forwardRef(() => SessionService))
     private readonly sessionService: SessionService,
   ) {}
@@ -28,16 +28,16 @@ export class InfoService {
     email_or_username: string,
   ): Promise<Response<UserDoc>> {
     // Check if user exists
-    const user = await this.userModel.findOne(
+    const user_response = await this.userServiceClient.getInfoByEmailOrUsername(
       {
-        $or: [{ email: email_or_username }, { username: email_or_username }],
-      },
-      {
-        updatedAt: 0,
-        createdAt: 0,
+        email_or_username: email_or_username,
       },
     );
-    if (!user) {
+    if (!user_response.success) {
+      return user_response;
+    }
+    const user = user_response.data as UserDoc;
+    if (!user_response.success || !user) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,
@@ -48,7 +48,7 @@ export class InfoService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
-      data: user as UserDoc,
+      data: user,
     };
   }
 
@@ -70,11 +70,13 @@ export class InfoService {
     }
     const user_id = validate_access_token_response.data.user_id;
     // Get user info
-    const user = await this.userModel.findById(user_id, {
-      password_hashed: 0,
-      updatedAt: 0,
-      createdAt: 0,
+    const user_by_id_response = await this.userServiceClient.getInfoByUserId({
+      user_id: user_id,
     });
+    if (!user_by_id_response.success) {
+      return user_by_id_response;
+    }
+    const user = user_by_id_response.data as UserDoc;
     if (!user) {
       return {
         success: false,
@@ -86,16 +88,19 @@ export class InfoService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
-      data: user as UserDoc,
+      data: user,
     };
   }
 
   async getUserInfoByUserId(user_id: string): Promise<Response<UserDoc>> {
     // Check if user exists
-    const user = await this.userModel.findById(user_id, {
-      updatedAt: 0,
-      createdAt: 0,
+    const user_by_id_response = await this.userServiceClient.getInfoByUserId({
+      user_id: user_id,
     });
+    if (!user_by_id_response.success) {
+      return user_by_id_response;
+    }
+    const user = user_by_id_response.data as UserDoc;
     if (!user) {
       return {
         success: false,
@@ -107,13 +112,13 @@ export class InfoService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
-      data: user as UserDoc,
+      data: user,
     };
   }
 
   async getUserInfoByFingerprintHashed(
     fingerprint_hashed: string,
-  ): Promise<Response<UserDoc[]>> {
+  ): Promise<Response> {
     const device_fingerprints = await this.deviceFingerprintModel.find({
       fingerprint_hashed: fingerprint_hashed,
     });
@@ -127,13 +132,15 @@ export class InfoService {
 
     const users: UserDoc[] = [];
     for (const device_fingerprint of device_fingerprints) {
-      const user = await this.userModel.findById(device_fingerprint.user_id, {
-        password_hashed: 0,
-        updatedAt: 0,
-        createdAt: 0,
+      const user_by_id_response = await this.userServiceClient.getInfoByUserId({
+        user_id: device_fingerprint.user_id.toString(),
       });
+      if (!user_by_id_response.success) {
+        return user_by_id_response;
+      }
+      const user = user_by_id_response.data as UserDoc;
       if (user) {
-        users.push(user as UserDoc);
+        users.push(user);
       }
     }
 
@@ -156,17 +163,14 @@ export class InfoService {
     email_or_username: string;
   }): Promise<Response> {
     const { email_or_username } = input;
-    const user = await this.userModel.findOne(
-      {
-        $or: [{ email: email_or_username }, { username: email_or_username }],
-      },
-      {
-        password_hashed: 0,
-        updatedAt: 0,
-        createdAt: 0,
-      },
-    );
-    if (!user) {
+    const user_response =
+      await this.userServiceClient.checkUserExistsByEmailOrUsername({
+        email_or_username: email_or_username,
+      });
+    if (!user_response.success) {
+      return user_response;
+    }
+    if (!user_response.data) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,

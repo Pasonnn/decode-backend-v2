@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { HttpModule } from '@nestjs/axios';
+import { JwtModule } from '@nestjs/jwt';
 
 // Controllers Import
 import { WalletController } from './wallet.controller';
@@ -18,6 +19,9 @@ import { PrimaryService } from './services/primary.service';
 // Utils Import
 import { CryptoUtils } from './utils/crypto.utils';
 
+// Strategies Import
+import { ServicesJwtStrategy } from './strategies/services-jwt.strategy';
+
 // Infrastructure Import
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
 
@@ -26,6 +30,7 @@ import { Wallet, WalletSchema } from './schemas/wallet.schema';
 
 // Config Import
 import configuration from './config/configuration';
+import jwtConfig from './config/jwt.config';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,6 +38,19 @@ import configuration from './config/configuration';
       envFilePath: '.env',
     }),
     ConfigModule.forFeature(configuration),
+    ConfigModule.forFeature(jwtConfig),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('jwt.secret.servicesToken'), // Secret key for signing tokens
+        signOptions: {
+          expiresIn: config.get<string>('jwt.servicesToken.expiresIn'), // Token expiration time
+          issuer: config.get<string>('jwt.servicesToken.issuer'), // Token issuer identification
+          audience: config.get<string>('jwt.servicesToken.audience'), // Token audience validation
+        },
+      }),
+      inject: [ConfigService],
+    }),
     HttpModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -61,6 +79,9 @@ import configuration from './config/configuration';
     // Infrastructure
     RedisInfrastructure,
     CryptoUtils,
+
+    // Strategies
+    ServicesJwtStrategy,
 
     // External Services
     AuthServiceClient,

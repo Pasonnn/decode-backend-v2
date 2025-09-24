@@ -37,7 +37,7 @@ import { Document, Types } from 'mongoose';
 @Schema({ timestamps: true, collection: 'device_fingerprints' })
 export class DeviceFingerprint extends Document {
   /** Reference to the user who owns this device fingerprint */
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, type: Types.ObjectId, ref: 'User', index: true })
   user_id: Types.ObjectId;
 
   /** Device information (e.g., "iPhone 12", "MacBook Pro") */

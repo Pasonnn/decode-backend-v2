@@ -33,16 +33,14 @@
 
 // Core NestJS modules for dependency injection and HTTP status codes
 import { Inject, Injectable, Logger, HttpStatus } from '@nestjs/common';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { ClientProxy } from '@nestjs/microservices';
 
 // Schemas Import
-import { User } from '../schemas/user.schema';
 
 // Infrastructure and Strategies Import
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
+import { UserServiceClient } from '../infrastructure/external-services/auth-service.client';
 
 // Services
 import { PasswordService } from './password.service';
@@ -86,13 +84,12 @@ export class RegisterService {
    *
    * @param redisInfrastructure - Redis operations for temporary data storage
    * @param passwordService - Password validation and hashing utilities
-   * @param userModel - MongoDB model for user data operations
    * @param emailService - RabbitMQ client for email service communication
    */
   constructor(
     private readonly redisInfrastructure: RedisInfrastructure,
     private readonly passwordService: PasswordService,
-    @InjectModel(User.name) private userModel: Model<User>,
+    private readonly userServiceClient: UserServiceClient,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
     @Inject('NEO4JDB_SYNC_SERVICE')
     private readonly neo4jdbCreateUserService: ClientProxy,
@@ -207,37 +204,15 @@ export class RegisterService {
     // Get register info from request
     const { username, email, password_hashed } = register_info;
     // Check if user email already exists
-    const existing_email = await this.userModel.findOne(
-      { email: email },
-      {
-        password_hashed: 0,
-        updatedAt: 0,
-        createdAt: 0,
-      },
-    );
-    if (existing_email) {
+    const existing_email_or_username_response =
+      await this.userServiceClient.checkUserExistsByEmailOrUsername({
+        email_or_username: email,
+      });
+    if (existing_email_or_username_response.success) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,
-        message: MESSAGES.REGISTRATION.EMAIL_EXISTS,
-      };
-    }
-    // Check if user username already exists
-    const existing_username = await this.userModel.findOne(
-      {
-        username: username,
-      },
-      {
-        password_hashed: 0,
-        updatedAt: 0,
-        createdAt: 0,
-      },
-    );
-    if (existing_username) {
-      return {
-        success: false,
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: MESSAGES.REGISTRATION.USERNAME_EXISTS,
+        message: MESSAGES.REGISTRATION.EMAIL_OR_USERNAME_EXISTS,
       };
     }
     // Store register info in Redis
@@ -349,46 +324,36 @@ export class RegisterService {
     }
 
     // Check if user already exists (by email or username)
-    const existing_user = await this.userModel.findOne(
-      {
-        $or: [{ email: email }, { username: register_info_value.username }],
-      },
-      {
-        password_hashed: 0,
-        updatedAt: 0,
-        createdAt: 0,
-      },
-    );
-    if (existing_user) {
+    const existing_user_response: Response =
+      await this.userServiceClient.checkUserExistsByEmailOrUsername({
+        email_or_username: email,
+      });
+    if (existing_user_response.success && existing_user_response.data) {
       return {
         success: false,
         statusCode: HttpStatus.CONFLICT,
-        message: MESSAGES.REGISTRATION.EMAIL_EXISTS,
+        message: MESSAGES.REGISTRATION.EXISTING_USER,
       };
     }
     // Delete register info from Redis
     await this.redisInfrastructure.del(register_info_key);
+
     // Create user
-    await this.userModel.create({
-      username: register_info_value.username,
-      email: register_info_value.email,
-      display_name: register_info_value.username,
-      password_hashed: register_info_value.password_hashed,
-      role: AUTH_CONSTANTS.USER.DEFAULT_ROLE,
-      bio: AUTH_CONSTANTS.USER.DEFAULT_BIO,
-      avatar_ipfs_hash: AUTH_CONSTANTS.USER.DEFAULT_AVATAR_IPFS_HASH,
-    });
-    const created_user = await this.userModel.findOne(
-      {
+    const created_user_response: Response =
+      await this.userServiceClient.createUser({
         username: register_info_value.username,
-      },
-      {
-        password_hashed: 0,
-        updatedAt: 0,
-        createdAt: 0,
-      },
-    );
+        email: register_info_value.email,
+        password_hashed: register_info_value.password_hashed,
+      });
+    if (!created_user_response.success) {
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.REGISTRATION.USER_CREATION_FAILED,
+      };
+    }
     // Sync user to Neo4j
+    const created_user = created_user_response.data;
     await this.neo4jdbCreateUserService
       .emit('create_user_request', created_user as UserDoc)
       .toPromise();
@@ -397,7 +362,7 @@ export class RegisterService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_CREATED,
-      data: created_user,
+      data: created_user as UserDoc,
     };
   }
 

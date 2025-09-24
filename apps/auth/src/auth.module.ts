@@ -42,6 +42,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { MongooseModule } from '@nestjs/mongoose';
+import { HttpModule } from '@nestjs/axios';
 
 // Controllers Import
 import { AuthController } from './auth.controller';
@@ -57,17 +58,19 @@ import { SsoService } from './services/sso.service';
 
 // Strategies and Infrastructure Import
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { ServicesJwtStrategy } from './strategies/services-jwt.strategy';
 import { SessionStrategy } from './strategies/session.strategy';
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
+import { UserServiceClient } from './infrastructure/external-services/auth-service.client';
 
 // Guards Import
 import { AuthGuard } from './common/guards/auth.guard';
+import { WalletServiceGuard } from './common/guards/service.guard';
 
 // Utils Import
 import { PasswordUtils } from './utils/password.utils';
 
 // Schemas Import
-import { User, UserSchema } from './schemas/user.schema';
 import { Session, SessionSchema } from './schemas/session.schema';
 import {
   DeviceFingerprint,
@@ -115,7 +118,7 @@ import jwtConfig from './config/jwt.config';
     }),
     ConfigModule.forFeature(authConfig), // Load authentication-specific configuration
     ConfigModule.forFeature(jwtConfig), // Load JWT-specific configuration
-
+    HttpModule,
     // Passport module for authentication strategies (JWT, Session-based)
     PassportModule,
 
@@ -132,7 +135,6 @@ import jwtConfig from './config/jwt.config';
     // MongoDB schema registration for all data models
     // Each schema defines the structure and validation rules for its respective collection
     MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema }, // User accounts and profiles
       { name: Session.name, schema: SessionSchema }, // User sessions and tokens
       { name: DeviceFingerprint.name, schema: DeviceFingerprintSchema }, // Device tracking
     ]),
@@ -151,7 +153,6 @@ import jwtConfig from './config/jwt.config';
       }),
       inject: [ConfigService],
     }),
-
     // Redis module configuration for caching and temporary data storage
     // Used for storing verification codes, session data, and rate limiting information
     RedisModule.forRootAsync({
@@ -222,12 +223,15 @@ import jwtConfig from './config/jwt.config';
     // Authentication strategies for different token types
     JwtStrategy, // JWT access token validation strategy
     SessionStrategy, // Session token validation strategy
+    ServicesJwtStrategy, // Service JWT token validation strategy
 
     // Security guards for route protection
     AuthGuard, // Main authentication and authorization guard
+    WalletServiceGuard, // Service JWT token validation guard
 
     // Infrastructure services for external system integration
     RedisInfrastructure, // Redis operations and caching utilities
+    UserServiceClient, // User service client for external system integration
 
     // Utility services for common operations
     PasswordUtils, // Password hashing, validation, and security utilities

@@ -35,14 +35,7 @@
  */
 
 // Core NestJS modules for HTTP request handling and security
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  UseGuards,
-  Headers,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 
 // DTOs Import
 import {
@@ -62,7 +55,7 @@ import {
   ValidateSsoTokenDto,
   CreateSsoTokenDto,
   RevokeSessionDto,
-  ValidateWalletPassTokenDto,
+  CreateWalletSessionDto,
 } from './dto/session.dto';
 import {
   ChangePasswordDto,
@@ -92,6 +85,7 @@ import { SsoService } from './services/sso.service';
 
 // Guards Import
 import { AuthGuard, Public } from './common/guards/auth.guard';
+import { WalletServiceGuard } from './common/guards/service.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './common/guards/auth.guard';
 import { InitiateForgotPasswordDto } from 'apps/api-gateway/src/modules/auth/dto/password.dto';
@@ -323,18 +317,19 @@ export class AuthController {
     return validate_access_response;
   }
 
-  @Post('session/validate-wallet-pass-token')
-  @Public()
-  async validateWalletPassToken(
-    @Body() dto: ValidateWalletPassTokenDto,
-    @Headers('User-Agent') userAgent: string,
+  @Post('services/session/create-wallet-session')
+  @UseGuards(WalletServiceGuard)
+  async createWalletSession(
+    @Body() dto: CreateWalletSessionDto,
   ): Promise<Response> {
-    const validate_wallet_pass_token_response =
-      await this.sessionService.validateWalletPassToken({
-        wallet_pass_token: dto.wallet_pass_token,
-        user_agent: userAgent,
+    const create_wallet_session_response =
+      await this.sessionService.createWalletSession({
+        user_id: dto.user_id,
+        device_fingerprint_hashed: dto.device_fingerprint_hashed,
+        browser: dto.browser,
+        device: dto.device,
       });
-    return validate_wallet_pass_token_response;
+    return create_wallet_session_response;
   }
 
   /**

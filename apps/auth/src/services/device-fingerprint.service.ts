@@ -11,7 +11,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { ClientProxy } from '@nestjs/microservices';
 
 // Schemas Import
-import { User } from '../schemas/user.schema';
 import { DeviceFingerprint } from '../schemas/device-fingerprint.schema';
 
 // Interfaces Import
@@ -21,6 +20,7 @@ import { SessionDoc } from '../interfaces/session-doc.interface';
 
 // Infrastructure and Strategies Import
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
+import { UserServiceClient } from '../infrastructure/external-services/auth-service.client';
 
 // Services Import
 import { InfoService } from './info.service';
@@ -29,6 +29,7 @@ import { SessionService } from './session.service';
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { MESSAGES } from '../constants/error-messages.constants';
+import { UserDoc } from '../interfaces/user-doc.interface';
 
 @Injectable()
 export class DeviceFingerprintService {
@@ -36,12 +37,12 @@ export class DeviceFingerprintService {
   constructor(
     @InjectModel(DeviceFingerprint.name)
     private deviceFingerprintModel: Model<DeviceFingerprint>,
-    @InjectModel(User.name) private userModel: Model<User>,
     private readonly redisInfrastructure: RedisInfrastructure,
     @Inject(forwardRef(() => InfoService))
     private readonly infoService: InfoService,
     @Inject(forwardRef(() => SessionService))
     private readonly sessionService: SessionService,
+    private readonly userServiceClient: UserServiceClient,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
   ) {
     this.logger = new Logger(DeviceFingerprintService.name);
@@ -250,8 +251,12 @@ export class DeviceFingerprintService {
   }): Promise<Response<DeviceFingerprintDoc>> {
     const { user_id, fingerprint_hashed } = input;
     // Check if device fingerprint is correct
+    const user_id_object = new Types.ObjectId(user_id);
     const device_fingerprint = await this.deviceFingerprintModel.findOne({
-      $and: [{ user_id: user_id }, { fingerprint_hashed: fingerprint_hashed }],
+      $and: [
+        { user_id: user_id_object },
+        { fingerprint_hashed: fingerprint_hashed },
+      ],
     });
     if (!device_fingerprint || device_fingerprint.is_trusted === false) {
       return {
@@ -275,13 +280,17 @@ export class DeviceFingerprintService {
     device: string;
   }): Promise<Response<DeviceFingerprintDoc>> {
     const { user_id, fingerprint_hashed, browser, device } = input;
+    const user_id_object = new Types.ObjectId(user_id);
     // Check if device fingerprint already exists
     let device_fingerprint = await this.deviceFingerprintModel.findOne({
-      $and: [{ user_id: user_id }, { fingerprint_hashed: fingerprint_hashed }],
+      $and: [
+        { user_id: user_id_object },
+        { fingerprint_hashed: fingerprint_hashed },
+      ],
     });
     if (!device_fingerprint) {
       device_fingerprint = await this.deviceFingerprintModel.create({
-        user_id: user_id,
+        user_id: user_id_object,
         fingerprint_hashed: fingerprint_hashed,
         browser: browser,
         device: device,
@@ -356,10 +365,11 @@ export class DeviceFingerprintService {
   }): Promise<Response> {
     const { user_id, fingerprint_hashed } = input;
     // Send device fingerprint email verification
+    const user_id_object = new Types.ObjectId(user_id);
     const device_fingerprint_email_verification =
       await this.deviceFingerprintModel.findOne({
         $and: [
-          { user_id: user_id },
+          { user_id: user_id_object },
           { fingerprint_hashed: fingerprint_hashed },
         ],
       });
@@ -371,14 +381,15 @@ export class DeviceFingerprintService {
       };
     }
     // Get user email
-    const user = await this.userModel.findById(
-      device_fingerprint_email_verification.user_id,
-      {
-        password_hashed: 0,
-        updatedAt: 0,
-        createdAt: 0,
-      },
-    );
+    const fingerprint_user_id =
+      device_fingerprint_email_verification.user_id.toString();
+    const user_info_response = await this.userServiceClient.getInfoByUserId({
+      user_id: fingerprint_user_id,
+    });
+    if (!user_info_response.success) {
+      return user_info_response;
+    }
+    const user = user_info_response.data as UserDoc;
     if (!user) {
       return {
         success: false,
@@ -394,7 +405,7 @@ export class DeviceFingerprintService {
     // Store email verification code with email in Redis
     const fingerprint_email_verification_code_key = `${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`;
     const fingerprint_email_verification_code_value = {
-      user_id: user_id,
+      user_id: fingerprint_user_id,
       fingerprint_hashed: fingerprint_hashed,
     };
     await this.redisInfrastructure.set(
@@ -440,6 +451,7 @@ export class DeviceFingerprintService {
       user_id: string;
       fingerprint_hashed: string;
     };
+    console.log(device_fingerprint_data);
     if (!device_fingerprint_data) {
       return {
         success: false,
