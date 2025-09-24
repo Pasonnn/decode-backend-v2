@@ -204,11 +204,15 @@ export class RegisterService {
     // Get register info from request
     const { username, email, password_hashed } = register_info;
     // Check if user email already exists
-    const existing_email_or_username_response =
+    const existing_username_response: Response =
       await this.userServiceClient.checkUserExistsByEmailOrUsername({
         email_or_username: email,
       });
-    if (existing_email_or_username_response.success) {
+    const existing_email_response: Response =
+      await this.userServiceClient.checkUserExistsByEmailOrUsername({
+        email_or_username: username,
+      });
+    if (existing_username_response.success || existing_email_response.success) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,
