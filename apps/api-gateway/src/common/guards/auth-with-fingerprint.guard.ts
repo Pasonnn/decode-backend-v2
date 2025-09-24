@@ -68,6 +68,7 @@ export class AuthGuardWithFingerprint implements CanActivate {
           },
         ),
       );
+      console.log(response.data);
       if (!response.data.success || !response.data.data) {
         throw new UnauthorizedException({
           message: 'Invalid fingerprint hash',

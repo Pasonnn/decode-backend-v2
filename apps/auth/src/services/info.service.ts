@@ -136,9 +136,10 @@ export class InfoService {
         user_id: device_fingerprint.user_id.toString(),
       });
       if (!user_by_id_response.success) {
-        return user_by_id_response;
+        continue;
       }
       const user = user_by_id_response.data as UserDoc;
+
       if (user) {
         users.push(user);
       }
