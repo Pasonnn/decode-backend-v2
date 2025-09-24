@@ -365,10 +365,11 @@ export class DeviceFingerprintService {
   }): Promise<Response> {
     const { user_id, fingerprint_hashed } = input;
     // Send device fingerprint email verification
+    const user_id_object = new Types.ObjectId(user_id);
     const device_fingerprint_email_verification =
       await this.deviceFingerprintModel.findOne({
         $and: [
-          { user_id: user_id },
+          { user_id: user_id_object },
           { fingerprint_hashed: fingerprint_hashed },
         ],
       });

@@ -47,7 +47,6 @@ import { DeviceFingerprintService } from './device-fingerprint.service';
 
 // Constants Import
 import { MESSAGES } from '../constants/error-messages.constants';
-import { UserDoc } from '../interfaces/user-doc.interface';
 
 /**
  * User Login Service
@@ -108,7 +107,7 @@ export class LoginService {
       if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
         return getUserInfoResponse;
       }
-      const user = getUserInfoResponse.data as UserDoc;
+      const user = getUserInfoResponse.data;
       const checkPasswordResponse = this.passwordService.checkPassword(
         password,
         user.password_hashed || '',
@@ -121,6 +120,7 @@ export class LoginService {
           user_id: user._id,
           fingerprint_hashed,
         });
+      console.log(checkDeviceFingerprintResponse);
       if (
         !checkDeviceFingerprintResponse.success ||
         !checkDeviceFingerprintResponse.data
