@@ -39,14 +39,17 @@ export class PasswordService {
   ): Promise<Response> {
     // Check if old password is correct
     const getUserInfoResponse =
-      await this.infoService.getUserInfoByUserId(user_id);
+      await this.userServiceClient.getInfoWithPasswordByUserId({
+        user_id: user_id,
+      });
     if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
       return getUserInfoResponse;
     }
+    const user = getUserInfoResponse.data;
     // Check if old password is correct
     const check_password_response = this.checkPassword(
       old_password,
-      getUserInfoResponse.data.password_hashed || '',
+      user.password_hashed,
     );
     if (!check_password_response.success) {
       return check_password_response;

@@ -35,6 +35,7 @@ import {
   GetInfoByUserIdDto,
   GetInfoWithPasswordByUserEmailOrUsernameDto,
   UpdateUserLastLoginDto,
+  GetInfoWithPasswordByUserIdDto,
 } from './dto/user-services-response.dto';
 
 // Guards and Decorators
@@ -310,6 +311,16 @@ export class UserController {
         email_or_username: query.email_or_username,
       },
     );
+  }
+
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/get-info-with-password-by-user-id')
+  async getInfoWithPasswordByUserId(
+    @Query() query: GetInfoWithPasswordByUserIdDto,
+  ): Promise<Response<UserDoc>> {
+    return await this.servicesResponseService.getInfoWithPasswordByUserId({
+      user_id: query.user_id,
+    });
   }
 
   @UseGuards(AuthServiceGuard)

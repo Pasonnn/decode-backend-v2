@@ -12,7 +12,9 @@ import {
   GetInfoByUserIdDto,
   GetInfoWithPasswordByUserEmailOrUsernameDto,
   UpdateUserLastLoginDto,
+  GetInfoWithPasswordByUserIdDto,
 } from '../../dto/user-services-response.dto';
+import { UserDoc } from '../../interfaces/user-doc.interface';
 
 @Injectable()
 export class UserServiceClient extends BaseHttpClient {
@@ -71,7 +73,7 @@ export class UserServiceClient extends BaseHttpClient {
 
   async getInfoByEmailOrUsername(
     data: GetInfoByEmailOrUsernameDto,
-  ): Promise<Response> {
+  ): Promise<Response<UserDoc>> {
     const services_token = this.servicesJwtStrategy.createUserServicesToken();
     const config = {
       headers: {
@@ -87,7 +89,7 @@ export class UserServiceClient extends BaseHttpClient {
     );
   }
 
-  async getInfoByUserId(data: GetInfoByUserIdDto): Promise<Response> {
+  async getInfoByUserId(data: GetInfoByUserIdDto): Promise<Response<UserDoc>> {
     const services_token = this.servicesJwtStrategy.createUserServicesToken();
     const config = {
       headers: {
@@ -102,9 +104,27 @@ export class UserServiceClient extends BaseHttpClient {
     );
   }
 
+  async getInfoWithPasswordByUserId(
+    data: GetInfoWithPasswordByUserIdDto,
+  ): Promise<Response<UserDoc>> {
+    const services_token = this.servicesJwtStrategy.createUserServicesToken();
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Auth-Service/1.0',
+        Authorization: `Bearer ${services_token}`,
+      },
+    };
+    return this.get(
+      '/users/services/user/get-info-with-password-by-user-id?user_id=' +
+        data.user_id,
+      config,
+    );
+  }
+
   async getInfoWithPasswordByUserEmailOrUsername(
     data: GetInfoWithPasswordByUserEmailOrUsernameDto,
-  ): Promise<Response> {
+  ): Promise<Response<UserDoc>> {
     const services_token = this.servicesJwtStrategy.createUserServicesToken();
     const config = {
       headers: {

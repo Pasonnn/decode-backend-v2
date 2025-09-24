@@ -34,7 +34,7 @@ export class InfoService {
       },
     );
     if (!user_response.success) {
-      return user_response as Response<UserDoc>;
+      return user_response;
     }
     const user = user_response.data as UserDoc;
     if (!user_response.success || !user) {
@@ -74,7 +74,7 @@ export class InfoService {
       user_id: user_id,
     });
     if (!user_by_id_response.success) {
-      return user_by_id_response as Response<UserDoc>;
+      return user_by_id_response;
     }
     const user = user_by_id_response.data as UserDoc;
     if (!user) {
@@ -98,7 +98,7 @@ export class InfoService {
       user_id: user_id,
     });
     if (!user_by_id_response.success) {
-      return user_by_id_response as Response<UserDoc>;
+      return user_by_id_response;
     }
     const user = user_by_id_response.data as UserDoc;
     if (!user) {
@@ -118,7 +118,7 @@ export class InfoService {
 
   async getUserInfoByFingerprintHashed(
     fingerprint_hashed: string,
-  ): Promise<Response<UserDoc[]>> {
+  ): Promise<Response> {
     const device_fingerprints = await this.deviceFingerprintModel.find({
       fingerprint_hashed: fingerprint_hashed,
     });
@@ -136,7 +136,7 @@ export class InfoService {
         user_id: device_fingerprint.user_id.toString(),
       });
       if (!user_by_id_response.success) {
-        return user_by_id_response as Response<UserDoc[]>;
+        return user_by_id_response;
       }
       const user = user_by_id_response.data as UserDoc;
       if (user) {

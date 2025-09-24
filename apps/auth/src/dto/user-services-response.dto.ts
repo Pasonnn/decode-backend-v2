@@ -69,6 +69,8 @@ class GetInfoByUserIdDto {
 
 class GetInfoWithPasswordByUserEmailOrUsernameDto extends GetInfoByEmailOrUsernameDto {}
 
+class GetInfoWithPasswordByUserIdDto extends GetInfoByUserIdDto {}
+
 class UpdateUserLastLoginDto extends GetInfoByUserIdDto {}
 
 export {
@@ -78,5 +80,6 @@ export {
   GetInfoByEmailOrUsernameDto,
   GetInfoByUserIdDto,
   GetInfoWithPasswordByUserEmailOrUsernameDto,
+  GetInfoWithPasswordByUserIdDto,
   UpdateUserLastLoginDto,
 };

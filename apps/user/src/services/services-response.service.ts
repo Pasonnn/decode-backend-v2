@@ -204,6 +204,36 @@ export class ServicesResponseService {
     }
   }
 
+  async getInfoWithPasswordByUserId(input: {
+    user_id: string;
+  }): Promise<Response<UserDoc>> {
+    const { user_id } = input;
+    try {
+      const user = await this.userModel.findById(user_id, {
+        updatedAt: 0,
+        createdAt: 0,
+      });
+      if (!user) {
+        return {
+          success: false,
+          statusCode: HttpStatus.NOT_FOUND,
+          message: MESSAGES.USER_INFO.USER_NOT_FOUND,
+        };
+      }
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.USER_INFO_FETCHED,
+        data: user as UserDoc,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error getting info with password by user id: ${error as string}`,
+      );
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   async updateUserLastLogin(input: {
     user_id: string;
   }): Promise<Response<UserDoc>> {
