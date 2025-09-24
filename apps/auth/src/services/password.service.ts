@@ -10,12 +10,10 @@ import { UserDoc } from '../interfaces/user-doc.interface';
 
 // Utils
 import { PasswordUtils } from '../utils/password.utils';
-// Models
-import { User } from '../schemas/user.schema';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
+
 // Infrastructures
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
+import { UserServiceClient } from '../infrastructure/external-services/auth-service.client';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
@@ -27,7 +25,7 @@ import { PasswordVerificationValue } from '../interfaces/password-verification-v
 export class PasswordService {
   constructor(
     private readonly passwordUtils: PasswordUtils,
-    @InjectModel(User.name) private userModel: Model<User>,
+    private readonly userServiceClient: UserServiceClient,
     private readonly infoService: InfoService,
     private readonly redisInfrastructure: RedisInfrastructure,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
@@ -239,11 +237,12 @@ export class PasswordService {
     new_password_hashed: string,
   ): Promise<Response> {
     // Change password
-    const update_password_response = await this.userModel.findByIdAndUpdate(
-      user_id,
-      { password_hashed: new_password_hashed },
-    );
-    if (!update_password_response) {
+    const update_password_response =
+      await this.userServiceClient.changePassword({
+        user_id: user_id,
+        password_hashed: new_password_hashed,
+      });
+    if (!update_password_response.success) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,

@@ -34,7 +34,8 @@
  */
 
 export interface ServicesJwtPayload {
-  service: string;
+  from_service: string;
+  to_service: string;
   iat?: number;
   exp?: number;
   iss?: string;

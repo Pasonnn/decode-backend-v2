@@ -42,6 +42,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { MongooseModule } from '@nestjs/mongoose';
+import { HttpModule } from '@nestjs/axios';
 
 // Controllers Import
 import { AuthController } from './auth.controller';
@@ -60,6 +61,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { ServicesJwtStrategy } from './strategies/services-jwt.strategy';
 import { SessionStrategy } from './strategies/session.strategy';
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
+import { UserServiceClient } from './infrastructure/external-services/auth-service.client';
 
 // Guards Import
 import { AuthGuard } from './common/guards/auth.guard';
@@ -117,7 +119,7 @@ import jwtConfig from './config/jwt.config';
     }),
     ConfigModule.forFeature(authConfig), // Load authentication-specific configuration
     ConfigModule.forFeature(jwtConfig), // Load JWT-specific configuration
-
+    HttpModule,
     // Passport module for authentication strategies (JWT, Session-based)
     PassportModule,
 
@@ -231,6 +233,7 @@ import jwtConfig from './config/jwt.config';
 
     // Infrastructure services for external system integration
     RedisInfrastructure, // Redis operations and caching utilities
+    UserServiceClient, // User service client for external system integration
 
     // Utility services for common operations
     PasswordUtils, // Password hashing, validation, and security utilities

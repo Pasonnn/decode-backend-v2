@@ -33,23 +33,21 @@
 
 // Core NestJS modules for dependency injection and HTTP status codes
 import { Injectable, Logger, HttpStatus } from '@nestjs/common';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-
-// Schemas Import
-import { User } from '../schemas/user.schema';
 
 // Interfaces Import
 import { Response } from '../interfaces/response.interface';
 
+// Infrastructure Import
+import { UserServiceClient } from '../infrastructure/external-services/auth-service.client';
+
 // Services Import
 import { SessionService } from './session.service';
-import { InfoService } from './info.service';
 import { PasswordService } from './password.service';
 import { DeviceFingerprintService } from './device-fingerprint.service';
 
 // Constants Import
 import { MESSAGES } from '../constants/error-messages.constants';
+import { UserDoc } from '../interfaces/user-doc.interface';
 
 /**
  * User Login Service
@@ -78,18 +76,15 @@ export class LoginService {
   /**
    * Constructor for dependency injection
    *
-   * @param userModel - MongoDB model for user data operations
    * @param sessionService - Session management and token operations
-   * @param infoService - User information retrieval services
    * @param passwordService - Password validation and verification
    * @param deviceFingerprintService - Device tracking and verification
    */
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
     private readonly sessionService: SessionService,
-    private readonly infoService: InfoService,
     private readonly passwordService: PasswordService,
     private readonly deviceFingerprintService: DeviceFingerprintService,
+    private readonly userServiceClient: UserServiceClient,
   ) {
     this.logger = new Logger(LoginService.name);
   }
@@ -107,20 +102,23 @@ export class LoginService {
     try {
       this.logger.log(`Login request received for ${email_or_username}`);
       const getUserInfoResponse =
-        await this.infoService.getUserInfoByEmailOrUsername(email_or_username);
+        await this.userServiceClient.getInfoWithPasswordByUserEmailOrUsername({
+          email_or_username: email_or_username,
+        });
       if (!getUserInfoResponse.success || !getUserInfoResponse.data) {
         return getUserInfoResponse;
       }
+      const user = getUserInfoResponse.data as UserDoc;
       const checkPasswordResponse = this.passwordService.checkPassword(
         password,
-        getUserInfoResponse.data.password_hashed || '',
+        user.password_hashed || '',
       );
       if (!checkPasswordResponse.success) {
         return checkPasswordResponse;
       }
       const checkDeviceFingerprintResponse =
         await this.deviceFingerprintService.checkDeviceFingerprint({
-          user_id: getUserInfoResponse.data._id,
+          user_id: user._id,
           fingerprint_hashed,
         });
       if (
@@ -133,7 +131,7 @@ export class LoginService {
         );
         const createDeviceFingerprintResponse =
           await this.deviceFingerprintService.createDeviceFingerprint({
-            user_id: getUserInfoResponse.data._id,
+            user_id: user._id,
             fingerprint_hashed,
             browser,
             device,
@@ -147,7 +145,7 @@ export class LoginService {
         const sendDeviceFingerprintEmailVerificationResponse =
           await this.deviceFingerprintService.sendDeviceFingerprintEmailVerification(
             {
-              user_id: getUserInfoResponse.data._id,
+              user_id: user._id,
               fingerprint_hashed,
             },
           );
@@ -169,7 +167,7 @@ export class LoginService {
         // Device fingerprint trusted
         this.logger.log(`Device fingerprint trusted for ${email_or_username}`);
         const createSessionResponse = await this.sessionService.createSession({
-          user_id: getUserInfoResponse.data._id,
+          user_id: user._id,
           device_fingerprint_id: checkDeviceFingerprintResponse.data._id,
           app: 'decode',
         });
@@ -179,7 +177,7 @@ export class LoginService {
         }
         this.logger.log(`Session created for ${email_or_username}`);
         const updateUserLastLoginResponse = await this.updateUserLastLogin({
-          user_id: getUserInfoResponse.data._id,
+          user_id: user._id,
         });
         if (!updateUserLastLoginResponse.success) {
           this.logger.error(
@@ -209,20 +207,17 @@ export class LoginService {
     user_id: string;
   }): Promise<Response> {
     const { user_id } = input;
-    const user = await this.userModel.findById(user_id, {
-      password_hashed: 0,
-      updatedAt: 0,
-      createdAt: 0,
-    });
-    if (!user) {
+    const user_last_login_response =
+      await this.userServiceClient.updateUserLastLogin({
+        user_id: user_id,
+      });
+    if (!user_last_login_response.success) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
-    user.last_login = new Date();
-    await user.save();
     return {
       success: true,
       statusCode: HttpStatus.OK,

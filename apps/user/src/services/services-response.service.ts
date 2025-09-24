@@ -169,15 +169,20 @@ export class ServicesResponseService {
     }
   }
 
-  async getInfoWithPasswordByUserId(input: {
-    user_id: string;
+  async getInfoWithPasswordByUserEmailOrUsername(input: {
+    email_or_username: string;
   }): Promise<Response<UserDoc>> {
-    const { user_id } = input;
+    const { email_or_username } = input;
     try {
-      const user = await this.userModel.findById(user_id, {
-        updatedAt: 0,
-        createdAt: 0,
-      });
+      const user = await this.userModel.findOne(
+        {
+          $or: [{ username: email_or_username }, { email: email_or_username }],
+        },
+        {
+          updatedAt: 0,
+          createdAt: 0,
+        },
+      );
       if (!user) {
         return {
           success: false,
@@ -193,7 +198,7 @@ export class ServicesResponseService {
       };
     } catch (error) {
       this.logger.error(
-        `Error getting info with password by user id: ${error as string}`,
+        `Error getting info with password by user email or username: ${error as string}`,
       );
       throw new InternalServerErrorException(error);
     }

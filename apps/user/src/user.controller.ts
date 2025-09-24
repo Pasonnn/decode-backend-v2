@@ -33,13 +33,14 @@ import {
   ChangePasswordDto,
   GetInfoByEmailOrUsernameDto,
   GetInfoByUserIdDto,
-  GetInfoWithPasswordByUserIdDto,
+  GetInfoWithPasswordByUserEmailOrUsernameDto,
   UpdateUserLastLoginDto,
-} from './dto/services-response.dto';
+} from './dto/user-services-response.dto';
 
 // Guards and Decorators
 import { AuthGuard } from './common/guards/auth.guard';
 import { Roles, UserRole } from './common/decorators/roles.decorator';
+import { AuthServiceGuard } from './common/guards/service.guard';
 
 // Interfaces
 import { Response } from './interfaces/response.interface';
@@ -249,9 +250,9 @@ export class UserController {
   }
 
   // ==================== SERVICES RESPONSE ENDPOINTS ====================
-
-  @Get('services/response/check-user-exists')
-  async checkUserExists(
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/check-user-exists')
+  async checkUserExistsByEmailOrUsername(
     @Query() query: CheckUserExistsByEmailOrUsernameDto,
   ): Promise<Response<UserDoc>> {
     return await this.servicesResponseService.checkUserExistsByEmailOrUsername({
@@ -259,7 +260,8 @@ export class UserController {
     });
   }
 
-  @Post('services/response/create-user')
+  @UseGuards(AuthServiceGuard)
+  @Post('services/user/create-user')
   async createUser(@Body() body: CreateUserDto): Promise<Response<UserDoc>> {
     return await this.servicesResponseService.createUser({
       email: body.email,
@@ -268,7 +270,8 @@ export class UserController {
     });
   }
 
-  @Put('services/response/change-password')
+  @UseGuards(AuthServiceGuard)
+  @Put('services/user/change-password')
   async changePassword(
     @Body() body: ChangePasswordDto,
   ): Promise<Response<UserDoc>> {
@@ -278,7 +281,8 @@ export class UserController {
     });
   }
 
-  @Get('services/response/get-info-by-email-or-username')
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/get-info-by-email-or-username')
   async getInfoByEmailOrUsername(
     @Query() query: GetInfoByEmailOrUsernameDto,
   ): Promise<Response<UserDoc>> {
@@ -287,7 +291,8 @@ export class UserController {
     });
   }
 
-  @Get('services/response/get-info-by-user-id')
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/get-info-by-user-id')
   async getInfoByUserId(
     @Query() query: GetInfoByUserIdDto,
   ): Promise<Response<UserDoc>> {
@@ -296,16 +301,20 @@ export class UserController {
     });
   }
 
-  @Get('services/response/get-info-with-password-by-user-id')
-  async getInfoWithPasswordByUserId(
-    @Query() query: GetInfoWithPasswordByUserIdDto,
+  @UseGuards(AuthServiceGuard)
+  @Get('services/user/get-info-with-password-by-user-email-or-username')
+  async getInfoWithPasswordByUserEmailOrUsername(
+    @Query() query: GetInfoWithPasswordByUserEmailOrUsernameDto,
   ): Promise<Response<UserDoc>> {
-    return await this.servicesResponseService.getInfoWithPasswordByUserId({
-      user_id: query.user_id,
-    });
+    return await this.servicesResponseService.getInfoWithPasswordByUserEmailOrUsername(
+      {
+        email_or_username: query.email_or_username,
+      },
+    );
   }
 
-  @Put('services/response/update-user-last-login')
+  @UseGuards(AuthServiceGuard)
+  @Put('services/user/update-user-last-login')
   async updateUserLastLogin(
     @Body() body: UpdateUserLastLoginDto,
   ): Promise<Response<UserDoc>> {

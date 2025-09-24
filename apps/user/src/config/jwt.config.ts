@@ -42,10 +42,11 @@ export default registerAs('jwt', () => ({
     servicesToken: process.env.JWT_SERVICE_TOKEN_SECRET,
   },
 
-  services: {
-    apiGateway: 'api-gateway',
-    wallet: 'wallet',
-    user: 'user',
-    auth: 'auth',
+  servicesToken: {
+    expiresIn: '5s', // 5 seconds
+    algorithm: 'HS256',
+    issuer: 'decode-user-service',
+    audience: 'decode-user-service',
+    authIssuer: 'decode-auth-service',
   },
 }));

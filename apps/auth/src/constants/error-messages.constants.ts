@@ -67,8 +67,8 @@ export const MESSAGES = {
 
   // Registration Errors
   REGISTRATION: {
-    EMAIL_EXISTS: 'Email already exists',
-    USERNAME_EXISTS: 'Username already exists',
+    EMAIL_OR_USERNAME_EXISTS: 'Email or username already exists',
+    EXISTING_USER: 'User already exists',
     WEAK_PASSWORD: 'Password does not meet security requirements',
     INVALID_PASSWORD: 'Invalid password',
     INVALID_EMAIL: 'Invalid email format',
