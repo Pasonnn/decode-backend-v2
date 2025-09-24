@@ -90,8 +90,8 @@ export class AuthGuardWithFingerprint implements CanActivate {
 
       if (!isUserMatched) {
         throw new UnauthorizedException({
-          message: 'User authentication mismatch',
-          error: 'USER_ID_MISMATCH',
+          message: 'This device is not trusted for current user',
+          error: 'USER_ID_AND_FINGERPRINT_MISMATCH',
         });
       }
 

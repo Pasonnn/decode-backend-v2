@@ -33,11 +33,11 @@ export class ServicesJwtStrategy extends PassportStrategy(Strategy) {
   createUserServicesToken(): string {
     const payload: ServicesJwtPayload = {
       from_service:
-        this.configService.get<string>('jwt.servicesToken.userAudience') ||
-        'decode-user-service',
-      to_service:
         this.configService.get<string>('jwt.servicesToken.issuer') ||
         'decode-auth-service',
+      to_service:
+        this.configService.get<string>('jwt.servicesToken.userAudience') ||
+        'decode-user-service',
     };
     return this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.secret.servicesToken'),

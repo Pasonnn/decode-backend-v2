@@ -38,7 +38,11 @@ export class UserServiceClient extends BaseHttpClient {
         Authorization: `Bearer ${services_token}`,
       },
     };
-    return this.post('/users/services/user/check-user-exists', data, config);
+    return this.get(
+      '/users/services/user/check-user-exists?email_or_username=' +
+        data.email_or_username,
+      config,
+    );
   }
 
   async createUser(data: CreateUserDto): Promise<Response> {
@@ -62,7 +66,7 @@ export class UserServiceClient extends BaseHttpClient {
         Authorization: `Bearer ${services_token}`,
       },
     };
-    return this.post('/users/services/user/change-password', data, config);
+    return this.put('/users/services/user/change-password', data, config);
   }
 
   async getInfoByEmailOrUsername(

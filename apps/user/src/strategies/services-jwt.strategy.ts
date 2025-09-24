@@ -47,6 +47,7 @@ export class ServicesJwtStrategy extends PassportStrategy(Strategy) {
           ),
         },
       );
+      console.log(payload);
       if (
         payload.from_service !=
           (this.configService.get<string>('jwt.servicesToken.authIssuer') ||

@@ -52,7 +52,6 @@ import { ServicesResponseService } from './services/services-response.service';
 
 @ApiTags('User Management')
 @Controller('users')
-@UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class UserController {
   constructor(

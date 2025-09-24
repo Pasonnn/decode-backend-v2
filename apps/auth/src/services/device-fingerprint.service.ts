@@ -251,8 +251,12 @@ export class DeviceFingerprintService {
   }): Promise<Response<DeviceFingerprintDoc>> {
     const { user_id, fingerprint_hashed } = input;
     // Check if device fingerprint is correct
+    const user_id_object = new Types.ObjectId(user_id);
     const device_fingerprint = await this.deviceFingerprintModel.findOne({
-      $and: [{ user_id: user_id }, { fingerprint_hashed: fingerprint_hashed }],
+      $and: [
+        { user_id: user_id_object },
+        { fingerprint_hashed: fingerprint_hashed },
+      ],
     });
     if (!device_fingerprint || device_fingerprint.is_trusted === false) {
       return {
@@ -276,13 +280,17 @@ export class DeviceFingerprintService {
     device: string;
   }): Promise<Response<DeviceFingerprintDoc>> {
     const { user_id, fingerprint_hashed, browser, device } = input;
+    const user_id_object = new Types.ObjectId(user_id);
     // Check if device fingerprint already exists
     let device_fingerprint = await this.deviceFingerprintModel.findOne({
-      $and: [{ user_id: user_id }, { fingerprint_hashed: fingerprint_hashed }],
+      $and: [
+        { user_id: user_id_object },
+        { fingerprint_hashed: fingerprint_hashed },
+      ],
     });
     if (!device_fingerprint) {
       device_fingerprint = await this.deviceFingerprintModel.create({
-        user_id: user_id,
+        user_id: user_id_object,
         fingerprint_hashed: fingerprint_hashed,
         browser: browser,
         device: device,
@@ -442,6 +450,7 @@ export class DeviceFingerprintService {
       user_id: string;
       fingerprint_hashed: string;
     };
+    console.log(device_fingerprint_data);
     if (!device_fingerprint_data) {
       return {
         success: false,
