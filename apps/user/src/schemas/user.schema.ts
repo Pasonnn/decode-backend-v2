@@ -78,11 +78,11 @@ export class User extends Document {
   last_login: Date;
 
   /** Timestamp of user's last username change - updated on each username change */
-  @Prop({ required: false, default: new Date() })
+  @Prop({ required: false })
   last_username_change: Date;
 
   /** Timestamp of user's last email change - updated on each email change */
-  @Prop({ required: false, default: new Date() })
+  @Prop({ required: false })
   last_email_change: Date;
 }
 
