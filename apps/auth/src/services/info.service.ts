@@ -7,7 +7,6 @@ import { Response } from '../interfaces/response.interface';
 // Models
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from '../schemas/user.schema';
 import { DeviceFingerprint } from '../schemas/device-fingerprint.schema';
 
 // Constants Import
@@ -18,7 +17,6 @@ import { UserServiceClient } from '../infrastructure/external-services/auth-serv
 @Injectable()
 export class InfoService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(DeviceFingerprint.name)
     private deviceFingerprintModel: Model<DeviceFingerprint>,
     private readonly userServiceClient: UserServiceClient,

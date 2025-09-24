@@ -71,7 +71,6 @@ import { WalletServiceGuard } from './common/guards/service.guard';
 import { PasswordUtils } from './utils/password.utils';
 
 // Schemas Import
-import { User, UserSchema } from './schemas/user.schema';
 import { Session, SessionSchema } from './schemas/session.schema';
 import {
   DeviceFingerprint,
@@ -136,7 +135,6 @@ import jwtConfig from './config/jwt.config';
     // MongoDB schema registration for all data models
     // Each schema defines the structure and validation rules for its respective collection
     MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema }, // User accounts and profiles
       { name: Session.name, schema: SessionSchema }, // User sessions and tokens
       { name: DeviceFingerprint.name, schema: DeviceFingerprintSchema }, // Device tracking
     ]),
