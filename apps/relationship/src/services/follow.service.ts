@@ -5,6 +5,7 @@ import {
   forwardRef,
   Inject,
 } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
@@ -26,6 +27,8 @@ export class FollowService {
     @Inject(forwardRef(() => BlockService))
     private readonly blockService: BlockService,
     private readonly userService: UserService,
+    @Inject('NOTIFICATION_SERVICE')
+    private readonly notificationService: ClientProxy,
   ) {
     this.logger = new Logger(FollowService.name);
     this.neo4jInfrastructure = neo4jInfrastructure;
@@ -90,6 +93,28 @@ export class FollowService {
           message: `Failed to following user`,
         };
       }
+      // Create notification for user to
+      // Get user from data
+      const get_user_from_response = await this.userService.getUser({
+        user_id_from: user_id_to,
+        user_id_to: user_id_from,
+      });
+      if (!get_user_from_response.success || !get_user_from_response.data) {
+        return {
+          success: false,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: `Failed to get user from to follow`,
+        };
+      }
+      const create_notification_notification_payload = {
+        user_id: user_id_to,
+        type: 'new_follow',
+        title: 'You have a new follower',
+        message: `${get_user_from_response.data.username} just followed you`,
+      };
+      await this.notificationService
+        .emit('create_notification', create_notification_notification_payload)
+        .toPromise();
       return {
         success: true,
         statusCode: HttpStatus.OK,

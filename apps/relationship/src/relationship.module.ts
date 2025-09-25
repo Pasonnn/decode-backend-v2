@@ -20,6 +20,8 @@ import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
 // Config Import
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
+import { Transport } from '@nestjs/microservices';
+import { ClientsModule } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -37,6 +39,26 @@ import configuration from './config/configuration';
       }),
       inject: [ConfigService],
     }),
+    ClientsModule.registerAsync([
+      {
+        name: 'NOTIFICATION_SERVICE',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              configService.get<string>('RABBITMQ_URI') ||
+                'amqp://localhost:5672',
+            ],
+            queue: 'notification_queue',
+            queueOptions: {
+              durable: true,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
   ],
   controllers: [RelationshipController],
   providers: [
