@@ -9,18 +9,14 @@ import {
   DefaultValuePipe,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
-  ApiParam,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { NotificationService } from './services/notification.service';
 import { AuthGuard } from './common/guards/auth.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { Response } from './interfaces/response.interface';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
+import type { NotificationPaginationResponse } from './interfaces/notification-pagination-response.interface';
+import { Notification } from './schema/notification.schema';
 
 /**
  * Notification Controller
@@ -35,74 +31,17 @@ export class NotificationController {
   /**
    * Get paginated notifications for the authenticated user (newest first)
    * @param user - The authenticated user
-   * @param page - Page number (default: 1)
+   * @param page - Page number (0-based, default: 0)
    * @param limit - Items per page (default: 10, max: 100)
    * @returns Paginated notifications
    */
   @Get()
   @ApiOperation({ summary: 'Get paginated notifications for user' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Notifications retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean' },
-        statusCode: { type: 'number' },
-        message: { type: 'string' },
-        data: {
-          type: 'object',
-          properties: {
-            notifications: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  user_id: { type: 'string' },
-                  type: { type: 'string' },
-                  title: { type: 'string' },
-                  message: { type: 'string' },
-                  delivered: { type: 'boolean' },
-                  delivered_at: { type: 'string', format: 'date-time' },
-                  read: { type: 'boolean' },
-                  read_at: { type: 'string', format: 'date-time' },
-                  createdAt: { type: 'string', format: 'date-time' },
-                  updatedAt: { type: 'string', format: 'date-time' },
-                },
-              },
-            },
-            pagination: {
-              type: 'object',
-              properties: {
-                currentPage: { type: 'number' },
-                totalPages: { type: 'number' },
-                totalItems: { type: 'number' },
-                itemsPerPage: { type: 'number' },
-              },
-            },
-          },
-        },
-      },
-    },
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Page number (default: 1)',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Items per page (default: 10, max: 100)',
-  })
   async getUserNotifications(
     @CurrentUser() user: AuthenticatedUser,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number = 0,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
-  ): Promise<Response> {
+  ): Promise<NotificationPaginationResponse<Notification>> {
     try {
       // Validate limit
       if (limit > 100) {
@@ -115,12 +54,7 @@ export class NotificationController {
         limit,
       );
 
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: 'Notifications retrieved successfully',
-        data: result,
-      };
+      return result;
     } catch (error) {
       return {
         success: false,
@@ -140,38 +74,6 @@ export class NotificationController {
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark notification as read' })
   @ApiParam({ name: 'id', description: 'Notification ID' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Notification marked as read successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean' },
-        statusCode: { type: 'number' },
-        message: { type: 'string' },
-        data: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            user_id: { type: 'string' },
-            type: { type: 'string' },
-            title: { type: 'string' },
-            message: { type: 'string' },
-            delivered: { type: 'boolean' },
-            delivered_at: { type: 'string', format: 'date-time' },
-            read: { type: 'boolean' },
-            read_at: { type: 'string', format: 'date-time' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-          },
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Notification not found',
-  })
   async markAsRead(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') notificationId: string,
@@ -197,6 +99,24 @@ export class NotificationController {
       };
     }
   }
+
+  @Patch('/read-all')
+  @ApiOperation({ summary: 'Mark all notifications as read' })
+  async markAsReadAll(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    try {
+      return this.notificationService.markAsReadAll(user.userId);
+    } catch (error) {
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Failed to mark all notifications as read',
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
   /**
    * Get unread notifications count for the authenticated user
    * @param user - The authenticated user
@@ -204,24 +124,6 @@ export class NotificationController {
    */
   @Get('unread/count')
   @ApiOperation({ summary: 'Get unread notifications count' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Unread count retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean' },
-        statusCode: { type: 'number' },
-        message: { type: 'string' },
-        data: {
-          type: 'object',
-          properties: {
-            count: { type: 'number' },
-          },
-        },
-      },
-    },
-  })
   async getUnreadCount(
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response> {

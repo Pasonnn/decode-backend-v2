@@ -53,9 +53,7 @@ async function bootstrap() {
   await app.listen(port, host);
 
   console.log(`Notification service is running on ${host}:${port}`);
-  console.log(
-    `Push service is cosumming from ${process.env.RABBITMQ_URI || 'amqp://localhost:5672'}`,
-  );
+  console.log(`Notif service is consuming from RabbitMQ`);
   console.log(`API Documentation: http://${host}:${port}/api/docs`);
 }
 

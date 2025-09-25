@@ -1,8 +1,14 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Notification } from '../schema/notification.schema';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
+import { NotificationPaginationResponse } from '../interfaces/notification-pagination-response.interface';
 import { Response } from '../interfaces/response.interface';
 
 /**
@@ -47,50 +53,42 @@ export class NotificationService {
   /**
    * Get paginated notifications for a user (newest first)
    * @param userId - The user ID
-   * @param page - Page number (default: 1)
+   * @param page - Page number (0-based, default: 0)
    * @param limit - Items per page (default: 10)
    * @returns Paginated notifications
    */
   async getUserNotifications(
     userId: string,
-    page: number = 1,
+    page: number = 0,
     limit: number = 10,
-  ): Promise<{
-    notifications: Notification[];
-    pagination: {
-      currentPage: number;
-      totalPages: number;
-      totalItems: number;
-      itemsPerPage: number;
-    };
-  }> {
+  ): Promise<NotificationPaginationResponse<Notification>> {
     try {
-      const skip = (page - 1) * limit;
+      const skip = page * limit;
       const userObjectId = new Types.ObjectId(userId);
 
-      const [notifications, totalItems] = await Promise.all([
-        this.notificationModel
-          .find({ user_id: userObjectId })
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(limit)
-          .exec(),
-        this.notificationModel.countDocuments({ user_id: userObjectId }),
-      ]);
-
-      const totalPages = Math.ceil(totalItems / limit);
+      const notifications = await this.notificationModel
+        .find({ user_id: userObjectId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec();
 
       this.logger.log(
         `Retrieved ${notifications.length} notifications for user ${userId} (page ${page})`,
       );
 
       return {
-        notifications,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalItems,
-          itemsPerPage: limit,
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: `Notifications retrieved successfully`,
+        data: {
+          notifications: notifications as Notification[],
+          meta: {
+            total: notifications.length,
+            page: page,
+            limit: limit,
+            is_last_page: notifications.length < limit,
+          },
         },
       };
     } catch (error) {
@@ -144,6 +142,30 @@ export class NotificationService {
     } catch (error) {
       this.logger.error(
         `Failed to mark notification ${notificationId} as read:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async markAsReadAll(userId: string): Promise<Response> {
+    try {
+      const userObjectId = new Types.ObjectId(userId);
+      await this.notificationModel
+        .updateMany(
+          { user_id: userObjectId },
+          { read: true, read_at: new Date() },
+        )
+        .exec();
+      this.logger.log(`Marked all notifications as read for user ${userId}`);
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: `All notifications marked as read for user ${userId}`,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to mark all notifications as read for user ${userId}:`,
         error,
       );
       throw error;

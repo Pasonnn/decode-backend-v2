@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { HttpModule } from '@nestjs/axios';
 
 // Controllers
 import { NotificationController } from './notification.controller';
@@ -21,6 +22,13 @@ import { Notification, NotificationSchema } from './schema/notification.schema';
 // Infrastructure
 import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure';
 
+// Strategy
+import { JwtStrategy } from './strategy/jwt.strategy';
+
+// Config
+import jwtConfig from './config/jwt.config';
+import configuration from './config/configuration';
+
 /**
  * Notification Module
  * Main module for notification service with clean architecture
@@ -30,13 +38,19 @@ import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
+
+    ConfigModule.forFeature(configuration),
+    ConfigModule.forFeature(jwtConfig),
+
+    HttpModule,
 
     // Database
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
+        uri: configService.get<string>('MONGO_URI'),
       }),
       inject: [ConfigService],
     }),
@@ -81,6 +95,9 @@ import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure
 
     // Infrastructure
     RabbitMQInfrastructure,
+
+    // Strategy
+    JwtStrategy,
   ],
   exports: [NotificationService, NotificationGateway, RedisInfrastructure],
 })

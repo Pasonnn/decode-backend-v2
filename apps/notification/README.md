@@ -69,7 +69,7 @@ Get paginated notifications for the authenticated user.
 
 **Query Parameters:**
 
-- `page` (optional): Page number (default: 1)
+- `page` (optional): Page number (0-based, default: 0)
 - `limit` (optional): Items per page (default: 10, max: 100)
 
 **Response:**
@@ -96,7 +96,7 @@ Get paginated notifications for the authenticated user.
       }
     ],
     "pagination": {
-      "currentPage": 1,
+      "currentPage": 0,
       "totalPages": 5,
       "totalItems": 47,
       "itemsPerPage": 10

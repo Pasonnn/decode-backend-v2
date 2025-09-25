@@ -6,6 +6,7 @@ import {
   ForbiddenException,
   Logger,
   SetMetadata,
+  HttpStatus,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -67,6 +68,8 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException({
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Access token is required',
         error: 'MISSING_TOKEN',
       });
@@ -105,6 +108,8 @@ export class AuthGuard implements CanActivate {
 
       // Convert unknown errors to UnauthorizedException
       throw new UnauthorizedException({
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Authentication failed',
         error: 'AUTHENTICATION_ERROR',
       });
@@ -140,6 +145,8 @@ export class AuthGuard implements CanActivate {
 
       if (!response.data.success || !response.data.data) {
         throw new UnauthorizedException({
+          success: false,
+          statusCode: HttpStatus.UNAUTHORIZED,
           message: 'Invalid access token',
           error: 'INVALID_TOKEN',
         });
@@ -163,6 +170,8 @@ export class AuthGuard implements CanActivate {
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 401) {
         throw new UnauthorizedException({
+          success: false,
+          statusCode: HttpStatus.UNAUTHORIZED,
           message: 'Invalid or expired access token',
           error: 'TOKEN_EXPIRED',
         });
@@ -171,11 +180,15 @@ export class AuthGuard implements CanActivate {
       if (error instanceof AxiosError) {
         this.logger.error('Auth service is unavailable');
         throw new UnauthorizedException({
+          success: false,
+          statusCode: HttpStatus.SERVICE_UNAVAILABLE,
           message: 'Authentication service unavailable',
           error: 'SERVICE_UNAVAILABLE',
         });
       }
       throw new UnauthorizedException({
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Token validation failed',
         error: 'VALIDATION_ERROR',
       });
@@ -197,6 +210,8 @@ export class AuthGuard implements CanActivate {
 
     if (!requiredRoles.includes(user.role)) {
       throw new ForbiddenException({
+        success: false,
+        statusCode: HttpStatus.FORBIDDEN,
         message: `Access denied. Required roles: ${requiredRoles.join(', ')}. Your role: ${user.role}`,
         error: 'INSUFFICIENT_PERMISSIONS',
       });

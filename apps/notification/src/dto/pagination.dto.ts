@@ -7,16 +7,16 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
  */
 export class PaginationDto {
   @ApiPropertyOptional({
-    description: 'Page number',
-    example: 1,
-    minimum: 1,
-    default: 1,
+    description: 'Page number (0-based)',
+    example: 0,
+    minimum: 0,
+    default: 0,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
-  page?: number = 1;
+  @Min(0)
+  page?: number = 0;
 
   @ApiPropertyOptional({
     description: 'Items per page',
