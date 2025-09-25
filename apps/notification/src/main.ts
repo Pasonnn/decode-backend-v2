@@ -2,12 +2,24 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NotificationModule } from './notification.module';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 /**
  * Bootstrap the notification service
  */
 async function bootstrap() {
   const app = await NestFactory.create(NotificationModule);
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [process.env.RABBITMQ_URI || 'amqp://localhost:5672'],
+      queue: 'notification_queue',
+      queueOptions: {
+        durable: true,
+      },
+    },
+  });
 
   // Enable CORS for WebSocket connections
   app.enableCors({
@@ -35,12 +47,16 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
+  const port = process.env.NOTIFICATION_PORT || 4006;
+  const host = process.env.NOTIFICATION_HOST || 'localhost';
+  await app.startAllMicroservices();
+  await app.listen(port, host);
 
-  console.log(`🚀 Notification service is running on port ${port}`);
-  console.log(`📡 WebSocket namespace: /notifications`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  console.log(`Notification service is running on ${host}:${port}`);
+  console.log(
+    `Push service is cosumming from ${process.env.RABBITMQ_URI || 'amqp://localhost:5672'}`,
+  );
+  console.log(`API Documentation: http://${host}:${port}/api/docs`);
 }
 
 bootstrap().catch((error) => {

@@ -19,8 +19,8 @@ import {
 import { NotificationService } from './services/notification.service';
 import { AuthGuard } from './common/guards/auth.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
-import { Response } from './interfaces/response.interface';
-import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
+import type { Response } from './interfaces/response.interface';
+import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 /**
  * Notification Controller
@@ -126,7 +126,7 @@ export class NotificationController {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Failed to retrieve notifications',
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -189,24 +189,14 @@ export class NotificationController {
         data: notification,
       };
     } catch (error) {
-      if (error.status === HttpStatus.NOT_FOUND) {
-        return {
-          success: false,
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'Notification not found',
-          error: error.message,
-        };
-      }
-
       return {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Failed to mark notification as read',
-        error: error.message,
+        message: 'Notification not found',
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
-
   /**
    * Get unread notifications count for the authenticated user
    * @param user - The authenticated user
@@ -249,7 +239,7 @@ export class NotificationController {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Failed to get unread count',
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }

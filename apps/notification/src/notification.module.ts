@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 // Controllers
 import { NotificationController } from './notification.controller';
@@ -10,7 +10,7 @@ import { RabbitMQController } from './controllers/rabbitmq.controller';
 
 // Services
 import { NotificationService } from './services/notification.service';
-import { RedisService } from './infrastructure/redis.service';
+import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
 
 // Gateways
 import { NotificationGateway } from './gateways/notification.gateway';
@@ -44,9 +44,9 @@ import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure
     // Redis for WebSocket connection management
     RedisModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService): RedisModuleOptions => ({
-        type: 'single',
-        url: `redis://${configService.get<string>('REDIS_HOST', 'localhost')}:${configService.get<number>('REDIS_PORT', 6379)}/${configService.get<number>('REDIS_DB', 0)}`,
+      useFactory: (config: ConfigService) => ({
+        type: 'single', // Single Redis instance configuration
+        url: config.get<string>('REDIS_URI'), // Redis connection string
       }),
       inject: [ConfigService],
     }),
@@ -54,9 +54,13 @@ import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure
     // JWT for authentication
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '24h' },
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('jwt.secret.accessToken'), // Secret key for signing tokens
+        signOptions: {
+          expiresIn: config.get<string>('jwt.accessToken.expiresIn'), // Token expiration time
+          issuer: config.get<string>('jwt.accessToken.issuer'), // Token issuer identification
+          audience: config.get<string>('jwt.accessToken.audience'), // Token audience validation
+        },
       }),
       inject: [ConfigService],
     }),
@@ -70,7 +74,7 @@ import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure
   providers: [
     // Core services
     NotificationService,
-    RedisService,
+    RedisInfrastructure,
 
     // WebSocket gateway
     NotificationGateway,
@@ -78,6 +82,6 @@ import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure
     // Infrastructure
     RabbitMQInfrastructure,
   ],
-  exports: [NotificationService, NotificationGateway, RedisService],
+  exports: [NotificationService, NotificationGateway, RedisInfrastructure],
 })
 export class NotificationModule {}

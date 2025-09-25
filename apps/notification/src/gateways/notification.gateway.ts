@@ -8,17 +8,18 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { RedisService } from '../infrastructure/redis.service';
+import { Logger } from '@nestjs/common';
+import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 import { NotificationService } from '../services/notification.service';
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import {
   WebSocketConnection,
   NotificationWebSocketMessage,
   MarkReadWebSocketMessage,
 } from '../interfaces/websocket.interface';
 import { Notification } from '../schema/notification.schema';
+import { JwtStrategy } from '../strategy/jwt.strategy';
+import { Response } from '../interfaces/response.interface';
 
 /**
  * WebSocket Gateway for real-time notifications
@@ -41,9 +42,8 @@ export class NotificationGateway
   private readonly connections = new Map<string, WebSocketConnection>();
 
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
-    private readonly redisService: RedisService,
+    private readonly jwtStrategy: JwtStrategy,
+    private readonly redisInfrastructure: RedisInfrastructure,
     private readonly notificationService: NotificationService,
   ) {}
 
@@ -68,15 +68,15 @@ export class NotificationGateway
         return;
       }
 
-      const payload = await this.verifyToken(token);
-      if (!payload) {
+      const payload_response: Response<JwtPayload> = this.verifyToken(token);
+      if (!payload_response.success || !payload_response.data) {
         this.logger.warn(`Invalid token for client: ${client.id}`);
         this.sendError(client, 'INVALID_TOKEN', 'Invalid authentication token');
         client.disconnect();
         return;
       }
 
-      const userId = payload.userId || payload.sub;
+      const userId = payload_response.data.user_id;
       if (!userId) {
         this.logger.warn(`No user ID in token for client: ${client.id}`);
         this.sendError(client, 'INVALID_TOKEN', 'No user ID in token');
@@ -95,7 +95,7 @@ export class NotificationGateway
       this.connections.set(client.id, connection);
 
       // Add socket to Redis for scalability
-      await this.redisService.addUserSocket(userId, client.id);
+      await this.redisInfrastructure.addUserSocket(userId, client.id);
 
       // Join user to their personal room
       const userRoom = `user_${userId}`;
@@ -131,7 +131,10 @@ export class NotificationGateway
       );
 
       // Remove socket from Redis
-      await this.redisService.removeUserSocket(connection.userId, client.id);
+      await this.redisInfrastructure.removeUserSocket(
+        connection.userId,
+        client.id,
+      );
 
       this.connections.delete(client.id);
     } else {
@@ -162,6 +165,11 @@ export class NotificationGateway
         data.notificationId,
         connection.userId,
       );
+
+      if (!notification) {
+        this.sendError(client, 'NOT_FOUND', 'Notification not found');
+        return;
+      }
 
       // Emit notification read event
       const message: MarkReadWebSocketMessage = {
@@ -202,7 +210,7 @@ export class NotificationGateway
       const message: NotificationWebSocketMessage = {
         event: 'notification_received',
         data: {
-          id: (notification._id as any).toString(),
+          id: (notification._id as string).toString(),
           user_id: notification.user_id.toString(),
           type: notification.type,
           title: notification.title,
@@ -227,7 +235,7 @@ export class NotificationGateway
 
       // Mark as delivered in database
       await this.notificationService.markAsDelivered(
-        (notification._id as any).toString(),
+        (notification._id as string).toString(),
       );
 
       return true;
@@ -241,12 +249,12 @@ export class NotificationGateway
    * Broadcast notification to all connected users
    * @param notification - The notification object
    */
-  async broadcastNotification(notification: Notification): Promise<void> {
+  broadcastNotification(notification: Notification): void {
     try {
       const message: NotificationWebSocketMessage = {
         event: 'notification_received',
         data: {
-          id: (notification._id as any).toString(),
+          id: (notification._id as string).toString(),
           user_id: notification.user_id.toString(),
           type: notification.type,
           title: notification.title,
@@ -286,7 +294,7 @@ export class NotificationGateway
    * Check if user is connected
    */
   async isUserConnected(userId: string): Promise<boolean> {
-    return await this.redisService.hasUserSockets(userId);
+    return await this.redisInfrastructure.hasUserSockets(userId);
   }
 
   /**
@@ -298,7 +306,7 @@ export class NotificationGateway
       return authHeader.substring(7);
     }
 
-    const token = client.handshake.auth?.token;
+    const token = client.handshake.auth?.token as string;
     if (token) {
       return token;
     }
@@ -309,13 +317,18 @@ export class NotificationGateway
   /**
    * Verify JWT token
    */
-  private async verifyToken(token: string): Promise<any> {
+  private verifyToken(token: string): Response<JwtPayload> {
     try {
-      const secret = this.configService.get<string>('JWT_SECRET');
-      return await this.jwtService.verifyAsync(token, { secret });
+      const payload: Response<JwtPayload> =
+        this.jwtStrategy.validateAccessToken(token);
+      return payload;
     } catch (error) {
       this.logger.error('Token verification failed:', error);
-      return null;
+      return {
+        success: false,
+        statusCode: 401,
+        message: 'Invalid token',
+      };
     }
   }
 
