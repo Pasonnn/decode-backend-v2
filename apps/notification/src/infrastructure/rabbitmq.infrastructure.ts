@@ -72,13 +72,14 @@ export class RabbitMQInfrastructure {
         );
 
       const duration = Date.now() - startTime;
+
       if (webSocketSent) {
         this.logger.log(
-          `Create notification processed successfully in ${duration}ms: ${request.type} for user ${request.user_id} (WebSocket delivered)`,
+          `✅ Create notification processed successfully in ${duration}ms: ${request.type} for user ${request.user_id} (WebSocket delivered)`,
         );
       } else {
         this.logger.warn(
-          `Create notification processed in ${duration}ms: ${request.type} for user ${request.user_id} (WebSocket not delivered - user offline)`,
+          `⚠️ Create notification processed in ${duration}ms: ${request.type} for user ${request.user_id} (WebSocket not delivered - user offline)`,
         );
       }
     } catch (error) {

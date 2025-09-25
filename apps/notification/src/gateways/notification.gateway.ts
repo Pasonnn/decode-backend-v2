@@ -198,13 +198,23 @@ export class NotificationGateway
    * Send notification to specific user via WebSocket
    * @param userId - The user ID
    * @param notification - The notification object
-   * @returns Promise<boolean> - Success status
+   * @returns Promise<boolean> - Success status (true if user is connected and message sent)
    */
   async sendNotificationToUser(
     userId: string,
     notification: Notification,
   ): Promise<boolean> {
     try {
+      // Check if user is connected via WebSocket
+      const isUserConnected = await this.isUserConnected(userId);
+
+      if (!isUserConnected) {
+        this.logger.log(
+          `User ${userId} is not connected via WebSocket. Notification ${notification.title} will not be delivered in real-time.`,
+        );
+        return false;
+      }
+
       const userRoom = `user_${userId}`;
 
       const message: NotificationWebSocketMessage = {
@@ -230,7 +240,7 @@ export class NotificationGateway
       this.server.to(userRoom).emit('notification_received', message);
 
       this.logger.log(
-        `Notification sent to user ${userId}: ${notification.title}`,
+        `Notification sent to user ${userId} via WebSocket: ${notification.title}`,
       );
 
       // Mark as delivered in database
