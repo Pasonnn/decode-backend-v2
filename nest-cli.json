@@ -46,6 +46,15 @@
         "tsConfigPath": "apps/neo4jdb-sync/tsconfig.app.json"
       }
     },
+    "notification": {
+      "type": "application",
+      "root": "apps/notification",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification/tsconfig.app.json"
+      }
+    },
     "relationship": {
       "type": "application",
       "root": "apps/relationship",

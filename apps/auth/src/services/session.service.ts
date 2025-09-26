@@ -48,7 +48,6 @@ import { JwtPayload } from '../interfaces/jwt-payload.interface';
 // Infrastructure and Strategies Import
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { SessionStrategy } from '../strategies/session.strategy';
-import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 
 // Logger Import
 import { Logger } from '@nestjs/common';
@@ -59,6 +58,7 @@ import { MESSAGES } from '../constants/error-messages.constants';
 
 // Services Import
 import { DeviceFingerprintService } from './device-fingerprint.service';
+import { ClientProxy } from '@nestjs/microservices';
 
 /**
  * Session Management Service
@@ -95,9 +95,10 @@ export class SessionService {
     private readonly jwtStrategy: JwtStrategy,
     @InjectModel(Session.name) private sessionModel: Model<Session>,
     private readonly sessionStrategy: SessionStrategy,
-    private readonly redisInfrastructure: RedisInfrastructure,
     @Inject(forwardRef(() => DeviceFingerprintService))
     private readonly deviceFingerprintService: DeviceFingerprintService,
+    @Inject('NOTIFICATION_SERVICE')
+    private readonly notificationService: ClientProxy,
   ) {
     this.logger = new Logger(SessionService.name);
   }
@@ -142,6 +143,17 @@ export class SessionService {
         user_id,
         session.session_token,
       );
+      // Send notification to user
+      const create_notification_notification_payload = {
+        user_id: user_id,
+        type: 'session_created',
+        title: 'New Login Detected',
+        message: `You just signed in to ${app} using your decode account`,
+      };
+      console.log(create_notification_notification_payload);
+      await this.notificationService
+        .emit('create_notification', create_notification_notification_payload)
+        .toPromise();
       // Return session
       return {
         success: true,

@@ -5,7 +5,7 @@
 /tmp
 
 # Packaging
-package-lock.json
+# package-lock.json - Keep this for reproducible builds and CI/CD
 yarn.lock
 pnpm-lock.yaml
 
