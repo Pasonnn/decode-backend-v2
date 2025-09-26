@@ -45,11 +45,11 @@ export class NotificationService {
 
   async markAsReadAll(authorization: string): Promise<Response> {
     this.logger.log('Marking all notifications as read');
-    return this.notificationServiceClient.markAsReadAll({}, authorization);
+    return this.notificationServiceClient.markAsReadAll(authorization);
   }
 
   async getUnreadCount(authorization: string): Promise<Response> {
     this.logger.log('Getting unread notifications count');
-    return this.notificationServiceClient.getUnreadCount({}, authorization);
+    return this.notificationServiceClient.getUnreadCount(authorization);
   }
 }
