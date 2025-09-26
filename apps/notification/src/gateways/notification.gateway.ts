@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger, forwardRef, Injectable } from '@nestjs/common';
 import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 import { NotificationService } from '../services/notification.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
@@ -33,6 +33,7 @@ import { NotificationPushService } from '../services/notification-push.service';
   },
   namespace: '/notifications',
 })
+@Injectable()
 export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -46,6 +47,7 @@ export class NotificationGateway
     private readonly jwtStrategy: JwtStrategy,
     private readonly redisInfrastructure: RedisInfrastructure,
     private readonly notificationService: NotificationService,
+    @Inject(forwardRef(() => NotificationPushService))
     private readonly notificationPushService: NotificationPushService,
   ) {}
 

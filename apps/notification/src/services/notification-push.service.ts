@@ -1,6 +1,10 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Notification } from '../schema/notification.schema';
+import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+  forwardRef,
+} from '@nestjs/common';
 import { Response } from '../interfaces/response.interface';
 import { NotificationService } from './notification.service';
 import { NotificationGateway } from '../gateways/notification.gateway';
@@ -14,8 +18,9 @@ export class NotificationPushService {
   private readonly logger = new Logger(NotificationPushService.name);
 
   constructor(
-    @InjectModel(Notification.name)
+    @Inject(forwardRef(() => NotificationGateway))
     private readonly notificationGateway: NotificationGateway,
+    @Inject(forwardRef(() => NotificationService))
     private readonly notificationService: NotificationService,
   ) {}
 

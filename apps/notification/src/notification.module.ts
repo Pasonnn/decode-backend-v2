@@ -12,6 +12,7 @@ import { RabbitMQController } from './controllers/rabbitmq.controller';
 // Services
 import { NotificationService } from './services/notification.service';
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
+import { NotificationPushService } from './services/notification-push.service';
 
 // Gateways
 import { NotificationGateway } from './gateways/notification.gateway';
@@ -88,6 +89,9 @@ import configuration from './config/configuration';
   providers: [
     // Core services
     NotificationService,
+    NotificationPushService,
+
+    // Infrastructure
     RedisInfrastructure,
 
     // WebSocket gateway
