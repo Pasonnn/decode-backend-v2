@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { RelationshipModule } from './modules/relationship/relationship.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { GuardsModule } from './common/guards/guards.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -31,6 +32,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     UsersModule,
     WalletModule,
     RelationshipModule,
+    NotificationModule,
     ClientsModule.registerAsync([
       {
         name: 'NEO4JDB_SYNC_SERVICE',

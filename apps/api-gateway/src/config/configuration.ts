@@ -40,5 +40,11 @@ export default () => ({
           ? `${process.env.WALLET_HOST}:${process.env.WALLET_PORT}`
           : 'http://localhost:4005',
     },
+    notification: {
+      url:
+        process.env.NOTIFICATION_HOST && process.env.NOTIFICATION_PORT
+          ? `${process.env.NOTIFICATION_HOST}:${process.env.NOTIFICATION_PORT}`
+          : 'http://localhost:4006',
+    },
   },
 });
