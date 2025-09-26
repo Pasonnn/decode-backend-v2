@@ -1,4 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  HttpStatus,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
@@ -53,7 +62,7 @@ export abstract class BaseHttpClient {
           requestConfig,
         ),
       );
-      return response.data;
+      return this.handleUnsuccessfulResponse(response);
     } catch (error) {
       this.handleError(error, 'POST', url);
     }
@@ -164,5 +173,25 @@ export abstract class BaseHttpClient {
     }
 
     throw new Error(`Network error: ${errorMessage}`);
+  }
+
+  private handleUnsuccessfulResponse(
+    response: AxiosResponse<Response<any>>,
+  ): Response<any> {
+    if (response.data.success) {
+      return response.data;
+    }
+    // Create a mapping of status codes to exception constructors
+    const statusToExceptionMap = new Map([
+      [HttpStatus.BAD_REQUEST, BadRequestException],
+      [HttpStatus.NOT_FOUND, NotFoundException],
+      [HttpStatus.FORBIDDEN, ForbiddenException],
+      [HttpStatus.UNAUTHORIZED, UnauthorizedException],
+    ]);
+
+    const ExceptionClass =
+      statusToExceptionMap.get(response.data.statusCode) ||
+      InternalServerErrorException;
+    throw new ExceptionClass(response.data.message, response.data.error);
   }
 }

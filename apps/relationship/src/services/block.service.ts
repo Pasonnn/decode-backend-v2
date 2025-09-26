@@ -44,6 +44,17 @@ export class BlockService {
           message: `User already blocked`,
         };
       }
+      // Check if user exists
+      const user_exists_response = await this.userService.userExists({
+        user_id: user_id_to,
+      });
+      if (!user_exists_response) {
+        return {
+          success: false,
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `User not found`,
+        };
+      }
       // Check if you are following user_to
       const user_following_response =
         await this.followService.checkIfUserFollowing({

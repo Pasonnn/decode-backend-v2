@@ -72,6 +72,24 @@ export class UserService {
     }
   }
 
+  async userExists(input: { user_id: string }): Promise<boolean> {
+    const { user_id } = input;
+    try {
+      const user = await this.neo4jInfrastructure.findUserNode({
+        user_id: user_id,
+      });
+      if (!user) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to check if user exists: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    }
+  }
+
   async filterUsers(input: {
     users: NodeResponse<UserNeo4jDoc>[];
     from_user_id: string;
