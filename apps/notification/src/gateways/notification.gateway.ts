@@ -20,6 +20,7 @@ import {
 import { Notification } from '../schema/notification.schema';
 import { JwtStrategy } from '../strategy/jwt.strategy';
 import { Response } from '../interfaces/response.interface';
+import { NotificationPushService } from '../services/notification-push.service';
 
 /**
  * WebSocket Gateway for real-time notifications
@@ -45,6 +46,7 @@ export class NotificationGateway
     private readonly jwtStrategy: JwtStrategy,
     private readonly redisInfrastructure: RedisInfrastructure,
     private readonly notificationService: NotificationService,
+    private readonly notificationPushService: NotificationPushService,
   ) {}
 
   /**
@@ -108,6 +110,11 @@ export class NotificationGateway
         event: 'user_connected',
         data: { userId, socketId: client.id },
         timestamp: new Date(),
+      });
+
+      // Push undelivered notifications
+      await this.notificationPushService.pushUndeliveredNotifications({
+        user_id: userId,
       });
     } catch (error) {
       this.logger.error(`Connection error for client ${client.id}:`, error);
