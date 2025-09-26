@@ -31,7 +31,7 @@ import { UserRateLimit } from '../../common/decorators/rate-limit.decorator';
 // Interfaces
 import type { Response } from '../../interfaces/response.interface';
 
-@ApiTags('Notification Management')
+@ApiTags('notifications')
 @Controller('notifications')
 @UseGuards(AuthGuardWithFingerprint)
 @ApiBearerAuth('JWT-auth')

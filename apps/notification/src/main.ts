@@ -54,7 +54,6 @@ async function bootstrap() {
 
   console.log(`Notification service is running on ${host}:${port}`);
   console.log(`Notif service is consuming from RabbitMQ`);
-  console.log(`API Documentation: http://${host}:${port}/api/docs`);
 }
 
 bootstrap().catch((error) => {

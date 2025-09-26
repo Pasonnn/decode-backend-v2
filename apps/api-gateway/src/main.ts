@@ -61,6 +61,7 @@ async function bootstrap() {
     .addTag('users', 'User management endpoints')
     .addTag('wallet', 'Wallet management endpoints')
     .addTag('relationship', 'Relationship management endpoints')
+    .addTag('notifications', 'Notification management endpoints')
     .addTag('email', 'Email service endpoints')
     .addTag('health', 'Health check endpoints')
     .addBearerAuth(
