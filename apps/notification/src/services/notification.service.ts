@@ -315,33 +315,4 @@ export class NotificationService {
       throw error;
     }
   }
-
-  async markAsDeliveredByNotificationId(input: {
-    notification_id: string;
-  }): Promise<Notification> {
-    const { notification_id } = input;
-    try {
-      const notificationObjectId = new Types.ObjectId(notification_id);
-      const notification = await this.notificationModel
-        .findByIdAndUpdate(
-          notificationObjectId,
-          { delivered: true, delivered_at: new Date() },
-          { new: true },
-        )
-        .exec();
-      if (!notification) {
-        throw new NotFoundException(
-          `Notification ${notification_id} not found`,
-        );
-      }
-      this.logger.log(`Marked notification ${notification_id} as delivered`);
-      return notification;
-    } catch (error) {
-      this.logger.error(
-        `Failed to mark notification ${notification_id} as delivered:`,
-        error,
-      );
-      throw error;
-    }
-  }
 }

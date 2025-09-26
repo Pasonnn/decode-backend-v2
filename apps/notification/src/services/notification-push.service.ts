@@ -1,6 +1,5 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
 import { Notification } from '../schema/notification.schema';
 import { Response } from '../interfaces/response.interface';
 import { NotificationService } from './notification.service';
@@ -48,9 +47,9 @@ export class NotificationPushService {
           notification,
         );
         if (delivered) {
-          await this.notificationService.markAsDeliveredByNotificationId({
-            notification_id: notification._id as string,
-          });
+          await this.notificationService.markAsDelivered(
+            notification._id as string,
+          );
         }
       }
       return {
