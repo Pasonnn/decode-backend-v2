@@ -29,3 +29,14 @@ export class GetFollowingDto {
 }
 
 export class GetFollowersDto extends GetFollowingDto {}
+
+export class GetFollowingByUserIdDto extends GetFollowingDto {
+  @Matches(USER_CONSTANTS.VALIDATION.USER_ID.PATTERN, {
+    message: 'Invalid user ID format',
+  })
+  @IsString()
+  @IsNotEmpty()
+  user_id: string;
+}
+
+export class GetFollowersByUserIdDto extends GetFollowingByUserIdDto {}

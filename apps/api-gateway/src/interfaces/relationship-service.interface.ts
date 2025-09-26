@@ -26,6 +26,18 @@ export interface GetFollowersRequest {
   limit?: number;
 }
 
+export interface GetFollowingByUserIdRequest {
+  user_id: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface GetFollowersByUserIdRequest {
+  user_id: string;
+  page?: number;
+  limit?: number;
+}
+
 export interface BlockRequest {
   user_id_to: string;
 }

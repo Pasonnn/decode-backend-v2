@@ -20,6 +20,8 @@ import {
   UnfollowDto,
   RemoveFollowerDto,
   GetFollowingDto,
+  GetFollowingByUserIdDto,
+  GetFollowersByUserIdDto,
   GetFollowersDto,
 } from './dto/follow.dto';
 import { GetUserDto } from './dto/user.dto';
@@ -107,7 +109,7 @@ export class RelationshipController {
     });
   }
 
-  @Get('follow/followings')
+  @Get('follow/followings/me')
   @UseGuards(AuthGuard)
   async getFollowing(
     @Query() query: GetFollowingDto,
@@ -120,7 +122,19 @@ export class RelationshipController {
     });
   }
 
-  @Get('follow/followers')
+  @Get('follow/followings')
+  @UseGuards(AuthGuard)
+  async getFollowingByUserId(
+    @Query() query: GetFollowingByUserIdDto,
+  ): Promise<Response> {
+    return await this.followService.getFollowing({
+      user_id: query.user_id,
+      page: query.page,
+      limit: query.limit,
+    });
+  }
+
+  @Get('follow/followers/me')
   @UseGuards(AuthGuard)
   async getFollowers(
     @Query() query: GetFollowersDto,
@@ -128,6 +142,18 @@ export class RelationshipController {
   ): Promise<Response> {
     return await this.followService.getFollowers({
       user_id: user.userId,
+      page: query.page,
+      limit: query.limit,
+    });
+  }
+
+  @Get('follow/followers')
+  @UseGuards(AuthGuard)
+  async getFollowersByUserId(
+    @Query() query: GetFollowersByUserIdDto,
+  ): Promise<Response> {
+    return await this.followService.getFollowers({
+      user_id: query.user_id,
       page: query.page,
       limit: query.limit,
     });

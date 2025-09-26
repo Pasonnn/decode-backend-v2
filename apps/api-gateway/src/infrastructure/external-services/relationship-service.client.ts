@@ -23,6 +23,8 @@ import {
   SearchFollowersRequest,
   SearchFollowingRequest,
   GetSuggestionsRequest,
+  GetFollowingByUserIdRequest,
+  GetFollowersByUserIdRequest,
 } from '../../interfaces/relationship-service.interface';
 
 @Injectable()
@@ -130,8 +132,35 @@ export class RelationshipServiceClient extends BaseHttpClient {
 
     const queryString = queryParams.toString();
     const url = queryString
-      ? `/relationship/follow/followings?${queryString}`
-      : '/relationship/follow/followings';
+      ? `/relationship/follow/followings/me?${queryString}`
+      : '/relationship/follow/followings/me';
+
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.get(url, config);
+  }
+
+  /**
+   * Get following list by user ID
+   */
+  async getFollowingByUserId(
+    data: GetFollowingByUserIdRequest,
+    authorization: string,
+  ): Promise<Response<UserRelationshipDoc[]>> {
+    const queryParams = new URLSearchParams();
+    if (data.page !== undefined) {
+      queryParams.append('page', data.page.toString());
+    }
+    if (data.limit !== undefined) {
+      queryParams.append('limit', data.limit.toString());
+    }
+    queryParams.append('user_id', data.user_id);
+
+    const queryString = queryParams.toString();
+    const url = `/relationship/follow/followings?${queryString}`;
 
     const config = {
       headers: {
@@ -158,8 +187,35 @@ export class RelationshipServiceClient extends BaseHttpClient {
 
     const queryString = queryParams.toString();
     const url = queryString
-      ? `/relationship/follow/followers?${queryString}`
-      : '/relationship/follow/followers';
+      ? `/relationship/follow/followers/me?${queryString}`
+      : '/relationship/follow/followers/me';
+
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.get(url, config);
+  }
+
+  /**
+   * Get following list by user ID
+   */
+  async getFollowersByUserId(
+    data: GetFollowersByUserIdRequest,
+    authorization: string,
+  ): Promise<Response<UserRelationshipDoc[]>> {
+    const queryParams = new URLSearchParams();
+    if (data.page !== undefined) {
+      queryParams.append('page', data.page.toString());
+    }
+    if (data.limit !== undefined) {
+      queryParams.append('limit', data.limit.toString());
+    }
+    queryParams.append('user_id', data.user_id);
+
+    const queryString = queryParams.toString();
+    const url = `/relationship/follow/followers?${queryString}`;
 
     const config = {
       headers: {

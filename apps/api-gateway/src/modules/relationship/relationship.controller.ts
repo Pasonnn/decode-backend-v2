@@ -30,7 +30,9 @@ import {
   UnfollowDto,
   RemoveFollowerDto,
   GetFollowingDto,
+  GetFollowingByUserIdDto,
   GetFollowersDto,
+  GetFollowersByUserIdDto,
   BlockDto,
   UnblockDto,
   GetBlockedUsersDto,
@@ -57,7 +59,9 @@ import type { Response } from '../../interfaces/response.interface';
   UnfollowDto,
   RemoveFollowerDto,
   GetFollowingDto,
+  GetFollowingByUserIdDto,
   GetFollowersDto,
+  GetFollowersByUserIdDto,
   BlockDto,
   UnblockDto,
   GetBlockedUsersDto,
@@ -212,7 +216,7 @@ export class RelationshipController {
     status: 200,
     description: 'Following list retrieved successfully',
   })
-  @Get('follow/followings')
+  @Get('follow/followings/me')
   @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async getFollowing(
@@ -223,8 +227,44 @@ export class RelationshipController {
   }
 
   @ApiOperation({
+    summary: 'Get following list by user ID',
+    description: 'Get list of users a specific user is following',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Following list retrieved successfully',
+  })
+  @Get('follow/followings')
+  @UserRateLimit.standard()
+  @HttpCode(HttpStatus.OK)
+  async getFollowingByUserId(
+    @Query() query: GetFollowingByUserIdDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.relationshipService.getFollowingByUserId(query, authorization);
+  }
+
+  @ApiOperation({
     summary: 'Get followers list',
     description: 'Get list of users following you',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Followers list retrieved successfully',
+  })
+  @Get('follow/followers/me')
+  @UserRateLimit.standard()
+  @HttpCode(HttpStatus.OK)
+  async getFollowers(
+    @Query() query: GetFollowersDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.relationshipService.getFollowers(query, authorization);
+  }
+
+  @ApiOperation({
+    summary: 'Get followers list by user ID',
+    description: 'Get list of users a specific user is following',
   })
   @ApiResponse({
     status: 200,
@@ -233,11 +273,11 @@ export class RelationshipController {
   @Get('follow/followers')
   @UserRateLimit.standard()
   @HttpCode(HttpStatus.OK)
-  async getFollowers(
-    @Query() query: GetFollowersDto,
+  async getFollowersByUserId(
+    @Query() query: GetFollowersByUserIdDto,
     @Headers('authorization') authorization: string,
   ): Promise<Response> {
-    return this.relationshipService.getFollowers(query, authorization);
+    return this.relationshipService.getFollowersByUserId(query, authorization);
   }
 
   // ==================== BLOCK ENDPOINTS ====================

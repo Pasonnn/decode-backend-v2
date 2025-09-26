@@ -80,3 +80,15 @@ export class GetFollowersDto {
   @Min(1)
   limit?: number;
 }
+
+export class GetFollowingByUserIdDto extends GetFollowingDto {
+  @ApiProperty({
+    description: 'User ID to get following list',
+    example: 'user123',
+  })
+  @IsString()
+  @IsNotEmpty()
+  user_id: string;
+}
+
+export class GetFollowersByUserIdDto extends GetFollowingByUserIdDto {}

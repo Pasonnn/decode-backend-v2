@@ -17,6 +17,8 @@ import {
   SearchFollowersDto,
   SearchFollowingDto,
   GetSuggestionsDto,
+  GetFollowingByUserIdDto,
+  GetFollowersByUserIdDto,
 } from './dto';
 
 @Injectable()
@@ -71,6 +73,17 @@ export class RelationshipService {
     return this.relationshipServiceClient.getFollowing(data, authorization);
   }
 
+  async getFollowingByUserId(
+    data: GetFollowingByUserIdDto,
+    authorization: string,
+  ): Promise<Response> {
+    this.logger.log(`Getting following list by user ID: ${data.user_id}`);
+    return this.relationshipServiceClient.getFollowingByUserId(
+      data,
+      authorization,
+    );
+  }
+
   async getFollowers(
     data: GetFollowersDto,
     authorization: string,
@@ -79,6 +92,17 @@ export class RelationshipService {
       `Getting followers list - page: ${data.page}, limit: ${data.limit}`,
     );
     return this.relationshipServiceClient.getFollowers(data, authorization);
+  }
+
+  async getFollowersByUserId(
+    data: GetFollowersByUserIdDto,
+    authorization: string,
+  ): Promise<Response> {
+    this.logger.log(`Getting followers list by user ID: ${data.user_id}`);
+    return this.relationshipServiceClient.getFollowersByUserId(
+      data,
+      authorization,
+    );
   }
 
   // ==================== BLOCK ENDPOINTS ====================
