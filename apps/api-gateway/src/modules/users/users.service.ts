@@ -877,17 +877,6 @@ export class UsersService {
     return await this.userServiceClient.reactivateAccount(authorization);
   }
 
-  /**
-   * Delete deactivated accounts (admin only)
-   */
-  async deleteDeactivatedAccounts(
-    authorization: string,
-  ): Promise<Response<void>> {
-    return await this.userServiceClient.deleteDeactivatedAccounts(
-      authorization,
-    );
-  }
-
   // ==================== HEALTH CHECK ====================
 
   /**

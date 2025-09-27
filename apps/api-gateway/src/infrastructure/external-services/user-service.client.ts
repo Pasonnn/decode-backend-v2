@@ -347,23 +347,6 @@ export class UserServiceClient extends BaseHttpClient {
     return this.patch<UserDoc>('/users/account/reactivate', data, config);
   }
 
-  /**
-   * Delete deactivated accounts (admin only)
-   */
-  async deleteDeactivatedAccounts(
-    authorization: string,
-  ): Promise<Response<void>> {
-    const config = {
-      headers: {
-        Authorization: authorization,
-      },
-    };
-    return this.delete<void>(
-      '/users/account/delete-deactivated-accounts',
-      config,
-    );
-  }
-
   // Generic HTTP methods for flexibility
   async post<T>(
     url: string,

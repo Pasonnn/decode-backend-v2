@@ -17,7 +17,6 @@ import { User } from '../schemas/user.schema';
 
 // Constants Import
 import { MESSAGES } from '../constants/messages.constants';
-import { USER_CONSTANTS } from '../constants/user.constants';
 import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 export class DeactivateService {
@@ -59,29 +58,6 @@ export class DeactivateService {
     } catch (error) {
       this.logger.error(error);
       throw new InternalServerErrorException(MESSAGES.DATABASE.SAVE_FAILED);
-    }
-  }
-
-  async deleteDeactivatedAccounts(): Promise<Response<void>> {
-    try {
-      await this.userModel.deleteMany({
-        is_active: false,
-        last_account_deactivation: {
-          $lt: new Date(
-            Date.now() - USER_CONSTANTS.ACCOUNT.DEACTIVATION.AUTO_DELETE_AFTER,
-          ),
-        },
-      });
-      return {
-        success: true,
-        statusCode: HttpStatus.OK,
-        message: MESSAGES.SUCCESS.DEACTIVATED_ACCOUNTS_PERMANENTLY_DELETED,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error deleting deactivated account: ${error as string}`,
-      );
-      throw new InternalServerErrorException(MESSAGES.DATABASE.DELETE_FAILED);
     }
   }
 

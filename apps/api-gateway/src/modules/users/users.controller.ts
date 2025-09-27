@@ -466,22 +466,4 @@ export class UsersController {
   ): Promise<Response<UserDoc>> {
     return await this.usersService.reactivateAccount(authorization);
   }
-
-  @Delete('account/delete-deactivated-accounts')
-  @UseGuards(AuthGuardWithFingerprint)
-  @Roles('admin' as UserRole)
-  @AdminRateLimit.strict()
-  @ApiOperation({ summary: 'Delete deactivated accounts (admin only)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Deactivated accounts deleted successfully',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
-  @HttpCode(HttpStatus.OK)
-  async deleteDeactivatedAccounts(
-    @Headers('authorization') authorization: string,
-  ): Promise<Response<void>> {
-    return await this.usersService.deleteDeactivatedAccounts(authorization);
-  }
 }

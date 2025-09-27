@@ -355,11 +355,4 @@ export class UserController {
       user_id: user.userId,
     });
   }
-
-  @Roles(USER_CONSTANTS.ROLES.ADMIN as UserRole)
-  @UseGuards(AuthGuard)
-  @Delete('account/delete-deactivated-accounts')
-  async deleteDeactivatedAccounts(): Promise<Response<void>> {
-    return await this.deactivateService.deleteDeactivatedAccounts();
-  }
 }
