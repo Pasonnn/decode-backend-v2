@@ -319,6 +319,34 @@ export class UserServiceClient extends BaseHttpClient {
     );
   }
 
+  // ==================== ACCOUNT MANAGEMENT ENDPOINTS ====================
+
+  /**
+   * Deactivate user account
+   */
+  async deactivateAccount(authorization: string): Promise<Response<UserDoc>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    const data = {};
+    return this.patch<UserDoc>('/users/account/deactivate', data, config);
+  }
+
+  /**
+   * Reactivate user account
+   */
+  async reactivateAccount(authorization: string): Promise<Response<UserDoc>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    const data = {};
+    return this.patch<UserDoc>('/users/account/reactivate', data, config);
+  }
+
   // Generic HTTP methods for flexibility
   async post<T>(
     url: string,
@@ -338,6 +366,14 @@ export class UserServiceClient extends BaseHttpClient {
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
     return super.put<T>(url, data, config);
+  }
+
+  async patch<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<Response<T>> {
+    return super.patch<T>(url, data, config);
   }
 
   async delete<T>(

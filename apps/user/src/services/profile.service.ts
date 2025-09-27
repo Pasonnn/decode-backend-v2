@@ -33,12 +33,15 @@ export class ProfileService {
     try {
       // Check if user exists
       const { user_id } = input;
-      const user = await this.userModel.findById(user_id, {
-        password_hashed: 0,
-        email: 0,
-        updatedAt: 0,
-        createdAt: 0,
-      });
+      const user = await this.userModel.findOne(
+        { _id: user_id, is_active: true },
+        {
+          password_hashed: 0,
+          email: 0,
+          updatedAt: 0,
+          createdAt: 0,
+        },
+      );
       if (!user) {
         return {
           success: false,

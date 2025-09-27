@@ -10,6 +10,8 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Delete,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -35,7 +37,7 @@ import {
 } from './dto/search.dto';
 
 // Guards and Decorators
-import { Public } from '../../common/guards/auth.guard';
+import { Public, AuthGuard } from '../../common/guards/auth.guard';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
 import { Roles, UserRole } from '../../common/decorators/roles.decorator';
@@ -89,7 +91,7 @@ export class UsersController {
   // ==================== PROFILE ENDPOINTS ====================
 
   @Get('profile/me')
-  @UseGuards(AuthGuardWithFingerprint)
+  @UseGuards(AuthGuard)
   @UserRateLimit.standard()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({
@@ -429,5 +431,39 @@ export class UsersController {
     @Headers('authorization') authorization: string,
   ): Promise<Response<void>> {
     return await this.usersService.checkEmailExists(query, authorization);
+  }
+
+  // ==================== ACCOUNT MANAGEMENT ENDPOINTS ====================
+
+  @Patch('account/deactivate')
+  @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
+  @ApiOperation({ summary: 'Deactivate user account' })
+  @ApiResponse({
+    status: 200,
+    description: 'User account deactivated successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @HttpCode(HttpStatus.OK)
+  async deactivateAccount(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response<UserDoc>> {
+    return await this.usersService.deactivateAccount(authorization);
+  }
+
+  @Patch('account/reactivate')
+  @UseGuards(AuthGuard)
+  @UserRateLimit.strict()
+  @ApiOperation({ summary: 'Reactivate user account' })
+  @ApiResponse({
+    status: 200,
+    description: 'User account reactivated successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @HttpCode(HttpStatus.OK)
+  async reactivateAccount(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response<UserDoc>> {
+    return await this.usersService.reactivateAccount(authorization);
   }
 }

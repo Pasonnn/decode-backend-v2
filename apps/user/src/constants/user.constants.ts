@@ -149,7 +149,7 @@ export const USER_CONSTANTS = {
     DEACTIVATION: {
       REASON_MAX_LENGTH: 500,
       COOLDOWN_PERIOD: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-      AUTO_DELETE_AFTER: 365 * 24 * 60 * 60 * 1000, // 1 year in milliseconds
+      AUTO_DELETE_AFTER: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     },
     REACTIVATION: {
       MAX_ATTEMPTS: 3,

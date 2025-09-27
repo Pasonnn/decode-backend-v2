@@ -861,6 +861,22 @@ export class UsersService {
     }
   }
 
+  // ==================== ACCOUNT MANAGEMENT METHODS ====================
+
+  /**
+   * Deactivate user account
+   */
+  async deactivateAccount(authorization: string): Promise<Response<UserDoc>> {
+    return await this.userServiceClient.deactivateAccount(authorization);
+  }
+
+  /**
+   * Reactivate user account
+   */
+  async reactivateAccount(authorization: string): Promise<Response<UserDoc>> {
+    return await this.userServiceClient.reactivateAccount(authorization);
+  }
+
   // ==================== HEALTH CHECK ====================
 
   /**
