@@ -15,7 +15,7 @@ import { SearchService } from './services/search.service';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from './infrastructure/neo4j.infrastructure';
-import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
+import { RedisInfrastructure } from './infrastructure/cache/redis.infrastructure';
 
 // Config Import
 import { ConfigModule, ConfigService } from '@nestjs/config';

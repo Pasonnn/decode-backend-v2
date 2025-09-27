@@ -9,11 +9,13 @@ import { UsersController } from './users.controller';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-
+import { CacheModule } from '../../infrastructure/cache/cache.module';
+import { CacheService } from '../../infrastructure/cache/cache.service';
 @Module({
   imports: [
     HttpModule,
     ConfigModule,
+    CacheModule,
     ClientsModule.registerAsync([
       {
         name: 'NEO4JDB_SYNC_SERVICE',
@@ -44,6 +46,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     AuthGuard,
     AuthGuardWithFingerprint,
     ClientsModule,
+    CacheService,
   ],
   exports: [
     UserServiceClient,

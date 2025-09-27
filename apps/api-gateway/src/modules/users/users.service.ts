@@ -29,6 +29,7 @@ import type {
 
 import { MESSAGES } from 'apps/wallet/src/constants/messages.constants';
 import { UserNeo4jDoc } from 'apps/neo4jdb-sync/src/interfaces/user-neo4j-doc.interface';
+import { CacheService } from '../../infrastructure/cache/cache.service';
 
 @Injectable()
 export class UsersService {
@@ -40,6 +41,7 @@ export class UsersService {
     private readonly relationshipServiceClient: RelationshipServiceClient,
     @Inject('NEO4JDB_SYNC_SERVICE')
     private readonly neo4jdbUpdateUserService: ClientProxy,
+    private readonly cacheService: CacheService,
   ) {}
 
   // ==================== PROFILE METHODS ====================
@@ -53,6 +55,18 @@ export class UsersService {
   ): Promise<Response<UserDoc>> {
     try {
       this.logger.log(`Getting profile for user: ${data.user_id}`);
+      // Try get user data from cache
+      const user_data = await this.cacheService.getUserData({
+        user_id: data.user_id,
+      });
+      if (user_data) {
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: MESSAGES.SUCCESS.PROFILE_FETCHED,
+          data: user_data,
+        };
+      }
       // Get user basic
       const user_profile_response: Response<UserDoc> =
         await this.userServiceClient.getUserProfile(data, authorization);
@@ -163,6 +177,12 @@ export class UsersService {
           (user_relationship_data
             ? ''
             : ` (User relationship data unavailable)`);
+
+      // Cache user data
+      await this.cacheService.userData({
+        user_id: data.user_id,
+        data: full_user_profile_data,
+      });
 
       return {
         success: true,

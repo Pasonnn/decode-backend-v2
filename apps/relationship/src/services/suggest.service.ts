@@ -2,7 +2,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 // Infrastructure Import
 import { Neo4jInfrastructure } from '../infrastructure/neo4j.infrastructure';
-import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
+import { RedisInfrastructure } from '../infrastructure/cache/redis.infrastructure';
 
 // Interface Import
 import type { PaginationResponse } from '../interfaces/pagination-response.interface';
