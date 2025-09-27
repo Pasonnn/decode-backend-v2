@@ -34,6 +34,7 @@ export class SearchService {
             { username: { $regex: email_or_username, $options: 'i' } },
             { email: { $regex: email_or_username, $options: 'i' } },
           ],
+          is_active: true,
         })
         .skip((page - 1) * limit)
         .limit(limit)
