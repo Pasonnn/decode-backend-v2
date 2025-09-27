@@ -15,7 +15,7 @@
     "build:neo4jdb-sync": "nest build neo4jdb-sync",
     "build:relationship": "nest build relationship",
     "build:notification": "nest build notification",
-    "build:all": "npm run build:api-gateway | npm run build:auth | npm run build:email-worker | npm run build:user | npm run build:wallet | npm run build:neo4jdb-sync | npm run build:relationship | npm run build:notification",
+    "build:all": "npm run build:api-gateway && npm run build:auth && npm run build:email-worker && npm run build:user && npm run build:wallet && npm run build:neo4jdb-sync && npm run build:relationship && npm run build:notification",
     "start:api-gateway": "nest start api-gateway",
     "start:auth": "nest start auth",
     "start:email-worker": "nest start email-worker",
