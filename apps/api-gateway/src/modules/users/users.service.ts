@@ -60,7 +60,6 @@ export class UsersService {
         await this.cacheService.getUserData({
           user_id: data.user_id,
         });
-      console.log('full_user_profile_data', full_user_profile_data);
       if (!full_user_profile_data) {
         this.logger.log(
           `User data not found in cache, getting from user service`,

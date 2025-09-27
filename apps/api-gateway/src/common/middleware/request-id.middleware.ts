@@ -34,11 +34,6 @@ export class RequestIdMiddleware implements NestMiddleware {
     // Add request ID to response headers
     response.setHeader('X-Request-ID', finalRequestId);
 
-    // Log the request ID for debugging
-    this.logger.debug(
-      `Request ID: ${finalRequestId} for ${request.method} ${request.path}`,
-    );
-
     next();
   }
 }

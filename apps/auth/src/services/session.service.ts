@@ -150,7 +150,6 @@ export class SessionService {
         title: 'New Login Detected',
         message: `You just signed in to ${app} using your decode account`,
       };
-      console.log(create_notification_notification_payload);
       await this.notificationService
         .emit('create_notification', create_notification_notification_payload)
         .toPromise();
