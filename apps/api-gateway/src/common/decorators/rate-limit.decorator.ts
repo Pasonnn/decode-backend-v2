@@ -52,7 +52,7 @@ export const AuthRateLimit = {
   login: () =>
     RateLimit({
       windowMs: 30 * 1000, // 15 * 60 * 1000, // 15 minutes
-      max: 5,
+      max: 5000, // TODO: Fix back
       message: 'Too many login attempts, please try again later.',
       keyGenerator: (req: any) => `auth:login:${req.ip as string}`,
     }),
