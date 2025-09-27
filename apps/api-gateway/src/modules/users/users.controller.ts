@@ -10,6 +10,8 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Delete,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -429,5 +431,57 @@ export class UsersController {
     @Headers('authorization') authorization: string,
   ): Promise<Response<void>> {
     return await this.usersService.checkEmailExists(query, authorization);
+  }
+
+  // ==================== ACCOUNT MANAGEMENT ENDPOINTS ====================
+
+  @Patch('account/deactivate')
+  @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
+  @ApiOperation({ summary: 'Deactivate user account' })
+  @ApiResponse({
+    status: 200,
+    description: 'User account deactivated successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @HttpCode(HttpStatus.OK)
+  async deactivateAccount(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response<UserDoc>> {
+    return await this.usersService.deactivateAccount(authorization);
+  }
+
+  @Patch('account/reactivate')
+  @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
+  @ApiOperation({ summary: 'Reactivate user account' })
+  @ApiResponse({
+    status: 200,
+    description: 'User account reactivated successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @HttpCode(HttpStatus.OK)
+  async reactivateAccount(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response<UserDoc>> {
+    return await this.usersService.reactivateAccount(authorization);
+  }
+
+  @Delete('account/delete-deactivated-accounts')
+  @UseGuards(AuthGuardWithFingerprint)
+  @Roles('admin' as UserRole)
+  @AdminRateLimit.strict()
+  @ApiOperation({ summary: 'Delete deactivated accounts (admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Deactivated accounts deleted successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+  @HttpCode(HttpStatus.OK)
+  async deleteDeactivatedAccounts(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response<void>> {
+    return await this.usersService.deleteDeactivatedAccounts(authorization);
   }
 }

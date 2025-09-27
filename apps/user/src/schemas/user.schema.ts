@@ -84,6 +84,14 @@ export class User extends Document {
   /** Timestamp of user's last email change - updated on each email change */
   @Prop({ required: false })
   last_email_change: Date;
+
+  /** Whether the user is active - used for account management */
+  @Prop({ required: false, default: true })
+  is_active: boolean;
+
+  /** Timestamp of user's last account deactivation - updated on each account deactivation */
+  @Prop({ required: false })
+  last_account_deactivation: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

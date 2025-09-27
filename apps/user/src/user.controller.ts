@@ -7,13 +7,15 @@ import {
   Param,
   Query,
   UseGuards,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProfileService } from './services/profile.service';
 import { UsernameService } from './services/username.service';
 import { SearchService } from './services/search.service';
 import { EmailService } from './services/email.service';
-
+import { DeactivateService } from './services/deactivate.service';
 // DTOs
 import { GetUserProfileDto } from './dto/profile.dto';
 import { UpdateUserDisplayNameDto } from './dto/profile.dto';
@@ -61,6 +63,7 @@ export class UserController {
     private readonly searchService: SearchService,
     private readonly emailService: EmailService,
     private readonly servicesResponseService: ServicesResponseService,
+    private readonly deactivateService: DeactivateService,
   ) {}
 
   // ==================== PROFILE ENDPOINTS ====================
@@ -330,5 +333,33 @@ export class UserController {
     return await this.servicesResponseService.updateUserLastLogin({
       user_id: body.user_id,
     });
+  }
+
+  // ==================== ACCOUNT MANAGEMENT ENDPOINTS ====================
+  @UseGuards(AuthGuard)
+  @Patch('account/deactivate')
+  async deactivateAccount(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response<UserDoc>> {
+    return await this.deactivateService.deactivateAccount({
+      user_id: user.userId,
+    });
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('account/reactivate')
+  async reactivateAccount(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response<UserDoc>> {
+    return await this.deactivateService.reactivateAccount({
+      user_id: user.userId,
+    });
+  }
+
+  @Roles(USER_CONSTANTS.ROLES.ADMIN as UserRole)
+  @UseGuards(AuthGuard)
+  @Delete('account/delete-deactivated-accounts')
+  async deleteDeactivatedAccounts(): Promise<Response<void>> {
+    return await this.deactivateService.deleteDeactivatedAccounts();
   }
 }

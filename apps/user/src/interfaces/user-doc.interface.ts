@@ -11,4 +11,6 @@ export type UserDoc = {
   last_login: Date;
   last_username_change: Date;
   last_email_change: Date;
+  is_active: boolean;
+  last_account_deactivation: Date;
 };

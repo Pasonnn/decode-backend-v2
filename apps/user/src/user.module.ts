@@ -15,6 +15,7 @@ import { UsernameService } from './services/username.service';
 import { SearchService } from './services/search.service';
 import { EmailService } from './services/email.service';
 import { ServicesResponseService } from './services/services-response.service';
+import { DeactivateService } from './services/deactivate.service';
 
 // Infrastructure Import
 import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
@@ -117,6 +118,7 @@ import jwtConfig from './config/jwt.config';
     ServicesResponseService,
     ServicesJwtStrategy,
     AuthServiceGuard,
+    DeactivateService,
     // Infrastructure
     RedisInfrastructure,
   ],

@@ -327,7 +327,11 @@ export const MESSAGES = {
     NEW_EMAIL_CHANGE_INITIATED: 'New email change initiated successfully',
     NEW_EMAIL_CHANGE_VERIFIED: 'New email change verified successfully',
     EMAIL_CHANGED: 'Email changed successfully',
-    ACCOUNT_DEACTIVATED: 'Account deactivated successfully',
+    ACCOUNT_DEACTIVATED:
+      'Account deactivated successfully, it will be permanently deleted after 1 month',
     ACCOUNT_REACTIVATED: 'Account reactivated successfully',
+    DEACTIVATED_ACCOUNTS_PERMANENTLY_DELETED:
+      'Deactivated accounts permanently deleted',
+    NO_DEACTIVATED_ACCOUNTS: 'No deactivated accounts found',
   },
 };
