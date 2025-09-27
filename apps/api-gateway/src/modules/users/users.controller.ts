@@ -37,7 +37,7 @@ import {
 } from './dto/search.dto';
 
 // Guards and Decorators
-import { Public } from '../../common/guards/auth.guard';
+import { Public, AuthGuard } from '../../common/guards/auth.guard';
 import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
 import { Roles, UserRole } from '../../common/decorators/roles.decorator';
@@ -91,7 +91,7 @@ export class UsersController {
   // ==================== PROFILE ENDPOINTS ====================
 
   @Get('profile/me')
-  @UseGuards(AuthGuardWithFingerprint)
+  @UseGuards(AuthGuard)
   @UserRateLimit.standard()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({
@@ -452,7 +452,7 @@ export class UsersController {
   }
 
   @Patch('account/reactivate')
-  @UseGuards(AuthGuardWithFingerprint)
+  @UseGuards(AuthGuard)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Reactivate user account' })
   @ApiResponse({

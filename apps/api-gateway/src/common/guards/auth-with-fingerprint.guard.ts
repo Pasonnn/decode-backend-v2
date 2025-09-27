@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
@@ -83,6 +84,12 @@ export class AuthGuardWithFingerprint implements CanActivate {
       // Compare users ID of JWT and fingerprint
       const isUserMatched = fingerprintUsers.some((fingerprintUser) => {
         if (jwtUserData.userId == fingerprintUser._id) {
+          if (fingerprintUser.is_active === false) {
+            throw new ForbiddenException({
+              message: 'Your account is deactivated',
+              error: 'USER_DEACTIVATED',
+            });
+          }
           return true;
         }
         return false;
@@ -109,7 +116,10 @@ export class AuthGuardWithFingerprint implements CanActivate {
         `Fingerprint authentication failed: ${error instanceof Error ? error.message : String(error)}`,
       );
 
-      if (error instanceof UnauthorizedException) {
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof ForbiddenException
+      ) {
         throw error;
       }
 
