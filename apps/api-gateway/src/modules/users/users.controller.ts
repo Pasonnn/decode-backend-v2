@@ -55,7 +55,6 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('User Management')
 @Controller('users')
-@UseGuards(AuthGuardWithFingerprint)
 @ApiBearerAuth('JWT-auth')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -126,6 +125,7 @@ export class UsersController {
   }
 
   @Put('profile/display-name')
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Update user display name' })
   @ApiResponse({
@@ -149,6 +149,7 @@ export class UsersController {
   }
 
   @Put('profile/bio')
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.strict()
   @ApiOperation({ summary: 'Update user bio' })
   @ApiResponse({
@@ -173,6 +174,7 @@ export class UsersController {
 
   @Put('profile/avatar')
   @UserRateLimit.strict()
+  @UseGuards(AuthGuardWithFingerprint)
   @ApiOperation({ summary: 'Update user avatar' })
   @ApiResponse({
     status: 200,
@@ -197,6 +199,7 @@ export class UsersController {
   }
 
   @Put('profile/role')
+  @UseGuards(AuthGuardWithFingerprint)
   @Roles('admin' as UserRole)
   @AdminRateLimit.standard()
   @ApiOperation({ summary: 'Update user role (admin only)' })

@@ -75,7 +75,6 @@ export class UserController {
   }
 
   @Get('profile/:user_id')
-  @UseGuards(AuthGuard)
   async getUserProfile(
     @Param() params: GetUserProfileDto,
   ): Promise<Response<UserDoc>> {

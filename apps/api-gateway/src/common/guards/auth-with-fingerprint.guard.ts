@@ -95,6 +95,14 @@ export class AuthGuardWithFingerprint implements CanActivate {
         });
       }
 
+      // Attach user to request for use in controllers (same as AuthGuard)
+      request['user'] = jwtUserData;
+
+      // Log successful authentication
+      this.logger.log(
+        `User ${jwtUserData.userId} (${jwtUserData.role}) with fingerprint authentication accessed ${request.method} ${request.url}`,
+      );
+
       return true;
     } catch (error) {
       this.logger.error(
