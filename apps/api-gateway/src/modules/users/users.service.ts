@@ -56,64 +56,41 @@ export class UsersService {
     try {
       this.logger.log(`Getting profile for user: ${data.user_id}`);
       // Try get user data from cache
-      const user_data = await this.cacheService.getUserData({
-        user_id: data.user_id,
-      });
-      if (user_data) {
+      let full_user_profile_data: UserDoc | null =
+        await this.cacheService.getUserData({
+          user_id: data.user_id,
+        });
+      console.log('full_user_profile_data', full_user_profile_data);
+      if (!full_user_profile_data) {
+        this.logger.log(
+          `User data not found in cache, getting from user service`,
+        );
+        const full_user_profile_data_response: Response<UserDoc> =
+          await this.getUserProfileData(data, authorization);
+        if (
+          !full_user_profile_data_response.success ||
+          !full_user_profile_data_response.data
+        ) {
+          this.logger.error(
+            `Failed to get profile for user: ${data.user_id}: ${full_user_profile_data_response.message}`,
+          );
+          return full_user_profile_data_response;
+        }
+        full_user_profile_data = full_user_profile_data_response.data;
+        // Cache user data
+        await this.cacheService.userData({
+          user_id: data.user_id,
+          data: full_user_profile_data,
+        });
+      }
+      if (!full_user_profile_data) {
+        this.logger.error(`Failed to get profile for user: ${data.user_id}`);
         return {
-          success: true,
-          statusCode: HttpStatus.OK,
-          message: MESSAGES.SUCCESS.PROFILE_FETCHED,
-          data: user_data,
+          success: false,
+          statusCode: HttpStatus.NOT_FOUND,
+          message: MESSAGES.ERROR.PROFILE_NOT_FOUND,
         };
       }
-      // Get user basic
-      const user_profile_response: Response<UserDoc> =
-        await this.userServiceClient.getUserProfile(data, authorization);
-      if (!user_profile_response.success || !user_profile_response.data) {
-        this.logger.error(
-          `Failed to get profile for user: ${data.user_id}: ${user_profile_response.message}`,
-        );
-        return user_profile_response;
-      }
-      const user_profile_data = user_profile_response.data;
-
-      // Get user primary wallet with graceful degradation
-      let user_primary_wallet_data: WalletDoc | undefined = undefined;
-
-      try {
-        const user_primary_wallet_response: Response<WalletDoc> =
-          await this.walletServiceClient.getPrimaryWalletByUserId(
-            { user_id: data.user_id },
-            authorization,
-          );
-
-        if (
-          user_primary_wallet_response.success &&
-          user_primary_wallet_response.data
-        ) {
-          user_primary_wallet_data = user_primary_wallet_response.data;
-          this.logger.log(
-            `Successfully fetched primary wallet for user: ${data.user_id}`,
-          );
-        } else {
-          this.logger.warn(
-            `Primary wallet not found for user: ${data.user_id}`,
-          );
-        }
-      } catch (error) {
-        this.logger.warn(
-          `Failed to fetch primary wallet for user ${data.user_id}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-      }
-
-      const full_user_profile_data: UserDoc = {
-        ...user_profile_data,
-        primary_wallet: user_primary_wallet_data,
-      };
-
       // Get user relationship data with graceful degradation
       let user_relationship_data: UserRelationshipDoc | undefined = undefined;
 
@@ -123,7 +100,7 @@ export class UsersService {
 
         // Compare and sync to Neo4j
         const is_synced = await this.syncNeo4jUser(
-          user_profile_data,
+          full_user_profile_data,
           user_relationship_response.data as UserNeo4jDoc,
         );
 
@@ -170,24 +147,10 @@ export class UsersService {
         );
       }
 
-      // Construct response message
-      const responseMessage = user_primary_wallet_data
-        ? MESSAGES.SUCCESS.PROFILE_FETCHED
-        : `${MESSAGES.SUCCESS.PROFILE_FETCHED} (Wallet data unavailable)` +
-          (user_relationship_data
-            ? ''
-            : ` (User relationship data unavailable)`);
-
-      // Cache user data
-      await this.cacheService.userData({
-        user_id: data.user_id,
-        data: full_user_profile_data,
-      });
-
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: responseMessage,
+        message: MESSAGES.SUCCESS.PROFILE_FETCHED,
         data: full_user_profile_data,
       };
     } catch (error) {
@@ -330,21 +293,25 @@ export class UsersService {
   async updateUserDisplayName(
     data: UpdateUserDisplayNameRequest,
     authorization: string,
+    user_id: string,
   ): Promise<Response<UserDoc>> {
     try {
       this.logger.log(`Updating display name for user`);
-      const response = await this.userServiceClient.updateUserDisplayName(
-        data,
-        authorization,
-      );
+      const response: Response<UserDoc> =
+        await this.userServiceClient.updateUserDisplayName(data, authorization);
 
-      if (!response.success) {
+      if (!response.success || !response.data) {
         this.logger.error(
           `Failed to update display name for user: ${response.message}`,
         );
       } else {
         this.logger.log(`Successfully updated display name for user`);
       }
+
+      // Delete user data from cache
+      await this.cacheService.userChangedData({
+        user_id: user_id,
+      });
 
       return response;
     } catch (error) {
@@ -363,19 +330,23 @@ export class UsersService {
   async updateUserBio(
     data: UpdateUserBioRequest,
     authorization: string,
+    user_id: string,
   ): Promise<Response<UserDoc>> {
     try {
       this.logger.log(`Updating bio for user`);
-      const response = await this.userServiceClient.updateUserBio(
-        data,
-        authorization,
-      );
+      const response: Response<UserDoc> =
+        await this.userServiceClient.updateUserBio(data, authorization);
 
-      if (!response.success) {
+      if (!response.success || !response.data) {
         this.logger.error(`Failed to update bio for user: ${response.message}`);
       } else {
         this.logger.log(`Successfully updated bio for user`);
       }
+
+      // Delete user data from cache
+      await this.cacheService.userChangedData({
+        user_id: user_id,
+      });
 
       return response;
     } catch (error) {
@@ -394,21 +365,25 @@ export class UsersService {
   async updateUserAvatar(
     data: UpdateUserAvatarRequest,
     authorization: string,
+    user_id: string,
   ): Promise<Response<UserDoc>> {
     try {
       this.logger.log(`Updating avatar for user`);
-      const response = await this.userServiceClient.updateUserAvatar(
-        data,
-        authorization,
-      );
+      const response: Response<UserDoc> =
+        await this.userServiceClient.updateUserAvatar(data, authorization);
 
-      if (!response.success) {
+      if (!response.success || !response.data) {
         this.logger.error(
           `Failed to update avatar for user: ${response.message}`,
         );
       } else {
         this.logger.log(`Successfully updated avatar for user`);
       }
+
+      // Delete user data from cache
+      await this.cacheService.userChangedData({
+        user_id: user_id,
+      });
 
       return response;
     } catch (error) {
@@ -427,19 +402,23 @@ export class UsersService {
   async updateUserRole(
     data: UpdateUserRoleRequest,
     authorization: string,
+    user_id: string,
   ): Promise<Response<UserDoc>> {
     try {
       this.logger.log(`Updating role for user to ${data.role}`);
-      const response = await this.userServiceClient.updateUserRole(
-        data,
-        authorization,
-      );
+      const response: Response<UserDoc> =
+        await this.userServiceClient.updateUserRole(data, authorization);
 
-      if (!response.success) {
+      if (!response.success || !response.data) {
         this.logger.error(`Failed to update user role: ${response.message}`);
       } else {
         this.logger.log(`Successfully updated user role`);
       }
+
+      // Delete user data from cache
+      await this.cacheService.userChangedData({
+        user_id: user_id,
+      });
 
       return response;
     } catch (error) {
@@ -519,6 +498,7 @@ export class UsersService {
   async changeUsername(
     data: ChangeUsernameRequest,
     authorization: string,
+    user_id: string,
   ): Promise<Response<void>> {
     try {
       this.logger.log(`Changing username for user to ${data.new_username}`);
@@ -534,6 +514,11 @@ export class UsersService {
       } else {
         this.logger.log(`Successfully changed username for user`);
       }
+
+      // Delete user data from cache
+      await this.cacheService.userChangedData({
+        user_id: user_id,
+      });
 
       return response;
     } catch (error) {
@@ -650,6 +635,7 @@ export class UsersService {
   async newEmailVerify(
     data: VerifyNewEmailCodeRequest,
     authorization: string,
+    user_id: string,
   ): Promise<Response<void>> {
     try {
       this.logger.log(`Verifying new email code for user`);
@@ -665,6 +651,12 @@ export class UsersService {
       } else {
         this.logger.log(`Successfully verified new email code for user`);
       }
+
+      // Delete user data from cache
+      await this.cacheService.userChangedData({
+        user_id: user_id,
+      });
+
       return response;
     } catch (error) {
       this.logger.error(
@@ -932,6 +924,72 @@ export class UsersService {
       this.logger.error(`Failed to sync user to Neo4j: ${error}`);
       this.logger.error(`Error details: ${JSON.stringify(error)}`);
       return false;
+    }
+  }
+  private async getUserProfileData(
+    data: GetUserProfileRequest,
+    authorization: string,
+  ): Promise<Response<UserDoc>> {
+    try {
+      // Get user basic
+      const user_profile_response: Response<UserDoc> =
+        await this.userServiceClient.getUserProfile(data, authorization);
+      if (!user_profile_response.success || !user_profile_response.data) {
+        this.logger.error(
+          `Failed to get profile for user: ${data.user_id}: ${user_profile_response.message}`,
+        );
+        return user_profile_response;
+      }
+      const user_profile_data = user_profile_response.data;
+
+      // Get user primary wallet with graceful degradation
+      let user_primary_wallet_data: WalletDoc | undefined = undefined;
+
+      try {
+        const user_primary_wallet_response: Response<WalletDoc> =
+          await this.walletServiceClient.getPrimaryWalletByUserId(
+            { user_id: data.user_id },
+            authorization,
+          );
+
+        if (
+          user_primary_wallet_response.success &&
+          user_primary_wallet_response.data
+        ) {
+          user_primary_wallet_data = user_primary_wallet_response.data;
+          this.logger.log(
+            `Successfully fetched primary wallet for user: ${data.user_id}`,
+          );
+        } else {
+          this.logger.warn(
+            `Primary wallet not found for user: ${data.user_id}`,
+          );
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to fetch primary wallet for user ${data.user_id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+
+      const full_user_profile_data: UserDoc = {
+        ...user_profile_data,
+        primary_wallet: user_primary_wallet_data,
+      };
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.PROFILE_FETCHED,
+        data: full_user_profile_data,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to get profile for user ${data.user_id}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      throw error;
     }
   }
 }

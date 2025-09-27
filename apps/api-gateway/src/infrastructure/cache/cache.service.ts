@@ -11,7 +11,8 @@ export class CacheService {
     try {
       const { user_id, data } = input;
       const key = `user:${user_id}`;
-      await this.redisInfrastructure.set(key, data, 60 * 60 * 24 * 30);
+      await this.redisInfrastructure.set(key, data, 60 * 5); // 5 mins
+      this.logger.log(`User data set in cache for user: ${user_id}`);
     } catch (error) {
       this.logger.error(
         `Error setting user data in cache: ${error instanceof Error ? error.message : String(error)}`,
@@ -27,12 +28,26 @@ export class CacheService {
       if (!data) {
         return null;
       }
+      this.logger.log(`User data fetched from cache for user: ${user_id}`);
       return data;
     } catch (error) {
       this.logger.error(
         `Error getting user data from cache: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
+    }
+  }
+
+  async userChangedData(input: { user_id: string }): Promise<void> {
+    try {
+      const { user_id } = input;
+      const key = `user:${user_id}`;
+      await this.redisInfrastructure.del(key);
+      this.logger.log(`User data deleted from cache for user: ${user_id}`);
+    } catch (error) {
+      this.logger.error(
+        `Error deleting user data from cache: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

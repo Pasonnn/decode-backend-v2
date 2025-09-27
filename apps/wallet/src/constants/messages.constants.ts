@@ -1,4 +1,9 @@
 export const MESSAGES = {
+  // Error Messages
+  ERROR: {
+    PROFILE_NOT_FOUND: 'Profile not found',
+  },
+
   // Authentication & Login Errors
   AUTH: {
     INVALID_CREDENTIALS: 'Invalid wallet address or signature',

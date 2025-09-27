@@ -36,6 +36,7 @@ import {
 
 // Guards and Decorators
 import { Public } from '../../common/guards/auth.guard';
+import type { AuthenticatedUser } from '../../common/guards/auth.guard';
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
 import { Roles, UserRole } from '../../common/decorators/roles.decorator';
 import {
@@ -50,6 +51,7 @@ import {
   UserResponseWithoutEmailDto,
 } from './dto/user-response.dto';
 import type { UserDoc } from '../../interfaces/user-doc.interface';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('User Management')
 @Controller('users')
@@ -136,11 +138,13 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async updateDisplayName(
     @Body() body: UpdateUserDisplayNameDto,
+    @CurrentUser() user: AuthenticatedUser,
     @Headers('authorization') authorization: string,
   ): Promise<Response<UserDoc>> {
     return await this.usersService.updateUserDisplayName(
       { display_name: body.display_name },
       authorization,
+      user.userId,
     );
   }
 
@@ -157,11 +161,13 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async updateBio(
     @Body() body: UpdateUserBioDto,
+    @CurrentUser() user: AuthenticatedUser,
     @Headers('authorization') authorization: string,
   ): Promise<Response<UserDoc>> {
     return await this.usersService.updateUserBio(
       { bio: body.bio },
       authorization,
+      user.userId,
     );
   }
 
@@ -178,6 +184,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async updateAvatar(
     @Body() body: UpdateUserAvatarDto,
+    @CurrentUser() user: AuthenticatedUser,
     @Headers('authorization') authorization: string,
   ): Promise<Response<UserDoc>> {
     return await this.usersService.updateUserAvatar(
@@ -185,6 +192,7 @@ export class UsersController {
         avatar_ipfs_hash: body.avatar_ipfs_hash,
       },
       authorization,
+      user.userId,
     );
   }
 
@@ -203,9 +211,14 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async updateRole(
     @Body() body: UpdateUserRoleDto,
+    @CurrentUser() user: AuthenticatedUser,
     @Headers('authorization') authorization: string,
   ): Promise<Response<UserDoc>> {
-    return await this.usersService.updateUserRole(body, authorization);
+    return await this.usersService.updateUserRole(
+      body,
+      authorization,
+      user.userId,
+    );
   }
 
   // ==================== USERNAME ENDPOINTS ====================
@@ -261,6 +274,7 @@ export class UsersController {
   async changeUsername(
     @Body() body: ChangeUsernameDto,
     @Headers('authorization') authorization: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.usersService.changeUsername(
       {
@@ -268,6 +282,7 @@ export class UsersController {
         code: body.code,
       },
       authorization,
+      user.userId,
     );
   }
 
@@ -348,10 +363,12 @@ export class UsersController {
   async newEmailVerify(
     @Body() body: VerifyEmailCodeDto,
     @Headers('authorization') authorization: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<Response<void>> {
     return await this.usersService.newEmailVerify(
       { code: body.code },
       authorization,
+      user.userId,
     );
   }
 
