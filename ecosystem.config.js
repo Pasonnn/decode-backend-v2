@@ -28,5 +28,9 @@ module.exports = {
       name: 'relationship',
       script: 'dist/apps/relationship/main.js',
     },
+    {
+      name: 'notification',
+      script: 'dist/apps/notification/main.js',
+    },
   ],
 };
