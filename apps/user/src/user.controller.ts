@@ -8,7 +8,6 @@ import {
   Query,
   UseGuards,
   Patch,
-  Delete,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProfileService } from './services/profile.service';

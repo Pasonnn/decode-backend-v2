@@ -10,7 +10,6 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
-  Delete,
   Patch,
 } from '@nestjs/common';
 import {
