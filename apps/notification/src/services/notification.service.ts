@@ -161,7 +161,7 @@ export class NotificationService {
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: `All notifications marked as read for user ${userId}`,
+        message: `All notifications marked as read`,
       };
     } catch (error) {
       this.logger.error(
