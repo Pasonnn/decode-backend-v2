@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { NotificationService } from './services/notification.service';
-import { AuthGuard } from './common/guards/auth.guard';
+import { AuthGuard, Public } from './common/guards/auth.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { Response } from './interfaces/response.interface';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
@@ -151,6 +151,7 @@ export class NotificationController {
    * @returns Service health status
    */
   @Get('health')
+  @Public()
   @ApiOperation({ summary: 'Health check' })
   @ApiResponse({
     status: HttpStatus.OK,
