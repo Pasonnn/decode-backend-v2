@@ -48,7 +48,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.NOTIFICATION_PORT || 4006;
-  const host = process.env.NOTIFICATION_HOST || 'localhost';
+  const host = process.env.NOTIFICATION_HOST || '0.0.0.0';
   await app.startAllMicroservices();
   await app.listen(port, host);
 
