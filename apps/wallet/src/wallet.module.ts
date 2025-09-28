@@ -1,3 +1,50 @@
+/**
+ * @fileoverview Wallet Service Module Configuration
+ *
+ * This module serves as the central configuration hub for the Decode Wallet Service,
+ * which manages cryptocurrency wallets, blockchain interactions, and financial operations
+ * in the Decode platform. It provides comprehensive wallet management capabilities including
+ * wallet linking, authentication, primary wallet management, and secure cryptographic operations.
+ *
+ * The Wallet Service implements the following architectural patterns:
+ * - Document Database Integration: MongoDB for wallet data persistence
+ * - Caching Layer: Redis for performance optimization
+ * - External Service Integration: Auth service for user authentication
+ * - JWT Authentication: Service-to-service authentication
+ * - RESTful API: HTTP endpoints for wallet operations
+ * - Cryptographic Security: Secure key management and operations
+ *
+ * Key Features:
+ * - Wallet linking and management
+ * - Primary wallet designation
+ * - Secure cryptographic operations
+ * - User authentication integration
+ * - Wallet data persistence
+ * - Caching for performance optimization
+ * - Service-to-service communication
+ * - Secure key handling
+ *
+ * Database Integration:
+ * - MongoDB: Primary database for wallet data storage
+ * - Redis: Caching layer for performance optimization
+ *
+ * External Services:
+ * - Auth Service: User authentication and authorization
+ * - Blockchain Networks: Cryptocurrency wallet operations
+ *
+ * Security Features:
+ * - JWT-based service authentication
+ * - Cryptographic key management
+ * - Secure wallet operations
+ * - Input validation and sanitization
+ * - Encrypted data storage
+ *
+ * @author Decode Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+// Core NestJS modules for application structure and configuration
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -5,44 +52,75 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 import { HttpModule } from '@nestjs/axios';
 import { JwtModule } from '@nestjs/jwt';
 
-// Controllers Import
+// HTTP controller for handling wallet API requests
 import { WalletController } from './wallet.controller';
 
-// External Services Import
-import { AuthServiceClient } from './infrastructure/external-services/auth-service.client';
+// External service clients for inter-service communication
+import { AuthServiceClient } from './infrastructure/external-services/auth-service.client'; // Auth service integration
 
-// Services Import
-import { LinkService } from './services/link.service';
-import { AuthService } from './services/auth.service';
-import { PrimaryService } from './services/primary.service';
+// Business logic services for different wallet operations
+import { LinkService } from './services/link.service'; // Wallet linking operations
+import { AuthService } from './services/auth.service'; // Wallet authentication
+import { PrimaryService } from './services/primary.service'; // Primary wallet management
 
-// Utils Import
-import { CryptoUtils } from './utils/crypto.utils';
+// Utility services for cryptographic operations
+import { CryptoUtils } from './utils/crypto.utils'; // Cryptographic utilities and operations
 
-// Strategies Import
-import { ServicesJwtStrategy } from './strategies/services-jwt.strategy';
+// Authentication strategies for service-to-service communication
+import { ServicesJwtStrategy } from './strategies/services-jwt.strategy'; // JWT validation strategy
 
-// Infrastructure Import
-import { RedisInfrastructure } from './infrastructure/redis.infrastructure';
+// Infrastructure services for external system integration
+import { RedisInfrastructure } from './infrastructure/redis.infrastructure'; // Redis caching operations
 
-// Schemas Import
-import { Wallet, WalletSchema } from './schemas/wallet.schema';
+// MongoDB schemas for data persistence
+import { Wallet, WalletSchema } from './schemas/wallet.schema'; // Wallet data model
 
-// Config Import
-import configuration from './config/configuration';
-import jwtConfig from './config/jwt.config';
+// Configuration modules for environment variables and feature-specific configs
+import configuration from './config/configuration'; // Wallet service configuration
+import jwtConfig from './config/jwt.config'; // JWT configuration
+/**
+ * Wallet Module
+ *
+ * This is the main module that configures and orchestrates all components of the
+ * Decode Wallet Service. It serves as the dependency injection container
+ * and configuration hub for the entire wallet management system.
+ *
+ * Module Structure:
+ * - Imports: External modules, configurations, and database connections
+ * - Controllers: HTTP request handlers for wallet operations
+ * - Providers: Business logic services and infrastructure components
+ * - Exports: Services available to other modules
+ *
+ * Database Integration:
+ * - MongoDB: Primary database for wallet data storage
+ * - Redis: Caching layer for performance optimization
+ *
+ * External Services:
+ * - Auth Service: User authentication and authorization
+ * - Blockchain Networks: Cryptocurrency wallet operations
+ *
+ * Security Features:
+ * - JWT-based service authentication
+ * - Cryptographic key management
+ * - Secure wallet operations
+ *
+ * @Module
+ */
 @Module({
   imports: [
+    // Global configuration module for environment variables and feature-specific configs
     ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
+      isGlobal: true, // Make configuration available throughout the application
+      envFilePath: '.env', // Load environment variables from .env file
     }),
-    ConfigModule.forFeature(configuration),
-    ConfigModule.forFeature(jwtConfig),
+    ConfigModule.forFeature(configuration), // Load wallet-specific configuration
+    ConfigModule.forFeature(jwtConfig), // Load JWT-specific configuration
+
+    // JWT module configuration for service-to-service authentication
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('jwt.secret.servicesToken'), // Secret key for signing tokens
+        secret: config.get<string>('jwt.secret.servicesToken'), // Secret key for signing service tokens
         signOptions: {
           expiresIn: config.get<string>('jwt.servicesToken.expiresIn'), // Token expiration time
           issuer: config.get<string>('jwt.servicesToken.issuer'), // Token issuer identification
@@ -51,44 +129,57 @@ import jwtConfig from './config/jwt.config';
       }),
       inject: [ConfigService],
     }),
+
+    // HTTP client module for external service communication
     HttpModule,
+
+    // MongoDB connection configuration for document storage
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGO_URI'),
+        uri: config.get<string>('MONGO_URI'), // MongoDB connection string
       }),
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature([{ name: Wallet.name, schema: WalletSchema }]),
+
+    // MongoDB schema registration for data models
+    MongooseModule.forFeature([{ name: Wallet.name, schema: WalletSchema }]), // Wallet data model
+
+    // Redis module configuration for caching and temporary data storage
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        type: 'single',
-        url: config.get<string>('REDIS_URI'), // Use consistent naming
+        type: 'single', // Single Redis instance configuration
+        url: config.get<string>('REDIS_URI'), // Redis connection string
       }),
       inject: [ConfigService],
     }),
   ],
+
+  // HTTP controllers that handle incoming requests and route them to appropriate services
   controllers: [WalletController],
+
+  // Service providers that contain business logic and are available for dependency injection
   providers: [
-    // Services
-    LinkService,
-    AuthService,
-    PrimaryService,
+    // Core business logic services
+    LinkService, // Wallet linking operations and management
+    AuthService, // Wallet authentication and security
+    PrimaryService, // Primary wallet designation and management
 
-    // Infrastructure
-    RedisInfrastructure,
-    CryptoUtils,
+    // Infrastructure services for external system integration
+    RedisInfrastructure, // Redis caching operations and utilities
+    CryptoUtils, // Cryptographic utilities and secure operations
 
-    // Strategies
-    ServicesJwtStrategy,
+    // Authentication and security components
+    ServicesJwtStrategy, // JWT validation strategy for service-to-service communication
 
-    // External Services
-    AuthServiceClient,
+    // External service clients for inter-service communication
+    AuthServiceClient, // Auth service integration for user authentication
   ],
+
+  // Services exported for use by other modules in the application
   exports: [
-    // Export services that might be used by other modules
-    RedisInfrastructure,
+    RedisInfrastructure, // Make Redis infrastructure available to other modules
   ],
 })
 export class WalletModule {}
