@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 // Interfaces Import
 import { UserDoc } from '../interfaces/user-doc.interface';
 import { Response } from '../interfaces/response.interface';
+import { PaginationResponse } from '../interfaces/pagination-response.interface';
 
 // Schema Import
 import { User } from '../schemas/user.schema';
@@ -25,7 +26,7 @@ export class SearchService {
     limit: number;
     sortBy: string;
     sortOrder: string;
-  }): Promise<Response<UserDoc[]>> {
+  }): Promise<PaginationResponse<UserDoc[]>> {
     const { email_or_username, page, limit, sortBy, sortOrder } = input;
     try {
       const users = await this.userModel
@@ -48,7 +49,15 @@ export class SearchService {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.SEARCH_SUCCESSFUL,
-        data: users as UserDoc[],
+        data: {
+          users: users as UserDoc[],
+          meta: {
+            total: users.length,
+            page: page,
+            limit: limit,
+            is_last_page: users.length < limit,
+          },
+        },
       };
     } catch (error: unknown) {
       this.logger.error(`Error searching users: ${error as string}`);
