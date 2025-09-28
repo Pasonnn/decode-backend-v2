@@ -51,6 +51,7 @@ import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { USER_CONSTANTS } from './constants/user.constants';
 import { ServicesResponseService } from './services/services-response.service';
+import { PaginationResponse } from './interfaces/pagination-response.interface';
 
 @ApiTags('User Management')
 @Controller('users')
@@ -220,7 +221,9 @@ export class UserController {
 
   @Get('search')
   @UseGuards(AuthGuard)
-  async search(@Query() query: SearchUserDto): Promise<Response<UserDoc[]>> {
+  async search(
+    @Query() query: SearchUserDto,
+  ): Promise<PaginationResponse<UserDoc[]>> {
     return await this.searchService.searchUsers({
       email_or_username: query.email_or_username || '',
       page: query.page || USER_CONSTANTS.SEARCH.DEFAULT_PAGE,
