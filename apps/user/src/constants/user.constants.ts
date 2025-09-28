@@ -132,11 +132,11 @@ export const USER_CONSTANTS = {
 
   // Search Configuration
   SEARCH: {
-    DEFAULT_PAGE: 1,
+    DEFAULT_PAGE: 0,
     DEFAULT_LIMIT: 20,
-    MIN_PAGE: 1,
+    MIN_PAGE: 0,
     MAX_PAGE: 1000,
-    MIN_LIMIT: 1,
+    MIN_LIMIT: 0,
     MAX_LIMIT: 100,
     MIN_QUERY_LENGTH: 1,
     MAX_QUERY_LENGTH: 100,

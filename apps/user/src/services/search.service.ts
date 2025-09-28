@@ -36,7 +36,7 @@ export class SearchService {
           ],
           is_active: true,
         })
-        .skip((page - 1) * limit)
+        .skip(page * limit)
         .limit(limit)
         .sort({ [sortBy]: sortOrder as 'asc' | 'desc' | 1 | -1 })
         .select({

@@ -48,9 +48,9 @@ export class SearchUserDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  @Min(1)
+  @Min(0)
   @Max(1000)
-  page?: number = 1;
+  page?: number = 0;
 
   @ApiProperty({
     description: 'Number of results per page',
@@ -63,7 +63,7 @@ export class SearchUserDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  @Min(1)
+  @Min(0)
   @Max(100)
   limit?: number = 20;
 
