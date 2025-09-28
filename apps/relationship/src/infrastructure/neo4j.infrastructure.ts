@@ -104,9 +104,6 @@ export class Neo4jInfrastructure implements OnModuleInit {
       RETURN r`;
       const result = await session.run(query);
       if (result.records.length === 0) {
-        this.logger.log(
-          `Relationship not found: ${user_id_from} is not ${relationship_type} ${user_id_to}`,
-        );
         return false;
       }
       return true;
@@ -133,7 +130,6 @@ export class Neo4jInfrastructure implements OnModuleInit {
       RETURN t SKIP ${page * limit} LIMIT ${limit}`;
       const result = await session.run(query);
       if (result.records.length === 0) {
-        this.logger.log(`Relationship not found: ${user_id}`);
         return [];
       }
       const users = result.records.map(
@@ -164,7 +160,6 @@ export class Neo4jInfrastructure implements OnModuleInit {
       RETURN s SKIP ${page * limit} LIMIT ${limit}`;
       const result = await session.run(query);
       if (result.records.length === 0) {
-        this.logger.log(`Relationship not found: ${user_id}`);
         return [];
       }
       return result.records.map(

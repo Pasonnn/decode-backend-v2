@@ -90,7 +90,7 @@ export class UsersController {
   // ==================== PROFILE ENDPOINTS ====================
 
   @Get('profile/me')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuardWithFingerprint)
   @UserRateLimit.standard()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({

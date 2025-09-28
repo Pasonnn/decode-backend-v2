@@ -40,12 +40,11 @@ import { UserService } from './services/user.service';
 
 // Guards and Decorators
 import { CurrentUser } from './common/decorators/current-user.decorator';
-import { AuthGuard } from './common/guards/auth.guard';
+import { AuthGuard, Public } from './common/guards/auth.guard';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 @ApiTags('Relationship Management')
 @Controller('relationship')
-@UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class RelationshipController {
   constructor(
@@ -60,13 +59,13 @@ export class RelationshipController {
   // ==================== USER ENDPOINTS ====================
 
   @Get('user/:user_id')
-  @UseGuards(AuthGuard)
+  @Public()
   async getUser(
     @Param() params: GetUserDto,
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user?: AuthenticatedUser,
   ): Promise<Response<UserNeo4jDoc>> {
     return await this.userService.getUser({
-      user_id_from: user.userId,
+      user_id_from: user?.userId ?? '',
       user_id_to: params.user_id,
     });
   }
