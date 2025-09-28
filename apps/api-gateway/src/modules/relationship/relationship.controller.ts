@@ -40,18 +40,23 @@ import {
   SearchFollowersDto,
   SearchFollowingDto,
   GetSuggestionsDto,
+  GetFollowersSnapshotLastMonthDto,
 } from './dto';
 
 // Guards and Decorators
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
-import { UserRateLimit } from '../../common/decorators/rate-limit.decorator';
+import {
+  IPRateLimit,
+  UserRateLimit,
+} from '../../common/decorators/rate-limit.decorator';
+import { Roles, UserRole } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 // Interfaces
 import type { Response } from '../../interfaces/response.interface';
 
 @ApiTags('Relationship Management')
 @Controller('relationship')
-@UseGuards(AuthGuardWithFingerprint)
 @ApiBearerAuth('JWT-auth')
 @ApiExtraModels(
   GetUserDto,
@@ -69,6 +74,7 @@ import type { Response } from '../../interfaces/response.interface';
   SearchFollowersDto,
   SearchFollowingDto,
   GetSuggestionsDto,
+  GetFollowersSnapshotLastMonthDto,
 )
 export class RelationshipController {
   constructor(private readonly relationshipService: RelationshipService) {}
@@ -119,7 +125,7 @@ export class RelationshipController {
     description: 'User not found',
   })
   @Get('user/:user_id')
-  @UserRateLimit.standard()
+  @IPRateLimit.standard()
   @HttpCode(HttpStatus.OK)
   async getUser(
     @Param() params: GetUserDto,
@@ -156,6 +162,7 @@ export class RelationshipController {
   })
   @Post('follow/following')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async follow(
     @Body() followDto: FollowDto,
@@ -178,6 +185,7 @@ export class RelationshipController {
   })
   @Delete('follow/unfollow/:user_id_to')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async unfollow(
     @Param() params: UnfollowDto,
@@ -200,6 +208,7 @@ export class RelationshipController {
   })
   @Delete('follow/remove-follower/:user_id_to')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async removeFollower(
     @Param() params: RemoveFollowerDto,
@@ -218,6 +227,7 @@ export class RelationshipController {
   })
   @Get('follow/followings/me')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getFollowing(
     @Query() query: GetFollowingDto,
@@ -236,6 +246,7 @@ export class RelationshipController {
   })
   @Get('follow/followings')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getFollowingByUserId(
     @Query() query: GetFollowingByUserIdDto,
@@ -254,6 +265,7 @@ export class RelationshipController {
   })
   @Get('follow/followers/me')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getFollowers(
     @Query() query: GetFollowersDto,
@@ -272,6 +284,7 @@ export class RelationshipController {
   })
   @Get('follow/followers')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getFollowersByUserId(
     @Query() query: GetFollowersByUserIdDto,
@@ -308,6 +321,7 @@ export class RelationshipController {
   })
   @Post('block/blocking')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async block(
     @Body() blockDto: BlockDto,
@@ -330,6 +344,7 @@ export class RelationshipController {
   })
   @Delete('block/unblocking/:user_id_to')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async unblock(
     @Param() params: UnblockDto,
@@ -348,6 +363,7 @@ export class RelationshipController {
   })
   @Get('block/blocked')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getBlockedUsers(
     @Query() query: GetBlockedUsersDto,
@@ -372,6 +388,7 @@ export class RelationshipController {
   })
   @Get('mutual/followers/:user_id_to')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getMutualFollowers(
     @Param() params: MutualDto,
@@ -392,6 +409,7 @@ export class RelationshipController {
   })
   @Get('search/followers')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async searchFollowers(
     @Query() query: SearchFollowersDto,
@@ -410,6 +428,7 @@ export class RelationshipController {
   })
   @Get('search/followings')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async searchFollowing(
     @Query() query: SearchFollowingDto,
@@ -430,11 +449,117 @@ export class RelationshipController {
   })
   @Get('suggest')
   @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
   @HttpCode(HttpStatus.OK)
   async getSuggestions(
     @Query() query: GetSuggestionsDto,
     @Headers('authorization') authorization: string,
   ): Promise<Response> {
     return this.relationshipService.getSuggestions(query, authorization);
+  }
+
+  // ==================== SNAPSHOT ENDPOINTS ====================
+
+  @ApiOperation({
+    summary: 'Trigger manual follower snapshot',
+    description: 'Manually trigger the follower snapshot process for all users',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Snapshot triggered successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Manual follower snapshot completed successfully',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'Manual follower snapshot completed successfully',
+            },
+          },
+        },
+        requestId: { type: 'string', example: 'req-123' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to trigger snapshot',
+  })
+  @Post('snapshot/trigger')
+  @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin' as UserRole)
+  async triggerSnapshot(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.relationshipService.triggerSnapshot(authorization);
+  }
+
+  @ApiOperation({
+    summary: 'Get followers snapshot data for last month',
+    description:
+      'Get historical followers snapshot data for a specific user from the last month',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Followers snapshot data retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Followers snapshot data last month fetched successfully',
+        },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
+              user_id: { type: 'string', example: '507f1f77bcf86cd799439012' },
+              followers: { type: 'array', items: { type: 'string' } },
+              followers_number: { type: 'number', example: 150 },
+              snapshot_at: { type: 'string', format: 'date-time' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+        requestId: { type: 'string', example: 'req-123' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to retrieve snapshot data',
+  })
+  @Get('snapshot/last-month/:user_id')
+  @IPRateLimit.standard()
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async getFollowersSnapshotLastMonth(
+    @Param() params: GetFollowersSnapshotLastMonthDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.relationshipService.getFollowersSnapshotLastMonth(
+      params,
+      authorization,
+    );
   }
 }

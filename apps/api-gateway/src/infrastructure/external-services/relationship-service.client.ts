@@ -402,6 +402,37 @@ export class RelationshipServiceClient extends BaseHttpClient {
     return this.get(url, config);
   }
 
+  // ==================== SNAPSHOT ENDPOINTS ====================
+
+  /**
+   * Trigger manual follower snapshot
+   */
+  async triggerSnapshot(
+    authorization: string,
+  ): Promise<Response<{ success: boolean; message: string }>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.post('/relationship/snapshot/trigger', {}, config);
+  }
+
+  /**
+   * Get followers snapshot data for the last month
+   */
+  async getFollowersSnapshotLastMonth(
+    user_id: string,
+    authorization: string,
+  ): Promise<Response<any[]>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.get(`/relationship/snapshot/last-month/${user_id}`, config);
+  }
+
   // Generic HTTP methods for flexibility
   async post<T>(
     url: string,

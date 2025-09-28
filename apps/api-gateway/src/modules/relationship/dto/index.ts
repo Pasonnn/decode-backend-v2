@@ -15,3 +15,6 @@ export * from './suggest.dto';
 
 // User DTOs
 export * from './user.dto';
+
+// Snapshot DTOs
+export * from './snapshot.dto';

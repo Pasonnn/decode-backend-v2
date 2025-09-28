@@ -6,6 +6,7 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -14,6 +15,7 @@ import {
   AuthenticatedUser,
   AuthGuard,
   AuthServiceResponse,
+  ROLES_KEY,
 } from './auth.guard';
 import { UserDoc } from 'apps/auth/src/interfaces/user-doc.interface';
 
@@ -26,6 +28,7 @@ export class AuthGuardWithFingerprint implements CanActivate {
     private readonly authGuard: AuthGuard,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly reflector: Reflector,
   ) {
     this.authServiceUrl =
       this.configService.get<string>('services.auth.url') ||
@@ -102,6 +105,9 @@ export class AuthGuardWithFingerprint implements CanActivate {
         });
       }
 
+      // Check role-based access control
+      this.checkRoleAccess(context, jwtUserData);
+
       // Attach user to request for use in controllers (same as AuthGuard)
       request['user'] = jwtUserData;
 
@@ -138,5 +144,26 @@ export class AuthGuardWithFingerprint implements CanActivate {
       (request.headers['x-fingerprint-hashed'] as string) ||
       (request.headers['fingerprint-hashed'] as string)
     );
+  }
+
+  private checkRoleAccess(
+    context: ExecutionContext,
+    user: AuthenticatedUser,
+  ): void {
+    const requiredRoles = this.reflector.get<string[]>(
+      ROLES_KEY,
+      context.getHandler(),
+    );
+
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return; // No role requirements
+    }
+
+    if (!requiredRoles.includes(user.role)) {
+      throw new ForbiddenException({
+        message: `Access denied. Required roles: ${requiredRoles.join(', ')}. Your role: ${user.role}`,
+        error: 'INSUFFICIENT_PERMISSIONS',
+      });
+    }
   }
 }

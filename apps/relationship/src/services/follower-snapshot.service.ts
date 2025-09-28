@@ -26,10 +26,19 @@ export class FollowerSnapshotService {
   }): Promise<Response<FollowerSnapshot[]>> {
     const { user_id } = input;
     try {
-      const followers = await this.followerSnapshotRepository.find({
-        user_id: new Types.ObjectId(user_id),
-        snapshot_at: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-      });
+      const followers = await this.followerSnapshotRepository.find(
+        {
+          user_id: new Types.ObjectId(user_id),
+          snapshot_at: {
+            $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          },
+        },
+        {
+          followers: 0,
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      );
       return {
         success: true,
         statusCode: HttpStatus.OK,

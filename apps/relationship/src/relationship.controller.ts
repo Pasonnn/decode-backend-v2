@@ -8,6 +8,7 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
+import { Roles, UserRole } from './common/decorators/roles.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 // Interface Import
@@ -264,6 +265,7 @@ export class RelationshipController {
 
   @Post('snapshot/trigger')
   @UseGuards(AuthGuard)
+  @Roles('admin' as UserRole)
   async triggerSnapshot(): Promise<Response> {
     const result = await this.followerSnapshotService.triggerManualSnapshot();
     return {
@@ -274,7 +276,7 @@ export class RelationshipController {
   }
 
   @Get('snapshot/last-month/:user_id')
-  @UseGuards(AuthGuard)
+  @Public()
   async getFollowersSnapshotLastMonth(
     @Param('user_id') user_id: string,
   ): Promise<Response> {

@@ -19,6 +19,7 @@ import {
   GetSuggestionsDto,
   GetFollowingByUserIdDto,
   GetFollowersByUserIdDto,
+  GetFollowersSnapshotLastMonthDto,
 } from './dto';
 
 @Injectable()
@@ -168,5 +169,25 @@ export class RelationshipService {
       `Getting user suggestions - page: ${data.page}, limit: ${data.limit}`,
     );
     return this.relationshipServiceClient.getSuggestions(data, authorization);
+  }
+
+  // ==================== SNAPSHOT ENDPOINTS ====================
+
+  async triggerSnapshot(authorization: string): Promise<Response> {
+    this.logger.log('Triggering manual follower snapshot');
+    return this.relationshipServiceClient.triggerSnapshot(authorization);
+  }
+
+  async getFollowersSnapshotLastMonth(
+    data: GetFollowersSnapshotLastMonthDto,
+    authorization: string,
+  ): Promise<Response> {
+    this.logger.log(
+      `Getting followers snapshot data for last month - user: ${data.user_id}`,
+    );
+    return this.relationshipServiceClient.getFollowersSnapshotLastMonth(
+      data.user_id,
+      authorization,
+    );
   }
 }
