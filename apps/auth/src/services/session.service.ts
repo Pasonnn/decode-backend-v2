@@ -213,15 +213,23 @@ export class SessionService {
       const session = await this.sessionModel.findOne({
         session_token: new_session_token,
       });
+      if (!session) {
+        return {
+          success: false,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: MESSAGES.SESSION.SESSION_NOT_FOUND,
+        };
+      }
+      const session_response = {
+        ...session.toObject(),
+        access_token,
+      } as unknown as SessionDoc;
       // Return session
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.SESSION_REFRESHED,
-        data: {
-          session: session as unknown as SessionDoc,
-          access_token,
-        } as unknown as SessionDoc,
+        data: session_response as unknown as SessionDoc,
       };
     } catch (error) {
       this.logger.error(`Error refreshing session for token`, error);
