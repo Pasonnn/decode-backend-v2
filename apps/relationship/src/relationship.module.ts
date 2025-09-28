@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { HttpModule } from '@nestjs/axios';
+import { ScheduleModule } from '@nestjs/schedule';
 
 // Controller Import
 import { RelationshipController } from './relationship.controller';
@@ -22,6 +23,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
 import { Transport } from '@nestjs/microservices';
 import { ClientsModule } from '@nestjs/microservices';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  FollowerSnapshot,
+  FollowerSnapshotSchema,
+} from './schema/follower-snapshot.schema';
+import { FollowerSnapshotService } from './services/follower-snapshot.service';
 
 @Module({
   imports: [
@@ -30,6 +37,7 @@ import { ClientsModule } from '@nestjs/microservices';
       envFilePath: '.env',
     }),
     ConfigModule.forFeature(configuration),
+    ScheduleModule.forRoot(),
     HttpModule,
     RedisModule.forRootAsync({
       imports: [ConfigModule],
@@ -59,6 +67,17 @@ import { ClientsModule } from '@nestjs/microservices';
         inject: [ConfigService],
       },
     ]),
+    // Database
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_URI'),
+      }),
+      inject: [ConfigService],
+    }),
+    MongooseModule.forFeature([
+      { name: FollowerSnapshot.name, schema: FollowerSnapshotSchema },
+    ]),
   ],
   controllers: [RelationshipController],
   providers: [
@@ -69,7 +88,7 @@ import { ClientsModule } from '@nestjs/microservices';
     SuggestService,
     MutualService,
     SearchService,
-
+    FollowerSnapshotService,
     // Infrastructure
     Neo4jInfrastructure,
     RedisInfrastructure,

@@ -37,6 +37,7 @@ import { MutualService } from './services/mutual.service';
 import { SearchService } from './services/search.service';
 import { SuggestService } from './services/suggest.service';
 import { UserService } from './services/user.service';
+import { FollowerSnapshotService } from './services/follower-snapshot.service';
 
 // Guards and Decorators
 import { CurrentUser } from './common/decorators/current-user.decorator';
@@ -54,6 +55,7 @@ export class RelationshipController {
     private readonly mutualService: MutualService,
     private readonly searchService: SearchService,
     private readonly suggestService: SuggestService,
+    private readonly followerSnapshotService: FollowerSnapshotService,
   ) {}
 
   // ==================== USER ENDPOINTS ====================
@@ -256,5 +258,30 @@ export class RelationshipController {
       page: query.page,
       limit: query.limit,
     });
+  }
+
+  // ==================== FOLLOWER SNAPSHOT ENDPOINTS ====================
+
+  @Post('snapshot/trigger')
+  @UseGuards(AuthGuard)
+  async triggerSnapshot(): Promise<Response> {
+    const result = await this.followerSnapshotService.triggerManualSnapshot();
+    return {
+      success: result.success,
+      statusCode: result.success ? 200 : 500,
+      message: result.message,
+    };
+  }
+
+  @Get('snapshot/last-month/:user_id')
+  @UseGuards(AuthGuard)
+  async getFollowersSnapshotLastMonth(
+    @Param('user_id') user_id: string,
+  ): Promise<Response> {
+    return await this.followerSnapshotService.getFollowersSnapshotDataLastMonth(
+      {
+        user_id,
+      },
+    );
   }
 }

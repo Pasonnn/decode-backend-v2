@@ -79,14 +79,14 @@ export class FollowService {
         user_id_from: user_id_from,
         user_id_to: user_id_to,
       });
+
       if (user_blocked_response) {
         return {
           success: false,
           statusCode: HttpStatus.FORBIDDEN,
-          message: `You blocked this user`,
+          message: `This user is limited to you`,
         };
       }
-
       // Following payload
       const following_payload = {
         user_id_from: user_id_from,
@@ -179,7 +179,7 @@ export class FollowService {
         return {
           success: false,
           statusCode: HttpStatus.FORBIDDEN,
-          message: `You blocked this user`,
+          message: `This user is limited to you`,
         };
       }
 

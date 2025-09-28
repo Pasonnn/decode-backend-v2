@@ -32,6 +32,14 @@ export class BlockService {
   }): Promise<Response> {
     const { user_id_from, user_id_to } = input;
     try {
+      // Check if you are blocking yourself
+      if (user_id_from === user_id_to) {
+        return {
+          success: false,
+          statusCode: HttpStatus.FORBIDDEN,
+          message: `You cannot block yourself`,
+        };
+      }
       // Check if user blocked
       const user_blocked_response = await this.checkIfUserBlocked({
         user_id_from: user_id_from,

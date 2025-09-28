@@ -185,7 +185,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
       // Create relationship
       const query = `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"})
          CREATE (s)-[r:FOLLOWING]->(t)
-         SET s.following_number = s.following_number + 1, t.followers_number = t.followers_number + 1`;
+         SET r.timestamp = timestamp(), s.following_number = s.following_number + 1, t.followers_number = t.followers_number + 1`;
       await session.run(query);
       this.logger.log(
         `User following relationship created successfully: ${user_id_from} to ${user_id_to}`,
@@ -544,6 +544,51 @@ export class Neo4jInfrastructure implements OnModuleInit {
     } catch (error) {
       this.logger.error(
         `Failed to search following: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return [];
+    } finally {
+      await session.close();
+    }
+  }
+
+  async getAllUsers(): Promise<NodeResponse<UserNeo4jDoc>[]> {
+    const session = this.getSession();
+    try {
+      const query = `MATCH (u:User) RETURN u`;
+      const result = await session.run(query);
+      return result.records.map(
+        (record) => record.get('u') as NodeResponse<UserNeo4jDoc>,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to get all users: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return [];
+    } finally {
+      await session.close();
+    }
+  }
+
+  async getAllFollowers(input: {
+    user_id: string;
+  }): Promise<NodeResponse<UserNeo4jDoc>[]> {
+    const session = this.getSession();
+    const { user_id } = input;
+    try {
+      const query = `MATCH (s:User)-[:FOLLOWING]->(t:User {user_id: "${user_id}"})
+      RETURN s`;
+      const result = await session.run(query);
+      if (result.records.length === 0) {
+        this.logger.log(`No followers found for user: ${user_id}`);
+        return [];
+      }
+      console.log(result.records);
+      return result.records.map(
+        (record) => record.get('s') as NodeResponse<UserNeo4jDoc>,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to get all followers: ${error instanceof Error ? error.message : String(error)}`,
       );
       return [];
     } finally {
