@@ -94,9 +94,7 @@ async function bootstrap() {
   // Configure server host and port from environment variables
   // Default values ensure the service can run in various environments
   const port = process.env.AUTH_PORT ?? 4001;
-  const host = process.env.AUTH_HOST
-    ? process.env.AUTH_HOST.replace('http://', '').replace('https://', '')
-    : 'localhost';
+  const host = process.env.AUTH_HOST ?? '0.0.0.0';
 
   // Start the server and listen for incoming requests
   await app.listen(port, host);
