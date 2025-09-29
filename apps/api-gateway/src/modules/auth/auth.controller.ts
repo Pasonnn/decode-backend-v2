@@ -67,6 +67,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 // Constants Import
 import { AUTH_CONSTANTS } from 'apps/auth/src/constants/auth.constants';
+import { SessionSchema } from 'apps/auth/src/schemas/session.schema';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -370,6 +371,18 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Device fingerprint verified successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example:
+            'Device fingerprint verified successfully with session data including access token and session token',
+        },
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Invalid fingerprint data' })
   @Post('login/fingerprint/email-verification')
