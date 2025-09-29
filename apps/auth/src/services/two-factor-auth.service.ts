@@ -29,6 +29,7 @@ import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 
 // Services
 import { SessionService } from './session.service';
+import { DeviceFingerprintService } from './device-fingerprint.service';
 @Injectable()
 export class TwoFactorAuthService {
   private readonly logger: Logger;
@@ -38,6 +39,8 @@ export class TwoFactorAuthService {
     private readonly redisInfrastructure: RedisInfrastructure,
     @Inject(forwardRef(() => SessionService))
     private readonly sessionService: SessionService,
+    @Inject(forwardRef(() => DeviceFingerprintService))
+    private readonly deviceFingerprintService: DeviceFingerprintService,
   ) {
     this.logger = new Logger(TwoFactorAuthService.name);
   }
@@ -305,12 +308,12 @@ export class TwoFactorAuthService {
     }
   }
 
-  async loginCheckOtpEnable(input: {
-    user_id: string;
-  }): Promise<Response<IOtpDoc>> {
+  async checkOtpEnable(input: { user_id: string }): Promise<Response<IOtpDoc>> {
     const { user_id } = input;
     try {
-      const findOtpByUserIdResponse = await this.findOtpByUserId({ user_id });
+      const findOtpByUserIdResponse = await this.findEnabledOtpByUserId({
+        user_id,
+      });
       if (!findOtpByUserIdResponse.success) {
         return findOtpByUserIdResponse;
       }
@@ -404,11 +407,11 @@ export class TwoFactorAuthService {
     const { user_id, device_fingerprint_id, browser, device } = input;
     try {
       // Check if OTP is enabled for the user
-      const loginCheckOtpEnableResponse = await this.loginCheckOtpEnable({
+      const checkOtpEnableResponse = await this.checkOtpEnable({
         user_id,
       });
 
-      if (loginCheckOtpEnableResponse.success) {
+      if (checkOtpEnableResponse.success) {
         // OTP is enabled, create login session token
         const login_session_token = uuidv4().slice(
           0,
@@ -459,6 +462,130 @@ export class TwoFactorAuthService {
     } catch (error) {
       this.logger.error(
         `Error checking and initializing OTP login session for user ${user_id}: ${error}`,
+      );
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.AUTH.LOGIN_ERROR,
+      };
+    }
+  }
+
+  async fingerprintTrustVerifyOtp(input: {
+    verify_device_fingerprint_session_token: string;
+    otp: string;
+  }): Promise<Response> {
+    const { verify_device_fingerprint_session_token, otp } = input;
+    try {
+      // Get verify device fingerprint session
+      const verify_device_fingerprint_session_key = `${AUTH_CONSTANTS.REDIS.KEYS.VERIFY_DEVICE_FINGERPRINT_SESSION}:${verify_device_fingerprint_session_token}`;
+      const verify_device_fingerprint_session_value =
+        (await this.redisInfrastructure.get(
+          verify_device_fingerprint_session_key,
+        )) as {
+          user_id: string;
+          device_fingerprint_id: string;
+        };
+      if (!verify_device_fingerprint_session_value) {
+        return {
+          success: false,
+          statusCode: HttpStatus.NOT_FOUND,
+          message: MESSAGES.SESSION.VERIFY_DEVICE_FINGERPRINT_SESSION_NOT_FOUND,
+        };
+      }
+      // Verify OTP
+      const verifyOtpResponse = await this.verifyOtp({
+        user_id: verify_device_fingerprint_session_value.user_id,
+        otp,
+      });
+      if (!verifyOtpResponse.success) {
+        return verifyOtpResponse;
+      }
+      // Trust device fingerprint
+      const trustDeviceFingerprintResponse =
+        await this.deviceFingerprintService.trustDeviceFingerprint({
+          user_id: verify_device_fingerprint_session_value.user_id,
+          device_fingerprint_id:
+            verify_device_fingerprint_session_value.device_fingerprint_id,
+        });
+      console.log('devicefingerprint trust', trustDeviceFingerprintResponse);
+      if (!trustDeviceFingerprintResponse.success) {
+        return trustDeviceFingerprintResponse;
+      }
+      // Create session
+      const createSessionResponse = await this.sessionService.createSession({
+        user_id: verify_device_fingerprint_session_value.user_id,
+        device_fingerprint_id:
+          verify_device_fingerprint_session_value.device_fingerprint_id,
+        app: 'decode',
+      });
+      if (!createSessionResponse.success || !createSessionResponse.data) {
+        return createSessionResponse;
+      }
+      return {
+        success: true,
+        statusCode: HttpStatus.CREATED,
+        message: MESSAGES.SUCCESS.SESSION_CREATED,
+        data: createSessionResponse.data,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error verifying OTP for fingerprint trust verify session ${verify_device_fingerprint_session_token}: ${error}`,
+      );
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.OTP.OTP_VERIFY_FAILED,
+      };
+    }
+  }
+
+  async checkAndInitOtpVerifyDeviceFingerprint(input: {
+    user_id: string;
+    device_fingerprint_id: string;
+  }): Promise<Response> {
+    const { user_id, device_fingerprint_id } = input;
+    try {
+      // Check if OTP is enabled for the user
+      const checkOtpEnableResponse = await this.checkOtpEnable({
+        user_id,
+      });
+      if (checkOtpEnableResponse.success) {
+        // OTP is enabled, create verify device fingerprint session token
+        const verify_device_fingerprint_session_token = uuidv4().slice(
+          0,
+          AUTH_CONSTANTS.LOGIN_SESSION.TOKEN_LENGTH,
+        );
+        const verify_device_fingerprint_session_key = `${AUTH_CONSTANTS.REDIS.KEYS.VERIFY_DEVICE_FINGERPRINT_SESSION}:${verify_device_fingerprint_session_token}`;
+        const verify_device_fingerprint_session_value = JSON.stringify({
+          user_id,
+          device_fingerprint_id,
+        });
+        await this.redisInfrastructure.set(
+          verify_device_fingerprint_session_key,
+          verify_device_fingerprint_session_value,
+          AUTH_CONSTANTS.REDIS.LOGIN_SESSION_EXPIRES_IN,
+        );
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: MESSAGES.SUCCESS.OTP_VERIFY,
+          data: {
+            verify_device_fingerprint_session_token:
+              verify_device_fingerprint_session_token,
+          },
+        };
+      } else {
+        // OTP is not enabled, proceed with normal session creation
+        return {
+          success: false,
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: MESSAGES.OTP.OTP_NOT_ENABLED,
+        };
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error checking and initializing OTP verify device fingerprint for user ${user_id}: ${error}`,
       );
       return {
         success: false,
@@ -532,6 +659,41 @@ export class TwoFactorAuthService {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.OTP.OTP_FETCH_FAILED,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  private async findEnabledOtpByUserId(input: {
+    user_id: string;
+  }): Promise<Response<IOtpDoc>> {
+    const { user_id } = input;
+    try {
+      const otp = await this.otpModel.findOne({
+        user_id: new Types.ObjectId(user_id),
+        otp_enable: true,
+      });
+      if (!otp || !otp.otp_enable) {
+        return {
+          success: false,
+          statusCode: HttpStatus.NOT_FOUND,
+          message: MESSAGES.OTP.OTP_NOT_ENABLED,
+        };
+      }
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.OTP_FETCHED,
+        data: otp as IOtpDoc,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error finding enabled OTP for user ${user_id}: ${error}`,
+      );
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.OTP.OTP_NOT_ENABLED,
         error: error instanceof Error ? error.message : String(error),
       };
     }

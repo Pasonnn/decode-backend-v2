@@ -490,24 +490,14 @@ export class DeviceFingerprintService {
       };
     }
 
-    // Find device fingerprint in database
-    const user_id = new Types.ObjectId(device_fingerprint_data.user_id);
-    const device_fingerprint = await this.deviceFingerprintModel.findOne({
-      $and: [
-        { user_id: user_id },
-        { fingerprint_hashed: device_fingerprint_data.fingerprint_hashed },
-      ],
+    // Trust device fingerprint
+    const trustDeviceFingerprintResponse = await this.trustDeviceFingerprint({
+      user_id: device_fingerprint_data.user_id,
+      fingerprint_hashed: device_fingerprint_data.fingerprint_hashed,
     });
-    if (!device_fingerprint) {
-      return {
-        success: false,
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
-      };
+    if (!trustDeviceFingerprintResponse.success) {
+      return trustDeviceFingerprintResponse;
     }
-    // Update device fingerprint to trusted
-    device_fingerprint.is_trusted = true;
-    await device_fingerprint.save();
     // Delete email verification code from Redis
     await this.redisInfrastructure.del(
       `${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`,
@@ -516,7 +506,73 @@ export class DeviceFingerprintService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
-      data: device_fingerprint as DeviceFingerprintDoc,
+      data: trustDeviceFingerprintResponse.data as DeviceFingerprintDoc,
+    };
+  }
+
+  async trustDeviceFingerprint(input: {
+    user_id: string;
+    fingerprint_hashed?: string;
+    device_fingerprint_id?: string;
+  }): Promise<Response<DeviceFingerprintDoc>> {
+    const { user_id, fingerprint_hashed, device_fingerprint_id } = input;
+    if (!fingerprint_hashed && !device_fingerprint_id) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+      };
+    }
+    const device_fingerprint: DeviceFingerprintDoc = {
+      _id: '',
+      user_id: new Types.ObjectId(user_id),
+      fingerprint_hashed: '',
+      is_trusted: false,
+    };
+    if (!fingerprint_hashed) {
+      // Find device fingerprint in database with device_fingerprint_id
+      const user_id_obj = new Types.ObjectId(user_id);
+      const device_fingerprint = await this.deviceFingerprintModel.findOne({
+        $and: [
+          { user_id: user_id_obj },
+          { _id: new Types.ObjectId(device_fingerprint_id) },
+          { is_trusted: false },
+        ],
+      });
+      if (!device_fingerprint) {
+        return {
+          success: false,
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+        };
+      }
+      device_fingerprint.is_trusted = true;
+      await device_fingerprint.save();
+    } else {
+      // Find device fingerprint in database with fingerprint_hashed
+      const user_id_obj = new Types.ObjectId(user_id);
+      const device_fingerprint = await this.deviceFingerprintModel.findOne({
+        $and: [
+          { user_id: user_id_obj },
+          { fingerprint_hashed: fingerprint_hashed },
+          { is_trusted: false },
+        ],
+      });
+      if (!device_fingerprint) {
+        return {
+          success: false,
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+        };
+      }
+      device_fingerprint.is_trusted = true;
+      await device_fingerprint.save();
+    }
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_TRUSTED,
+      data: device_fingerprint,
     };
   }
 }

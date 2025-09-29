@@ -90,7 +90,11 @@ import { WalletServiceGuard } from './common/guards/service.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './common/guards/auth.guard';
 import { InitiateForgotPasswordDto } from 'apps/api-gateway/src/modules/auth/dto/password.dto';
-import { VerifyOtpDto, LoginVerifyOtpDto } from './dto/otp.dto';
+import {
+  VerifyOtpDto,
+  LoginVerifyOtpDto,
+  FingerprintTrustVerifyOtpDto,
+} from './dto/otp.dto';
 
 /**
  * Authentication Controller
@@ -571,5 +575,19 @@ export class AuthController {
         otp: dto.otp,
       });
     return login_verify_otp_response;
+  }
+
+  @Post('2fa/fingerprint-trust')
+  @Public()
+  async fingerprintTrustVerifyOtp(
+    @Body() dto: FingerprintTrustVerifyOtpDto,
+  ): Promise<Response> {
+    const fingerprint_trust_verify_otp_response =
+      await this.twoFactorAuthService.fingerprintTrustVerifyOtp({
+        verify_device_fingerprint_session_token:
+          dto.verify_device_fingerprint_session_token,
+        otp: dto.otp,
+      });
+    return fingerprint_trust_verify_otp_response;
   }
 }

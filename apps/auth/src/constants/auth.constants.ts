@@ -80,6 +80,7 @@ export const AUTH_CONSTANTS = {
       LOGIN_ATTEMPTS: 'login_attempts',
       WALLET_PASS_TOKEN: 'wallet_pass_token',
       LOGIN_SESSION: 'login_session',
+      VERIFY_DEVICE_FINGERPRINT_SESSION: 'verify_device_fingerprint_session',
     },
   },
 

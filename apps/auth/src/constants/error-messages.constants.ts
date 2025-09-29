@@ -108,6 +108,8 @@ export const MESSAGES = {
     SESSION_REVOKING_ERROR: 'Error revoking session',
     WALLET_SESSION_CREATION_ERROR: 'Error creating wallet session',
     LOGIN_SESSION_NOT_FOUND: 'Cannot found current login session',
+    VERIFY_DEVICE_FINGERPRINT_SESSION_NOT_FOUND:
+      'Cannot found current verify device fingerprint session',
   },
 
   // Password Errors
@@ -256,6 +258,7 @@ export const MESSAGES = {
     USER_FOUND: 'User found',
     DEVICE_FINGERPRINT_FETCHED: 'Device fingerprint fetched',
     DEVICE_FINGERPRINT_REVOKED: 'Device fingerprint revoked',
+    DEVICE_FINGERPRINT_TRUSTED: 'Device fingerprint trusted',
     WALLET_SESSION_CREATED_WITH_NEW_DEVICE_FINGERPRINT:
       'Wallet session created with new device fingerprint',
     WALLET_SESSION_CREATED: 'Wallet session created',
