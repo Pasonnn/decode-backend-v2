@@ -107,6 +107,7 @@ export const MESSAGES = {
     SESSION_VALIDATION_ERROR: 'Error validating session',
     SESSION_REVOKING_ERROR: 'Error revoking session',
     WALLET_SESSION_CREATION_ERROR: 'Error creating wallet session',
+    LOGIN_SESSION_NOT_FOUND: 'Cannot found current login session',
   },
 
   // Password Errors
@@ -167,6 +168,11 @@ export const MESSAGES = {
     OTP_ALREADY_SETUP: 'OTP already setup',
     OTP_FETCH_FAILED: 'Failed to fetch OTP',
     OTP_NOT_FOUND: 'OTP not found',
+    OTP_INVALID: 'Invalid OTP code',
+    OTP_VERIFY_FAILED: 'Failed to verify OTP',
+    OTP_EXPIRED: 'OTP code has expired',
+    OTP_ALREADY_USED: 'OTP code has already been used',
+    OTP_TOO_MANY_ATTEMPTS: 'Too many OTP verification attempts',
   },
 
   // Validation Errors
@@ -255,5 +261,9 @@ export const MESSAGES = {
     WALLET_SESSION_CREATED: 'Wallet session created',
     OTP_FETCHED: 'OTP fetched',
     OTP_SETUP_SUCCESS: 'OTP setup successful',
+    OTP_VERIFIED: 'OTP verified successfully',
+    OTP_ENABLED: 'OTP enabled successfully',
+    OTP_DISABLED: 'OTP disabled successfully',
+    OTP_VERIFY: 'Please verify OTP to continue',
   },
 };

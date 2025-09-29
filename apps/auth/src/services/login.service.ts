@@ -33,20 +33,26 @@
 
 // Core NestJS modules for dependency injection and HTTP status codes
 import { Injectable, Logger, HttpStatus } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 
 // Interfaces Import
 import { Response } from '../interfaces/response.interface';
 
 // Infrastructure Import
 import { UserServiceClient } from '../infrastructure/external-services/auth-service.client';
+import { RedisInfrastructure } from '../infrastructure/redis.infrastructure';
 
 // Services Import
 import { SessionService } from './session.service';
 import { PasswordService } from './password.service';
 import { DeviceFingerprintService } from './device-fingerprint.service';
+import { TwoFactorAuthService } from './two-factor-auth.service';
 
 // Constants Import
 import { MESSAGES } from '../constants/error-messages.constants';
+import { AUTH_CONSTANTS } from '../constants/auth.constants';
+import { UserDoc } from '../interfaces/user-doc.interface';
+import { DeviceFingerprintDoc } from '../interfaces/device-fingerprint-doc.interface';
 
 /**
  * User Login Service
@@ -84,6 +90,8 @@ export class LoginService {
     private readonly passwordService: PasswordService,
     private readonly deviceFingerprintService: DeviceFingerprintService,
     private readonly userServiceClient: UserServiceClient,
+    private readonly twoFactorAuthService: TwoFactorAuthService,
+    private readonly redisInfrastructure: RedisInfrastructure,
   ) {
     this.logger = new Logger(LoginService.name);
   }
@@ -115,7 +123,7 @@ export class LoginService {
       if (!checkPasswordResponse.success) {
         return checkPasswordResponse;
       }
-      const checkDeviceFingerprintResponse =
+      const checkDeviceFingerprintResponse: Response<DeviceFingerprintDoc> =
         await this.deviceFingerprintService.checkDeviceFingerprint({
           user_id: user._id,
           fingerprint_hashed,
@@ -125,72 +133,56 @@ export class LoginService {
         !checkDeviceFingerprintResponse.data
       ) {
         // Device fingerprint not trusted
-        this.logger.log(
-          `Device fingerprint not trusted for ${email_or_username}`,
-        );
-        const createDeviceFingerprintResponse =
-          await this.deviceFingerprintService.createDeviceFingerprint({
+        return this.untrustFingerprintLogin({
+          email_or_username,
+          user,
+          fingerprint_hashed,
+          browser,
+          device,
+        });
+      } else {
+        // Device fingerprint trusted
+        const deviceFingerprintData = checkDeviceFingerprintResponse.data;
+
+        // Check if OTP is enable
+        const loginCheckOtpEnableResponse =
+          await this.twoFactorAuthService.loginCheckOtpEnable({
+            user_id: user._id.toString(),
+          });
+        if (loginCheckOtpEnableResponse.success) {
+          const login_session_token = uuidv4().slice(
+            0,
+            AUTH_CONSTANTS.LOGIN_SESSION.TOKEN_LENGTH,
+          );
+          const login_session_key = `${AUTH_CONSTANTS.REDIS.KEYS.LOGIN_SESSION}:${login_session_token}`;
+          const login_session_value = JSON.stringify({
             user_id: user._id,
-            fingerprint_hashed,
+            device_fingerprint_id: deviceFingerprintData._id.toString(),
             browser,
             device,
           });
-        if (!createDeviceFingerprintResponse.success) {
-          this.logger.error(
-            `Cannot create device fingerprint for ${email_or_username}`,
+          await this.redisInfrastructure.set(
+            login_session_key,
+            login_session_value,
+            AUTH_CONSTANTS.REDIS.LOGIN_SESSION_EXPIRES_IN,
           );
-          return createDeviceFingerprintResponse;
-        }
-        const sendDeviceFingerprintEmailVerificationResponse =
-          await this.deviceFingerprintService.sendDeviceFingerprintEmailVerification(
-            {
-              user_id: user._id,
-              fingerprint_hashed,
+          // Return the login session key
+          return {
+            success: true,
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: MESSAGES.SUCCESS.OTP_VERIFY,
+            data: {
+              login_session_token: login_session_token,
             },
-          );
-        if (!sendDeviceFingerprintEmailVerificationResponse.success) {
-          this.logger.error(
-            `Cannot send device fingerprint email verification for ${email_or_username}`,
-          );
-          return sendDeviceFingerprintEmailVerificationResponse;
+          };
         }
-        this.logger.log(
-          `Device fingerprint email verification sent for ${email_or_username}`,
-        );
-        return {
-          success: true,
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: MESSAGES.AUTH.DEVICE_FINGERPRINT_NOT_TRUSTED,
-        };
-      } else {
-        // Device fingerprint trusted
-        this.logger.log(`Device fingerprint trusted for ${email_or_username}`);
-        const createSessionResponse = await this.sessionService.createSession({
-          user_id: user._id,
-          device_fingerprint_id: checkDeviceFingerprintResponse.data._id,
-          app: 'decode',
+
+        // Login
+        return this.trustFingerprintLogin({
+          email_or_username,
+          user,
+          checkDeviceFingerprintResponse: deviceFingerprintData,
         });
-        if (!createSessionResponse.success || !createSessionResponse.data) {
-          this.logger.error(`Cannot create session for ${email_or_username}`);
-          return createSessionResponse;
-        }
-        this.logger.log(`Session created for ${email_or_username}`);
-        const updateUserLastLoginResponse = await this.updateUserLastLogin({
-          user_id: user._id,
-        });
-        if (!updateUserLastLoginResponse.success) {
-          this.logger.error(
-            `Cannot update user last login for ${email_or_username}`,
-          );
-          return updateUserLastLoginResponse;
-        }
-        this.logger.log(`User last login updated for ${email_or_username}`);
-        return {
-          success: true,
-          statusCode: HttpStatus.OK,
-          message: MESSAGES.SUCCESS.LOGIN_SUCCESSFUL,
-          data: createSessionResponse.data,
-        };
       }
     } catch (error) {
       this.logger.error(`Error logging in for ${email_or_username}`, error);
@@ -221,6 +213,87 @@ export class LoginService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USER_UPDATED,
+    };
+  }
+
+  private async untrustFingerprintLogin(input: {
+    email_or_username: string;
+    user: UserDoc;
+    fingerprint_hashed: string;
+    browser: string;
+    device: string;
+  }): Promise<Response> {
+    const { email_or_username, user, fingerprint_hashed, browser, device } =
+      input;
+    this.logger.log(`Device fingerprint not trusted for ${email_or_username}`);
+    const createDeviceFingerprintResponse =
+      await this.deviceFingerprintService.createDeviceFingerprint({
+        user_id: user._id,
+        fingerprint_hashed,
+        browser,
+        device,
+      });
+    if (!createDeviceFingerprintResponse.success) {
+      this.logger.error(
+        `Cannot create device fingerprint for ${email_or_username}`,
+      );
+      return createDeviceFingerprintResponse;
+    }
+    const sendDeviceFingerprintEmailVerificationResponse =
+      await this.deviceFingerprintService.sendDeviceFingerprintEmailVerification(
+        {
+          user_id: user._id,
+          fingerprint_hashed,
+        },
+      );
+    if (!sendDeviceFingerprintEmailVerificationResponse.success) {
+      this.logger.error(
+        `Cannot send device fingerprint email verification for ${email_or_username}`,
+      );
+      return sendDeviceFingerprintEmailVerificationResponse;
+    }
+    this.logger.log(
+      `Device fingerprint email verification sent for ${email_or_username}`,
+    );
+    return {
+      success: true,
+      statusCode: HttpStatus.BAD_REQUEST,
+      message: MESSAGES.AUTH.DEVICE_FINGERPRINT_NOT_TRUSTED,
+    };
+  }
+
+  private async trustFingerprintLogin(input: {
+    email_or_username: string;
+    user: UserDoc;
+    checkDeviceFingerprintResponse: DeviceFingerprintDoc;
+  }): Promise<Response> {
+    const { email_or_username, user, checkDeviceFingerprintResponse } = input;
+    this.logger.log(`Device fingerprint trusted for ${email_or_username}`);
+    const createSessionResponse = await this.sessionService.createSession({
+      user_id: user._id,
+      device_fingerprint_id: checkDeviceFingerprintResponse._id,
+      app: 'decode',
+    });
+    if (!createSessionResponse.success || !createSessionResponse.data) {
+      this.logger.error(`Cannot create session for ${email_or_username}`);
+      return createSessionResponse;
+    }
+    this.logger.log(`Session created for ${email_or_username}`);
+    const updateUserLastLoginResponse = await this.updateUserLastLogin({
+      user_id: user._id,
+    });
+    if (!updateUserLastLoginResponse.success) {
+      this.logger.error(
+        `Cannot update user last login for ${email_or_username}`,
+      );
+      return updateUserLastLoginResponse;
+    }
+    this.logger.log(`User last login updated for ${email_or_username}`);
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      message: MESSAGES.SUCCESS.LOGIN_SUCCESSFUL,
+      data: createSessionResponse.data,
     };
   }
 }

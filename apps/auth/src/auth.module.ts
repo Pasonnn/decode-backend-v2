@@ -55,6 +55,7 @@ import { PasswordService } from './services/password.service';
 import { InfoService } from './services/info.service';
 import { DeviceFingerprintService } from './services/device-fingerprint.service';
 import { SsoService } from './services/sso.service';
+import { TwoFactorAuthService } from './services/two-factor-auth.service';
 
 // Strategies and Infrastructure Import
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -69,6 +70,7 @@ import { WalletServiceGuard } from './common/guards/service.guard';
 
 // Utils Import
 import { PasswordUtils } from './utils/password.utils';
+import { CryptoUtils } from './utils/crypto.utils';
 
 // Schemas Import
 import { Session, SessionSchema } from './schemas/session.schema';
@@ -76,10 +78,12 @@ import {
   DeviceFingerprint,
   DeviceFingerprintSchema,
 } from './schemas/device-fingerprint.schema';
+import { Otp, OtpSchema } from './schemas/otp';
 
 // Config Import
 import authConfig from './config/auth.config';
 import jwtConfig from './config/jwt.config';
+import otpConfig from './config/otp.config';
 
 /**
  * Authentication Module
@@ -118,6 +122,7 @@ import jwtConfig from './config/jwt.config';
     }),
     ConfigModule.forFeature(authConfig), // Load authentication-specific configuration
     ConfigModule.forFeature(jwtConfig), // Load JWT-specific configuration
+    ConfigModule.forFeature(otpConfig), // Load OTP-specific configuration
     HttpModule,
     // Passport module for authentication strategies (JWT, Session-based)
     PassportModule,
@@ -137,6 +142,7 @@ import jwtConfig from './config/jwt.config';
     MongooseModule.forFeature([
       { name: Session.name, schema: SessionSchema }, // User sessions and tokens
       { name: DeviceFingerprint.name, schema: DeviceFingerprintSchema }, // Device tracking
+      { name: Otp.name, schema: OtpSchema }, // OTP secrets and 2FA configuration
     ]),
 
     // JWT module configuration for access token generation and validation
@@ -237,6 +243,7 @@ import jwtConfig from './config/jwt.config';
     InfoService, // User information retrieval and management
     DeviceFingerprintService, // Device tracking and verification
     SsoService, // Single Sign-On token management
+    TwoFactorAuthService, // Two-Factor Authentication and OTP management
 
     // Authentication strategies for different token types
     JwtStrategy, // JWT access token validation strategy
@@ -253,6 +260,7 @@ import jwtConfig from './config/jwt.config';
 
     // Utility services for common operations
     PasswordUtils, // Password hashing, validation, and security utilities
+    CryptoUtils, // Cryptographic utilities for encryption and security
   ],
 
   // Services exported for use by other modules in the application

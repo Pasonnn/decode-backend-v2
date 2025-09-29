@@ -82,6 +82,7 @@ import { PasswordService } from './services/password.service';
 import { InfoService } from './services/info.service';
 import { DeviceFingerprintService } from './services/device-fingerprint.service';
 import { SsoService } from './services/sso.service';
+import { TwoFactorAuthService } from './services/two-factor-auth.service';
 
 // Guards Import
 import { AuthGuard, Public } from './common/guards/auth.guard';
@@ -89,6 +90,7 @@ import { WalletServiceGuard } from './common/guards/service.guard';
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from './common/guards/auth.guard';
 import { InitiateForgotPasswordDto } from 'apps/api-gateway/src/modules/auth/dto/password.dto';
+import { VerifyOtpDto, LoginVerifyOtpDto } from './dto/otp.dto';
 
 /**
  * Authentication Controller
@@ -126,6 +128,7 @@ export class AuthController {
     private readonly infoService: InfoService,
     private readonly deviceFingerprintService: DeviceFingerprintService,
     private readonly ssoService: SsoService,
+    private readonly twoFactorAuthService: TwoFactorAuthService,
   ) {}
 
   /**
@@ -506,5 +509,67 @@ export class AuthController {
     const exist_user_by_email_or_username_response =
       await this.infoService.existUserByEmailOrUsername(dto);
     return exist_user_by_email_or_username_response;
+  }
+
+  // ==================== Two-Factor Authentication (2FA) Endpoints ====================
+
+  /**
+   * Sets up Two-Factor Authentication (2FA) for a user
+   * Generates OTP secret and QR code for authenticator app setup
+   * @param dto - User ID for OTP setup {user_id: string}
+   * @returns Response containing OTP secret and QR code URL
+   */
+  @Post('2fa/setup')
+  @UseGuards(AuthGuard)
+  async setupOtp(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+    const setup_otp_response = await this.twoFactorAuthService.setUpOtp({
+      user_id: user.userId,
+    });
+    return setup_otp_response;
+  }
+
+  /**
+   * Enables Two-Factor Authentication for a user
+   * Activates previously setup OTP after successful verification
+   * @param dto - User ID for OTP enablement {user_id: string}
+   * @returns Response confirming OTP enablement
+   */
+  @Post('2fa/enable')
+  @UseGuards(AuthGuard)
+  async enableOtp(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: VerifyOtpDto,
+  ): Promise<Response> {
+    const enable_otp_response = await this.twoFactorAuthService.enableOtp({
+      user_id: user.userId,
+      otp: dto.otp,
+    });
+    return enable_otp_response;
+  }
+
+  /**
+   * Disables Two-Factor Authentication for a user
+   * Deactivates OTP for the specified user
+   * @param dto - User ID for OTP disablement {user_id: string}
+   * @returns Response confirming OTP disablement
+   */
+  @Post('2fa/disable')
+  @UseGuards(AuthGuard)
+  async disableOtp(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+    const disable_otp_response = await this.twoFactorAuthService.disableOtp({
+      user_id: user.userId,
+    });
+    return disable_otp_response;
+  }
+
+  @Post('2fa/login')
+  @Public()
+  async loginVerifyOtp(@Body() dto: LoginVerifyOtpDto): Promise<Response> {
+    const login_verify_otp_response =
+      await this.twoFactorAuthService.loginVerifyOtp({
+        login_session_token: dto.login_session_token,
+        otp: dto.otp,
+      });
+    return login_verify_otp_response;
   }
 }
