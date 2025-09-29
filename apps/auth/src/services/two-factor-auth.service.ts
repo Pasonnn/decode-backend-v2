@@ -4,6 +4,14 @@ import { Model, Types } from 'mongoose';
 import * as speakeasy from 'speakeasy';
 // Schemas
 import { Otp } from '../schemas/otp';
+
+// Speakeasy types
+interface SpeakeasySecret {
+  ascii: string;
+  hex: string;
+  base32: string;
+  otpauth_url?: string;
+}
 // Config and Constants
 import { ConfigService } from '@nestjs/config';
 import { MESSAGES } from '../constants/error-messages.constants';
@@ -33,18 +41,46 @@ export class TwoFactorAuthService {
           data: findUserOtpResponse.data as IOtpDoc,
         };
       }
-      // Generate OTP
-      const generateOtpSecretResponse = await this.generateOtpSecret({
-        user_id,
-      });
-      if (!generateOtpSecretResponse) {
+
+      // Generate OTP secret
+      const otpSecret = await this.generateOtpSecret({ user_id });
+      if (!otpSecret) {
         return {
           success: false,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: MESSAGES.OTP.OTP_SECRET_GENERATION_FAILED,
         };
       }
-      // Generate QR Code
+
+      // Generate QR code URL for Google Authenticator
+      const qrCodeUrl = (speakeasy as any).otpauthURL({
+        secret: otpSecret,
+        label: 'Decode',
+        issuer: 'Decode Platform',
+      }) as string;
+
+      // Get the created OTP document
+      const createdOtp = await this.otpModel.findOne({
+        user_id: new Types.ObjectId(user_id),
+      });
+
+      if (!createdOtp) {
+        return {
+          success: false,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: MESSAGES.OTP.OTP_FETCH_FAILED,
+        };
+      }
+
+      return {
+        success: true,
+        statusCode: HttpStatus.CREATED,
+        message: MESSAGES.SUCCESS.OTP_SETUP_SUCCESS,
+        data: {
+          ...createdOtp.toObject(),
+          qr_code_url: qrCodeUrl,
+        } as unknown as IOtpDoc & { qr_code_url: string },
+      };
     } catch (error) {
       this.logger.error(`Error setting up OTP for user ${user_id}: ${error}`);
       return {
@@ -63,14 +99,24 @@ export class TwoFactorAuthService {
       if (existingOtp) {
         return existingOtp.otp_secret;
       }
-      const otpSecret = speakeasy.generateSecret({
-          name: 'decode',
-          issuer: 'decode-auth-service',
-          length: 32,
-          encoding: 'base32',
-          alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
-      }));
-      return otpSecret.otpauth_url;
+
+      // Generate OTP secret using speakeasy
+      const otpSecret = (speakeasy as any).generateSecret({
+        name: 'Decode',
+        issuer: 'Decode Platform',
+        length: 32,
+      }) as SpeakeasySecret;
+
+      // Save the OTP secret to database
+      const newOtp = new this.otpModel({
+        user_id: new Types.ObjectId(user_id),
+        otp_secret: otpSecret.base32, // Use base32 format for TOTP
+        otp_enable: false, // Initially disabled until verified
+      });
+
+      await newOtp.save();
+
+      return otpSecret.base32;
     } catch (error) {
       this.logger.error(
         `Error generating OTP secret for user ${user_id}: ${error}`,
