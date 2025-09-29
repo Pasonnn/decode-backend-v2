@@ -50,6 +50,11 @@ import {
   InfoByEmailOrUsernameDto,
 } from './dto/info.dto';
 import { RevokeDeviceFingerprintDto } from './dto/device-fingerprint.dto';
+import {
+  VerifyOtpDto,
+  LoginVerifyOtpDto,
+  FingerprintTrustVerifyOtpDto,
+} from './dto/2fa.dto';
 // Interfaces Import
 import { Response } from '../../interfaces/response.interface';
 
@@ -92,6 +97,9 @@ import { AUTH_CONSTANTS } from 'apps/auth/src/constants/auth.constants';
   InfoByUserIdDto,
   InfoByEmailOrUsernameDto,
   RevokeDeviceFingerprintDto,
+  VerifyOtpDto,
+  LoginVerifyOtpDto,
+  FingerprintTrustVerifyOtpDto,
 )
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -1016,6 +1024,267 @@ export class AuthController {
     return this.authService.getUserInfoByEmailOrUsername(
       dto.email_or_username,
       authorization,
+    );
+  }
+
+  // Two-Factor Authentication (2FA) Endpoints
+
+  @ApiOperation({
+    summary: 'Setup Two-Factor Authentication',
+    description:
+      'Setup Two-Factor Authentication (2FA) for the authenticated user. Generates OTP secret and QR code for authenticator app setup.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '2FA setup successful',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: '2FA setup successful' },
+        data: {
+          type: 'object',
+          properties: {
+            otp_secret: { type: 'string', example: 'JBSWY3DPEHPK3PXP' },
+            qr_code_url: {
+              type: 'string',
+              example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiBearerAuth('JWT-auth')
+  @Post('2fa/setup')
+  @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
+  @HttpCode(HttpStatus.OK)
+  async setupOtp(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.setupOtp(authorization);
+  }
+
+  @ApiOperation({
+    summary: 'Enable Two-Factor Authentication',
+    description:
+      'Enable Two-Factor Authentication (2FA) for the authenticated user. Activates previously setup OTP after successful verification.',
+  })
+  @ApiBody({
+    type: VerifyOtpDto,
+    description: 'OTP verification code',
+    examples: {
+      example1: {
+        summary: 'Enable 2FA with OTP',
+        value: {
+          otp: '123456',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: '2FA enabled successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: '2FA enabled successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            enabled: { type: 'boolean', example: true },
+            enabled_at: { type: 'string', example: '2024-01-01T00:00:00Z' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid OTP code',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiBearerAuth('JWT-auth')
+  @Post('2fa/enable')
+  @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
+  @HttpCode(HttpStatus.OK)
+  async enableOtp(
+    @Body() verifyOtpDto: VerifyOtpDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.enableOtp(verifyOtpDto.otp, authorization);
+  }
+
+  @ApiOperation({
+    summary: 'Disable Two-Factor Authentication',
+    description:
+      'Disable Two-Factor Authentication (2FA) for the authenticated user. Deactivates OTP for the specified user.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '2FA disabled successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: '2FA disabled successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            disabled: { type: 'boolean', example: true },
+            disabled_at: { type: 'string', example: '2024-01-01T00:00:00Z' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiBearerAuth('JWT-auth')
+  @Post('2fa/disable')
+  @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.strict()
+  @HttpCode(HttpStatus.OK)
+  async disableOtp(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.disableOtp(authorization);
+  }
+
+  @ApiOperation({
+    summary: 'Verify OTP during login',
+    description:
+      'Verify OTP code during the login process when 2FA is enabled for the user.',
+  })
+  @ApiBody({
+    type: LoginVerifyOtpDto,
+    description: 'Login OTP verification data',
+    examples: {
+      example1: {
+        summary: 'Verify OTP during login',
+        value: {
+          login_session_token: 'abc123',
+          otp: '123456',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP verification successful',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'OTP verification successful' },
+        data: {
+          type: 'object',
+          properties: {
+            access_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIs...',
+            },
+            refresh_token: {
+              type: 'string',
+              example: 'eyJhbGciOiJIUzI1NiIs...',
+            },
+            user: {
+              type: 'object',
+              properties: {
+                user_id: { type: 'string', example: 'user123' },
+                email: { type: 'string', example: 'user@example.com' },
+                username: { type: 'string', example: 'johndoe' },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid OTP code or session token',
+  })
+  @Post('2fa/login')
+  @Public()
+  @UserRateLimit.strict()
+  @HttpCode(HttpStatus.OK)
+  async loginVerifyOtp(
+    @Body() loginVerifyOtpDto: LoginVerifyOtpDto,
+  ): Promise<Response> {
+    return this.authService.loginVerifyOtp(loginVerifyOtpDto);
+  }
+
+  @ApiOperation({
+    summary: 'Verify OTP for device fingerprint trust',
+    description:
+      'Verify OTP code to trust a new device fingerprint when 2FA is enabled.',
+  })
+  @ApiBody({
+    type: FingerprintTrustVerifyOtpDto,
+    description: 'Device fingerprint trust OTP verification data',
+    examples: {
+      example1: {
+        summary: 'Verify OTP for device trust',
+        value: {
+          verify_device_fingerprint_session_token: 'def456',
+          otp: '123456',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Device fingerprint trust OTP verification successful',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'Device fingerprint trust OTP verification successful',
+        },
+        data: {
+          type: 'object',
+          properties: {
+            device_trusted: { type: 'boolean', example: true },
+            session_token: { type: 'string', example: 'session123' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid OTP code or session token',
+  })
+  @Post('2fa/fingerprint-trust')
+  @Public()
+  @UserRateLimit.strict()
+  @HttpCode(HttpStatus.OK)
+  async fingerprintTrustVerifyOtp(
+    @Body()
+    fingerprintTrustVerifyOtpDto: FingerprintTrustVerifyOtpDto,
+  ): Promise<Response> {
+    return this.authService.fingerprintTrustVerifyOtp(
+      fingerprintTrustVerifyOtpDto,
     );
   }
 

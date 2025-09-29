@@ -114,3 +114,28 @@ export interface RevokeDeviceFingerprintRequest {
   user_id: string;
   authorization: string;
 }
+
+// Two-Factor Authentication (2FA) Interfaces
+
+export interface SetupOtpRequest {
+  authorization: string;
+}
+
+export interface EnableOtpRequest {
+  otp: string;
+  authorization: string;
+}
+
+export interface DisableOtpRequest {
+  authorization: string;
+}
+
+export interface LoginVerifyOtpRequest {
+  login_session_token: string;
+  otp: string;
+}
+
+export interface FingerprintTrustVerifyOtpRequest {
+  verify_device_fingerprint_session_token: string;
+  otp: string;
+}

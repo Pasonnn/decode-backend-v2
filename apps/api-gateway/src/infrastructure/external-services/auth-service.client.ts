@@ -30,6 +30,11 @@ import {
   ExistUserByEmailOrUsernameRequest,
   GetDeviceFingerprintRequest,
   RevokeDeviceFingerprintRequest,
+  SetupOtpRequest,
+  EnableOtpRequest,
+  DisableOtpRequest,
+  LoginVerifyOtpRequest,
+  FingerprintTrustVerifyOtpRequest,
 } from '../../interfaces/auth-service.interface';
 
 @Injectable()
@@ -251,6 +256,44 @@ export class AuthServiceClient extends BaseHttpClient {
       },
       config,
     );
+  }
+
+  // Two-Factor Authentication (2FA) Endpoints
+  async setupOtp(data: SetupOtpRequest): Promise<Response> {
+    const config = {
+      headers: {
+        Authorization: data.authorization,
+      },
+    };
+    return this.post('/auth/2fa/setup', {}, config);
+  }
+
+  async enableOtp(data: EnableOtpRequest): Promise<Response> {
+    const config = {
+      headers: {
+        Authorization: data.authorization,
+      },
+    };
+    return this.post('/auth/2fa/enable', { otp: data.otp }, config);
+  }
+
+  async disableOtp(data: DisableOtpRequest): Promise<Response> {
+    const config = {
+      headers: {
+        Authorization: data.authorization,
+      },
+    };
+    return this.post('/auth/2fa/disable', {}, config);
+  }
+
+  async loginVerifyOtp(data: LoginVerifyOtpRequest): Promise<Response> {
+    return this.post('/auth/2fa/login', data);
+  }
+
+  async fingerprintTrustVerifyOtp(
+    data: FingerprintTrustVerifyOtpRequest,
+  ): Promise<Response> {
+    return this.post('/auth/2fa/fingerprint-trust', data);
   }
 
   // Legacy method for backward compatibility
