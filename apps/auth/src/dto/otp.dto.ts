@@ -37,3 +37,12 @@ export class LoginVerifyOtpDto extends VerifyOtpDto {
   @Length(6, 6, { message: 'Login session token must be exactly 6 digits' })
   login_session_token: string;
 }
+
+export class FingerprintTrustVerifyOtpDto extends VerifyOtpDto {
+  @IsString()
+  @IsNotEmpty()
+  @Length(6, 6, {
+    message: 'Verify device fingerprint session token must be exactly 6 digits',
+  })
+  verify_device_fingerprint_session_token: string;
+}

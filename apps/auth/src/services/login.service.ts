@@ -33,7 +33,6 @@
 
 // Core NestJS modules for dependency injection and HTTP status codes
 import { Injectable, Logger, HttpStatus } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
 
 // Interfaces Import
 import { Response } from '../interfaces/response.interface';
@@ -50,7 +49,6 @@ import { TwoFactorAuthService } from './two-factor-auth.service';
 
 // Constants Import
 import { MESSAGES } from '../constants/error-messages.constants';
-import { AUTH_CONSTANTS } from '../constants/auth.constants';
 import { UserDoc } from '../interfaces/user-doc.interface';
 import { DeviceFingerprintDoc } from '../interfaces/device-fingerprint-doc.interface';
 
@@ -107,6 +105,7 @@ export class LoginService {
     const { email_or_username, password, fingerprint_hashed, browser, device } =
       input;
     try {
+      // Get user info
       this.logger.log(`Login request received for ${email_or_username}`);
       const getUserInfoResponse =
         await this.userServiceClient.getInfoWithPasswordByUserEmailOrUsername({
@@ -116,6 +115,7 @@ export class LoginService {
         return getUserInfoResponse;
       }
       const user = getUserInfoResponse.data;
+      // Check password
       const checkPasswordResponse = this.passwordService.checkPassword(
         password,
         user.password_hashed || '',
@@ -123,6 +123,7 @@ export class LoginService {
       if (!checkPasswordResponse.success) {
         return checkPasswordResponse;
       }
+      // Check device fingerprint
       const checkDeviceFingerprintResponse: Response<DeviceFingerprintDoc> =
         await this.deviceFingerprintService.checkDeviceFingerprint({
           user_id: user._id,
@@ -132,7 +133,7 @@ export class LoginService {
         !checkDeviceFingerprintResponse.success ||
         !checkDeviceFingerprintResponse.data
       ) {
-        // Device fingerprint not trusted
+        // Device fingerprint not trusted, create untrusted device fingerprint
         return this.untrustFingerprintLogin({
           email_or_username,
           user,
@@ -141,10 +142,10 @@ export class LoginService {
           device,
         });
       } else {
-        // Device fingerprint trusted
+        // Device fingerprint trusted, check if OTP is enabled
         const deviceFingerprintData = checkDeviceFingerprintResponse.data;
 
-        // Check if OTP is enable
+        // Check if OTP is enabled, if yes, create OTP login session
         const checkAndInitOtpLoginSessionResponse =
           await this.twoFactorAuthService.checkAndInitOtpLoginSession({
             user_id: user._id.toString(),
@@ -155,7 +156,7 @@ export class LoginService {
         if (checkAndInitOtpLoginSessionResponse.success) {
           return checkAndInitOtpLoginSessionResponse;
         }
-        // Login
+        // Login with trusted device fingerprint
         return this.trustFingerprintLogin({
           email_or_username,
           user,
@@ -204,6 +205,7 @@ export class LoginService {
     const { email_or_username, user, fingerprint_hashed, browser, device } =
       input;
     this.logger.log(`Device fingerprint not trusted for ${email_or_username}`);
+    // Create untrusted device fingerprint
     const createDeviceFingerprintResponse =
       await this.deviceFingerprintService.createDeviceFingerprint({
         user_id: user._id,
@@ -217,6 +219,20 @@ export class LoginService {
       );
       return createDeviceFingerprintResponse;
     }
+    // Find device fingerprint
+    const deviceFingerprintResponse =
+      await this.deviceFingerprintService.getDeviceFingerprint({
+        user_id: user._id,
+        fingerprint_hashed,
+      });
+    if (!deviceFingerprintResponse.success || !deviceFingerprintResponse.data) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+      };
+    }
+    // Send device fingerprint email verification
     const sendDeviceFingerprintEmailVerificationResponse =
       await this.deviceFingerprintService.sendDeviceFingerprintEmailVerification(
         {
@@ -233,10 +249,30 @@ export class LoginService {
     this.logger.log(
       `Device fingerprint email verification sent for ${email_or_username}`,
     );
+    // Check if OTP is enabled, if yes, create OTP device fingerprint authentication session
+    const checkAndInitOtpVerifyDeviceFingerprintResponse =
+      await this.twoFactorAuthService.checkAndInitOtpVerifyDeviceFingerprint({
+        user_id: user._id.toString(),
+        device_fingerprint_id: deviceFingerprintResponse.data._id.toString(),
+      });
+    if (checkAndInitOtpVerifyDeviceFingerprintResponse.success) {
+      return checkAndInitOtpVerifyDeviceFingerprintResponse;
+    }
+    console.log(
+      'checkAndInitOtpVerifyDeviceFingerprintResponse',
+      checkAndInitOtpVerifyDeviceFingerprintResponse,
+    );
+    const verify_device_fingerprint_session_token =
+      checkAndInitOtpVerifyDeviceFingerprintResponse.data as string;
+    // Return untrusted device fingerprint login response
     return {
       success: true,
       statusCode: HttpStatus.BAD_REQUEST,
       message: MESSAGES.AUTH.DEVICE_FINGERPRINT_NOT_TRUSTED,
+      data: {
+        verify_device_fingerprint_session_token:
+          verify_device_fingerprint_session_token,
+      },
     };
   }
 
