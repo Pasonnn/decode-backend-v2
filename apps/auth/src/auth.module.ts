@@ -128,6 +128,7 @@ import jwtConfig from './config/jwt.config';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('MONGO_URI'), // MongoDB connection string from environment
+        dbName: config.get<string>('MONGO_DB_NAME'), // MongoDB database name
       }),
       inject: [ConfigService],
     }),

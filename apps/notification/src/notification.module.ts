@@ -125,6 +125,7 @@ import configuration from './config/configuration'; // Notification service conf
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('MONGO_URI'), // MongoDB connection string
+        dbName: configService.get<string>('MONGO_DB_NAME'), // MongoDB database name
       }),
       inject: [ConfigService],
     }),
