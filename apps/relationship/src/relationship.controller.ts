@@ -43,6 +43,7 @@ import { FollowerSnapshotService } from './services/follower-snapshot.service';
 // Guards and Decorators
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import { AuthGuard, Public } from './common/guards/auth.guard';
+import { OptionalAuthGuard } from './common/guards/optional-auth.guard';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 @ApiTags('Relationship Management')
@@ -62,7 +63,7 @@ export class RelationshipController {
   // ==================== USER ENDPOINTS ====================
 
   @Get('user/:user_id')
-  @Public()
+  @UseGuards(OptionalAuthGuard)
   async getUser(
     @Param() params: GetUserDto,
     @CurrentUser() user?: AuthenticatedUser,
