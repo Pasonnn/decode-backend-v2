@@ -254,5 +254,6 @@ export const MESSAGES = {
       'Wallet session created with new device fingerprint',
     WALLET_SESSION_CREATED: 'Wallet session created',
     OTP_FETCHED: 'OTP fetched',
+    OTP_SETUP_SUCCESS: 'OTP setup successful',
   },
 };
