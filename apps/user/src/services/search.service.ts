@@ -33,7 +33,7 @@ export class SearchService {
         .find({
           $or: [
             { username: { $regex: email_or_username, $options: 'i' } },
-            { email: { $regex: email_or_username, $options: 'i' } },
+            { display_name: { $regex: email_or_username, $options: 'i' } },
           ],
           is_active: true,
         })
@@ -41,6 +41,7 @@ export class SearchService {
         .limit(limit)
         .sort({ [sortBy]: sortOrder as 'asc' | 'desc' | 1 | -1 })
         .select({
+          email: 0,
           password_hashed: 0,
           updatedAt: 0,
           createdAt: 0,
