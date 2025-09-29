@@ -157,6 +157,18 @@ export const MESSAGES = {
     USER_INFO_FETCH_FAILED: 'Failed to fetch user information',
   },
 
+  OTP: {
+    OTP_NOT_ENABLED: 'OTP is not enabled for this user',
+    OTP_SETUP_FAILED: 'Failed to setup OTP',
+    OTP_SECRET_GENERATION_FAILED: 'Failed to generate OTP secret',
+    OTP_SECRET_ENCRYPTION_FAILED: 'Failed to encrypt OTP secret',
+    OTP_SECRET_DECRYPTION_FAILED: 'Failed to decrypt OTP secret',
+    OTP_SECRET_COMPARISON_FAILED: 'Failed to compare OTP secret',
+    OTP_ALREADY_SETUP: 'OTP already setup',
+    OTP_FETCH_FAILED: 'Failed to fetch OTP',
+    OTP_NOT_FOUND: 'OTP not found',
+  },
+
   // Validation Errors
   VALIDATION: {
     REQUIRED_FIELD: 'This field is required',
@@ -241,5 +253,6 @@ export const MESSAGES = {
     WALLET_SESSION_CREATED_WITH_NEW_DEVICE_FINGERPRINT:
       'Wallet session created with new device fingerprint',
     WALLET_SESSION_CREATED: 'Wallet session created',
+    OTP_FETCHED: 'OTP fetched',
   },
 };
