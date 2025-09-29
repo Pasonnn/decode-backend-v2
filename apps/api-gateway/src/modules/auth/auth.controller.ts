@@ -67,7 +67,6 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 // Constants Import
 import { AUTH_CONSTANTS } from 'apps/auth/src/constants/auth.constants';
-import { SessionSchema } from 'apps/auth/src/schemas/session.schema';
 
 @ApiTags('Authentication')
 @Controller('auth')
