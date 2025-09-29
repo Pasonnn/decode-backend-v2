@@ -20,6 +20,7 @@ export interface LoginRequest {
 
 export interface FingerprintEmailVerificationRequest {
   code: string;
+  app?: string;
 }
 
 export interface ResendDeviceFingerprintEmailVerificationRequest {

@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
@@ -73,6 +79,18 @@ export class FingerprintEmailVerificationDto {
   @MinLength(6)
   @MaxLength(6)
   code: string;
+
+  @ApiProperty({
+    description: 'App for security verification',
+    example: 'decode',
+    minLength: 1,
+    maxLength: 255,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  app?: string;
 }
 
 export class ResendDeviceFingerprintEmailVerificationDto {
