@@ -1,7 +1,15 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as speakeasy from 'speakeasy';
+import { v4 as uuidv4 } from 'uuid';
+
 // Schemas
 import { Otp } from '../schemas/otp';
 
@@ -28,6 +36,7 @@ export class TwoFactorAuthService {
     @InjectModel(Otp.name) private otpModel: Model<Otp>,
     private readonly configService: ConfigService,
     private readonly redisInfrastructure: RedisInfrastructure,
+    @Inject(forwardRef(() => SessionService))
     private readonly sessionService: SessionService,
   ) {
     this.logger = new Logger(TwoFactorAuthService.name);
@@ -360,13 +369,11 @@ export class TwoFactorAuthService {
         };
       }
       // Create session
-      console.log('Creating session', login_session_value);
       const createSessionResponse = await this.sessionService.createSession({
         user_id: login_session_value.user_id,
         device_fingerprint_id: login_session_value.device_fingerprint_id,
         app: 'decode',
       });
-      console.log('Create session response', createSessionResponse);
       if (!createSessionResponse.success || !createSessionResponse.data) {
         return createSessionResponse;
       }
@@ -384,6 +391,79 @@ export class TwoFactorAuthService {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: MESSAGES.OTP.OTP_VERIFY_FAILED,
+      };
+    }
+  }
+
+  async checkAndInitOtpLoginSession(input: {
+    user_id: string;
+    device_fingerprint_id: string;
+    browser: string;
+    device: string;
+  }): Promise<Response> {
+    const { user_id, device_fingerprint_id, browser, device } = input;
+    try {
+      // Check if OTP is enabled for the user
+      const loginCheckOtpEnableResponse = await this.loginCheckOtpEnable({
+        user_id,
+      });
+
+      if (loginCheckOtpEnableResponse.success) {
+        // OTP is enabled, create login session token
+        const login_session_token = uuidv4().slice(
+          0,
+          AUTH_CONSTANTS.LOGIN_SESSION.TOKEN_LENGTH,
+        );
+        const login_session_key = `${AUTH_CONSTANTS.REDIS.KEYS.LOGIN_SESSION}:${login_session_token}`;
+        const login_session_value = JSON.stringify({
+          user_id,
+          device_fingerprint_id,
+          browser,
+          device,
+        });
+
+        await this.redisInfrastructure.set(
+          login_session_key,
+          login_session_value,
+          AUTH_CONSTANTS.REDIS.LOGIN_SESSION_EXPIRES_IN,
+        );
+
+        // Return the login session token for OTP verification
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: MESSAGES.SUCCESS.OTP_VERIFY,
+          data: {
+            login_session_token: login_session_token,
+          },
+        };
+      } else {
+        // OTP is not enabled, proceed with normal session creation
+        const createSessionResponse = await this.sessionService.createSession({
+          user_id,
+          device_fingerprint_id,
+          app: 'decode',
+        });
+
+        if (!createSessionResponse.success || !createSessionResponse.data) {
+          return createSessionResponse;
+        }
+
+        return {
+          success: true,
+          statusCode: HttpStatus.CREATED,
+          message: MESSAGES.SUCCESS.SESSION_CREATED,
+          data: createSessionResponse.data,
+        };
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error checking and initializing OTP login session for user ${user_id}: ${error}`,
+      );
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.AUTH.LOGIN_ERROR,
       };
     }
   }

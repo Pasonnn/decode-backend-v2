@@ -25,6 +25,7 @@ import { UserServiceClient } from '../infrastructure/external-services/auth-serv
 // Services Import
 import { InfoService } from './info.service';
 import { SessionService } from './session.service';
+import { TwoFactorAuthService } from './two-factor-auth.service';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
@@ -44,6 +45,7 @@ export class DeviceFingerprintService {
     private readonly sessionService: SessionService,
     private readonly userServiceClient: UserServiceClient,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
+    private readonly twoFactorAuthService: TwoFactorAuthService,
   ) {
     this.logger = new Logger(DeviceFingerprintService.name);
   }
@@ -187,15 +189,21 @@ export class DeviceFingerprintService {
       ) {
         return validateDeviceFingerprintEmailVerificationResponse;
       }
-      console.log(
-        'Device fingerprint verification successful',
-        validateDeviceFingerprintEmailVerificationResponse.data,
-      );
+      const deviceFingerprintData =
+        validateDeviceFingerprintEmailVerificationResponse.data;
       this.logger.log(
         `Device fingerprint verification successful for ${email_verification_code}`,
       );
-      const deviceFingerprintData =
-        validateDeviceFingerprintEmailVerificationResponse.data;
+      const checkAndInitOtpLoginSessionResponse =
+        await this.twoFactorAuthService.checkAndInitOtpLoginSession({
+          user_id: deviceFingerprintData.user_id.toString(),
+          device_fingerprint_id: deviceFingerprintData._id.toString(),
+          browser: 'browser',
+          device: 'device',
+        });
+      if (checkAndInitOtpLoginSessionResponse.success) {
+        return checkAndInitOtpLoginSessionResponse;
+      }
       const createSessionResponse = await this.sessionService.createSession({
         user_id: deviceFingerprintData.user_id.toString(),
         device_fingerprint_id: deviceFingerprintData._id.toString(),

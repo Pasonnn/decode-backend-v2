@@ -145,38 +145,16 @@ export class LoginService {
         const deviceFingerprintData = checkDeviceFingerprintResponse.data;
 
         // Check if OTP is enable
-        const loginCheckOtpEnableResponse =
-          await this.twoFactorAuthService.loginCheckOtpEnable({
+        const checkAndInitOtpLoginSessionResponse =
+          await this.twoFactorAuthService.checkAndInitOtpLoginSession({
             user_id: user._id.toString(),
-          });
-        if (loginCheckOtpEnableResponse.success) {
-          const login_session_token = uuidv4().slice(
-            0,
-            AUTH_CONSTANTS.LOGIN_SESSION.TOKEN_LENGTH,
-          );
-          const login_session_key = `${AUTH_CONSTANTS.REDIS.KEYS.LOGIN_SESSION}:${login_session_token}`;
-          const login_session_value = JSON.stringify({
-            user_id: user._id,
             device_fingerprint_id: deviceFingerprintData._id.toString(),
             browser,
             device,
           });
-          await this.redisInfrastructure.set(
-            login_session_key,
-            login_session_value,
-            AUTH_CONSTANTS.REDIS.LOGIN_SESSION_EXPIRES_IN,
-          );
-          // Return the login session key
-          return {
-            success: true,
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: MESSAGES.SUCCESS.OTP_VERIFY,
-            data: {
-              login_session_token: login_session_token,
-            },
-          };
+        if (checkAndInitOtpLoginSessionResponse.success) {
+          return checkAndInitOtpLoginSessionResponse;
         }
-
         // Login
         return this.trustFingerprintLogin({
           email_or_username,
