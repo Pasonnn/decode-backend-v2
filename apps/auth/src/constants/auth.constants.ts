@@ -56,6 +56,11 @@ export const AUTH_CONSTANTS = {
     CLEANUP_INTERVAL: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
   },
 
+  // Login Session Configuration
+  LOGIN_SESSION: {
+    TOKEN_LENGTH: 6,
+  },
+
   // Redis Configuration
   REDIS: {
     // Timeouts in seconds
@@ -65,6 +70,7 @@ export const AUTH_CONSTANTS = {
     PASSWORD_RESET_EXPIRES_IN: 5 * 60, // 5 minutes
     CHANGE_PASSWORD_VERIFICATION_EXPIRES_IN: 5 * 60, // 5 minutes
     SSO_TOKEN_EXPIRES_IN: 60, // 1 minute
+    LOGIN_SESSION_EXPIRES_IN: 60 * 5, // 1 minute
     // Key prefixes
     KEYS: {
       REGISTER_INFO: 'register_info',
@@ -73,6 +79,7 @@ export const AUTH_CONSTANTS = {
       PASSWORD_RESET: 'change_password_verification_code',
       LOGIN_ATTEMPTS: 'login_attempts',
       WALLET_PASS_TOKEN: 'wallet_pass_token',
+      LOGIN_SESSION: 'login_session',
     },
   },
 
