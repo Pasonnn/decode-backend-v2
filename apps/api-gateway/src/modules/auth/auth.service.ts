@@ -8,6 +8,7 @@ import {
 } from './dto/login.dto';
 import { RegisterInfoDto, VerifyEmailDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LoginVerifyOtpDto, FingerprintTrustVerifyOtpDto } from './dto/2fa.dto';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -798,6 +799,152 @@ export class AuthService {
     } catch (error) {
       this.logger.error(
         `Failed to get user info by email or username: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  // Two-Factor Authentication (2FA) Methods
+
+  /**
+   * Setup Two-Factor Authentication for current user
+   */
+  async setupOtp(authorization: string): Promise<Response> {
+    try {
+      this.logger.log('Setting up OTP for current user');
+
+      const response = await this.authServiceClient.setupOtp({
+        authorization,
+      });
+
+      if (!response.success) {
+        this.logger.error(`Failed to setup OTP: ${response.message}`);
+      } else {
+        this.logger.log('Successfully setup OTP');
+      }
+
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to setup OTP: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Enable Two-Factor Authentication for current user
+   */
+  async enableOtp(otp: string, authorization: string): Promise<Response> {
+    try {
+      this.logger.log('Enabling OTP for current user');
+
+      const response = await this.authServiceClient.enableOtp({
+        otp,
+        authorization,
+      });
+
+      if (!response.success) {
+        this.logger.error(`Failed to enable OTP: ${response.message}`);
+      } else {
+        this.logger.log('Successfully enabled OTP');
+      }
+
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to enable OTP: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Disable Two-Factor Authentication for current user
+   */
+  async disableOtp(authorization: string): Promise<Response> {
+    try {
+      this.logger.log('Disabling OTP for current user');
+
+      const response = await this.authServiceClient.disableOtp({
+        authorization,
+      });
+
+      if (!response.success) {
+        this.logger.error(`Failed to disable OTP: ${response.message}`);
+      } else {
+        this.logger.log('Successfully disabled OTP');
+      }
+
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to disable OTP: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Verify OTP during login process
+   */
+  async loginVerifyOtp(
+    loginVerifyOtpDto: LoginVerifyOtpDto,
+  ): Promise<Response> {
+    try {
+      this.logger.log('Verifying OTP during login');
+
+      const response = await this.authServiceClient.loginVerifyOtp({
+        login_session_token: loginVerifyOtpDto.login_session_token,
+        otp: loginVerifyOtpDto.otp,
+      });
+
+      if (!response.success) {
+        this.logger.error(
+          `Failed to verify OTP during login: ${response.message}`,
+        );
+      } else {
+        this.logger.log('Successfully verified OTP during login');
+      }
+
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to verify OTP during login: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Verify OTP for device fingerprint trust
+   */
+  async fingerprintTrustVerifyOtp(
+    fingerprintTrustVerifyOtpDto: FingerprintTrustVerifyOtpDto,
+  ): Promise<Response> {
+    try {
+      this.logger.log('Verifying OTP for device fingerprint trust');
+
+      const response = await this.authServiceClient.fingerprintTrustVerifyOtp({
+        verify_device_fingerprint_session_token:
+          fingerprintTrustVerifyOtpDto.verify_device_fingerprint_session_token,
+        otp: fingerprintTrustVerifyOtpDto.otp,
+      });
+
+      if (!response.success) {
+        this.logger.error(
+          `Failed to verify OTP for device fingerprint trust: ${response.message}`,
+        );
+      } else {
+        this.logger.log(
+          'Successfully verified OTP for device fingerprint trust',
+        );
+      }
+
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to verify OTP for device fingerprint trust: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
