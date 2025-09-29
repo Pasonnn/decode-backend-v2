@@ -170,8 +170,9 @@ export class DeviceFingerprintService {
 
   async verifyDeviceFingerprintEmailVerification(input: {
     email_verification_code: string;
+    app: string;
   }): Promise<Response> {
-    const { email_verification_code } = input;
+    const { email_verification_code, app } = input;
     try {
       this.logger.log(
         `Verify device fingerprint email verification request received for ${email_verification_code}`,
@@ -186,13 +187,35 @@ export class DeviceFingerprintService {
       ) {
         return validateDeviceFingerprintEmailVerificationResponse;
       }
+      console.log(
+        'Device fingerprint verification successful',
+        validateDeviceFingerprintEmailVerificationResponse.data,
+      );
       this.logger.log(
         `Device fingerprint verification successful for ${email_verification_code}`,
       );
+      const deviceFingerprintData =
+        validateDeviceFingerprintEmailVerificationResponse.data;
+      const createSessionResponse = await this.sessionService.createSession({
+        user_id: deviceFingerprintData.user_id.toString(),
+        device_fingerprint_id: deviceFingerprintData._id.toString(),
+        app: app,
+      });
+      if (!createSessionResponse.success || !createSessionResponse.data) {
+        return createSessionResponse;
+      }
+      const updateUserLastLoginResponse =
+        await this.userServiceClient.updateUserLastLogin({
+          user_id: deviceFingerprintData.user_id.toString(),
+        });
+      if (!updateUserLastLoginResponse.success) {
+        return updateUserLastLoginResponse;
+      }
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
+        data: createSessionResponse.data,
       };
     } catch (error) {
       this.logger.error(
@@ -442,7 +465,7 @@ export class DeviceFingerprintService {
 
   async validateDeviceFingerprintEmailVerification(input: {
     email_verification_code: string;
-  }): Promise<Response> {
+  }): Promise<Response<DeviceFingerprintDoc>> {
     const { email_verification_code } = input;
     // Validate device fingerprint email verification
     const device_fingerprint_data = (await this.redisInfrastructure.get(
@@ -485,7 +508,7 @@ export class DeviceFingerprintService {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_VERIFIED,
-      data: device_fingerprint as unknown as DeviceFingerprintDoc,
+      data: device_fingerprint as DeviceFingerprintDoc,
     };
   }
 }

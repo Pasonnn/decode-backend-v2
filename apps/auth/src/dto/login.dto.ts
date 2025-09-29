@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsOptional,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 // Constants Import
 import { AUTH_CONSTANTS } from '../constants/auth.constants';
@@ -35,6 +41,11 @@ export class FingerprintEmailVerificationDto {
   @MinLength(AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH)
   @MaxLength(AUTH_CONSTANTS.EMAIL.VERIFICATION_CODE_LENGTH)
   code: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsOptional()
+  app?: string;
 }
 
 export class ResendDeviceFingerprintEmailVerificationDto {

@@ -208,6 +208,7 @@ export class AuthController {
       await this.deviceFingerprintService.verifyDeviceFingerprintEmailVerification(
         {
           email_verification_code: dto.code,
+          app: dto.app || 'decode',
         },
       );
     return verify_device_fingerprint_email_verification_response;
