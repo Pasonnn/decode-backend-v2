@@ -151,7 +151,6 @@ export class WalletController {
     return this.primaryService.getPrimaryWallet({ user_id: user.userId });
   }
 
-  @UseGuards(AuthGuard)
   @Get('primary/:user_id')
   async getPrimaryWalletByUserId(
     @Param('user_id') user_id: string,

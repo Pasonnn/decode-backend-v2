@@ -34,7 +34,7 @@ export class ProfileService {
       // Check if user exists
       const { user_id } = input;
       const user = await this.userModel.findOne(
-        { _id: user_id, is_active: true },
+        { _id: user_id },
         {
           password_hashed: 0,
           email: 0,
@@ -42,7 +42,7 @@ export class ProfileService {
           createdAt: 0,
         },
       );
-      if (!user) {
+      if (!user || !user.is_active) {
         return {
           success: false,
           statusCode: HttpStatus.NOT_FOUND,
