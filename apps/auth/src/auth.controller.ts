@@ -146,6 +146,16 @@ export class AuthController {
   }
 
   /**
+   * Health check endpoint for Docker health checks
+   * @returns Service status object
+   */
+  @Get('health')
+  @Public()
+  checkHealthDocker(): { status: string } {
+    return { status: 'ok' };
+  }
+
+  /**
    * Initiates user registration process by sending email verification
    * @param dto - Registration information including username, email, and password
    * @returns Response containing verification status and user details

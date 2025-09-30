@@ -1,0 +1,120 @@
+version: "3.8"
+
+services:
+  # ==================== DATABASE SERVICES (Development) ====================
+
+  # MongoDB - Primary database for user data, sessions, and documents
+  mongodb:
+    image: mongo:7.0
+    container_name: decode-mongodb-dev
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: decode
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_dev_data:/data/db
+    networks:
+      - decode-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis - Caching and session storage
+  redis:
+    image: redis:7.2-alpine
+    container_name: decode-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - decode-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Neo4j - Graph database for relationships
+  neo4j:
+    image: neo4j:5.15-community
+    container_name: decode-neo4j-dev
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/password
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+      NEO4J_dbms_security_procedures_allowlist: apoc.*
+    ports:
+      - "7474:7474" # HTTP
+      - "7687:7687" # Bolt
+    volumes:
+      - neo4j_dev_data:/data
+      - neo4j_dev_logs:/logs
+      - neo4j_dev_import:/var/lib/neo4j/import
+      - neo4j_dev_plugins:/plugins
+    networks:
+      - decode-network
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "password", "RETURN 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # RabbitMQ - Message queue for async communication
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: decode-rabbitmq-dev
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672" # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_dev_data:/var/lib/rabbitmq
+    networks:
+      - decode-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# ==================== VOLUMES ====================
+volumes:
+  mongodb_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  neo4j_dev_data:
+    driver: local
+  neo4j_dev_logs:
+    driver: local
+  neo4j_dev_import:
+    driver: local
+  neo4j_dev_plugins:
+    driver: local
+  rabbitmq_dev_data:
+    driver: local
+
+# ==================== NETWORKS ====================
+networks:
+  decode-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

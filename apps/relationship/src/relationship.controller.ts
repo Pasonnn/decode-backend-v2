@@ -7,6 +7,8 @@ import {
   Post,
   UseGuards,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Roles, UserRole } from './common/decorators/roles.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -59,6 +61,15 @@ export class RelationshipController {
     private readonly suggestService: SuggestService,
     private readonly followerSnapshotService: FollowerSnapshotService,
   ) {}
+
+  // ==================== HEALTH CHECK ====================
+
+  @Get('health')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  checkHealth(): { status: string } {
+    return { status: 'ok' };
+  }
 
   // ==================== USER ENDPOINTS ====================
 

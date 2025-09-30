@@ -8,6 +8,8 @@ import {
   Query,
   UseGuards,
   Patch,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProfileService } from './services/profile.service';
@@ -43,6 +45,7 @@ import {
 import { AuthGuard } from './common/guards/auth.guard';
 import { Roles, UserRole } from './common/decorators/roles.decorator';
 import { AuthServiceGuard } from './common/guards/service.guard';
+import { Public } from './common/decorators/public.decorator';
 
 // Interfaces
 import { Response } from './interfaces/response.interface';
@@ -65,6 +68,15 @@ export class UserController {
     private readonly servicesResponseService: ServicesResponseService,
     private readonly deactivateService: DeactivateService,
   ) {}
+
+  // ==================== HEALTH CHECK ====================
+
+  @Get('health')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  checkHealth(): { status: string } {
+    return { status: 'ok' };
+  }
 
   // ==================== PROFILE ENDPOINTS ====================
   @Get('profile/me')

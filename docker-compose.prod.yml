@@ -1,112 +1,12 @@
 version: "3.8"
 
 services:
-  # ==================== DATABASE SERVICES ====================
+  # ==================== MICROSERVICES ONLY ====================
+  # This configuration runs only the microservices
+  # External databases (MongoDB, Redis, Neo4j, RabbitMQ) are cloud-hosted
+  # Only API Gateway and Auth are exposed to external traffic
 
-  # MongoDB - Primary database for user data, sessions, and documents
-  mongodb:
-    image: mongo:7.0
-    container_name: decode-mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
-      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-decode}
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    networks:
-      - decode-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Redis - Caching and session storage
-  redis:
-    image: redis:7.2-alpine
-    container_name: decode-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - decode-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # Neo4j - Graph database for relationships
-  neo4j:
-    image: neo4j:5.15-community
-    container_name: decode-neo4j
-    restart: unless-stopped
-    environment:
-      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-password}
-      NEO4J_PLUGINS: '["apoc"]'
-      NEO4J_dbms_security_procedures_unrestricted: apoc.*
-      NEO4J_dbms_security_procedures_allowlist: apoc.*
-    ports:
-      - "7474:7474" # HTTP
-      - "7687:7687" # Bolt
-    volumes:
-      - neo4j_data:/data
-      - neo4j_logs:/logs
-      - neo4j_import:/var/lib/neo4j/import
-      - neo4j_plugins:/plugins
-    networks:
-      - decode-network
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "cypher-shell",
-          "-u",
-          "${NEO4J_USER:-neo4j}",
-          "-p",
-          "${NEO4J_PASSWORD:-password}",
-          "RETURN 1",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-  # RabbitMQ - Message queue for async communication
-  rabbitmq:
-    image: rabbitmq:3.12-management-alpine
-    container_name: decode-rabbitmq
-    restart: unless-stopped
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-password}
-      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
-    ports:
-      - "5672:5672" # AMQP
-      - "15672:15672" # Management UI
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - decode-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # ==================== MICROSERVICES ====================
-
-  # API Gateway - Main entry point
+  # API Gateway - Main entry point (EXPOSED)
   api-gateway:
     build:
       context: .
@@ -114,27 +14,20 @@ services:
       target: production
     container_name: decode-api-gateway
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       API_GATEWAY_PORT: 4000
       API_GATEWAY_HOST: 0.0.0.0
     ports:
-      - "4000:4000"
+      - "4000:4000" # Exposed to external traffic
     depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      auth:
-        condition: service_started
-      user:
-        condition: service_started
-      wallet:
-        condition: service_started
-      relationship:
-        condition: service_started
-      notification:
-        condition: service_started
+      - auth
+      - user
+      - wallet
+      - relationship
+      - notification
     networks:
       - decode-network
     healthcheck:
@@ -150,7 +43,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Auth Service
+  # Auth Service (EXPOSED)
   auth:
     build:
       context: .
@@ -158,19 +51,14 @@ services:
       target: production
     container_name: decode-auth
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       AUTH_PORT: 4001
       AUTH_HOST: 0.0.0.0
     ports:
-      - "4001:4001"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      - "4001:4001" # Exposed to external traffic
     networks:
       - decode-network
     healthcheck:
@@ -186,7 +74,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # User Service
+  # User Service (INTERNAL ONLY)
   user:
     build:
       context: .
@@ -194,19 +82,13 @@ services:
       target: production
     container_name: decode-user
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       USER_PORT: 4002
       USER_HOST: 0.0.0.0
-    ports:
-      - "4002:4002"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+    # No external port exposure - internal only
     networks:
       - decode-network
     healthcheck:
@@ -222,7 +104,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Email Worker Service
+  # Email Worker Service (INTERNAL ONLY)
   email-worker:
     build:
       context: .
@@ -230,15 +112,13 @@ services:
       target: production
     container_name: decode-email-worker
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       EMAIL_PORT: 4003
       EMAIL_HOST: 0.0.0.0
-    ports:
-      - "4003:4003"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+    # No external port exposure - internal only
     networks:
       - decode-network
     healthcheck:
@@ -254,7 +134,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Relationship Service
+  # Relationship Service (INTERNAL ONLY)
   relationship:
     build:
       context: .
@@ -262,21 +142,13 @@ services:
       target: production
     container_name: decode-relationship
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       RELATIONSHIP_PORT: 4004
       RELATIONSHIP_HOST: 0.0.0.0
-    ports:
-      - "4004:4004"
-    depends_on:
-      neo4j:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+    # No external port exposure - internal only
     networks:
       - decode-network
     healthcheck:
@@ -292,7 +164,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Wallet Service
+  # Wallet Service (INTERNAL ONLY)
   wallet:
     build:
       context: .
@@ -300,17 +172,13 @@ services:
       target: production
     container_name: decode-wallet
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       WALLET_PORT: 4005
       WALLET_HOST: 0.0.0.0
-    ports:
-      - "4005:4005"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    # No external port exposure - internal only
     networks:
       - decode-network
     healthcheck:
@@ -326,7 +194,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Notification Service
+  # Notification Service (INTERNAL ONLY)
   notification:
     build:
       context: .
@@ -334,19 +202,13 @@ services:
       target: production
     container_name: decode-notification
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       NOTIFICATION_PORT: 4006
       NOTIFICATION_HOST: 0.0.0.0
-    ports:
-      - "4006:4006"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+    # No external port exposure - internal only
     networks:
       - decode-network
     healthcheck:
@@ -362,7 +224,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Neo4j DB Sync Service
+  # Neo4j DB Sync Service (INTERNAL ONLY)
   neo4jdb-sync:
     build:
       context: .
@@ -370,19 +232,13 @@ services:
       target: production
     container_name: decode-neo4jdb-sync
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       NEO4JDB_SYNC_PORT: 4007
       NEO4JDB_SYNC_HOST: 0.0.0.0
-    ports:
-      - "4007:4007"
-    depends_on:
-      neo4j:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+    # No external port exposure - internal only
     networks:
       - decode-network
     healthcheck:
@@ -397,23 +253,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-# ==================== VOLUMES ====================
-volumes:
-  mongodb_data:
-    driver: local
-  redis_data:
-    driver: local
-  neo4j_data:
-    driver: local
-  neo4j_logs:
-    driver: local
-  neo4j_import:
-    driver: local
-  neo4j_plugins:
-    driver: local
-  rabbitmq_data:
-    driver: local
 
 # ==================== NETWORKS ====================
 networks:
