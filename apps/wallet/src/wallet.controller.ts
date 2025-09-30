@@ -7,6 +7,8 @@ import {
   Body,
   UseGuards,
   Param,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
@@ -42,6 +44,13 @@ export class WalletController {
     private readonly authService: AuthService,
     private readonly primaryService: PrimaryService,
   ) {}
+
+  @Get('health')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  checkHealth(): { status: string } {
+    return { status: 'ok' };
+  }
 
   @Public()
   @Post('auth/challenge')

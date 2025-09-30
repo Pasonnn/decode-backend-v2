@@ -499,9 +499,10 @@ export class DeviceFingerprintService {
       return trustDeviceFingerprintResponse;
     }
     // Delete email verification code from Redis
-    await this.redisInfrastructure.del(
-      `${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`,
-    );
+    // TODO: Uncomment this when we have a way to delete the email verification code from Redis
+    // await this.redisInfrastructure.del(
+    //   `${AUTH_CONSTANTS.REDIS.KEYS.FINGERPRINT_VERIFICATION}:${email_verification_code}`,
+    // );
     return {
       success: true,
       statusCode: HttpStatus.OK,
@@ -523,12 +524,6 @@ export class DeviceFingerprintService {
         message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
       };
     }
-    const device_fingerprint: DeviceFingerprintDoc = {
-      _id: '',
-      user_id: new Types.ObjectId(user_id),
-      fingerprint_hashed: '',
-      is_trusted: false,
-    };
     if (!fingerprint_hashed) {
       // Find device fingerprint in database with device_fingerprint_id
       const user_id_obj = new Types.ObjectId(user_id);
@@ -568,11 +563,25 @@ export class DeviceFingerprintService {
       device_fingerprint.is_trusted = true;
       await device_fingerprint.save();
     }
+    const device_fingerprint = await this.deviceFingerprintModel.findOne({
+      $and: [
+        { user_id: new Types.ObjectId(user_id) },
+        { fingerprint_hashed: fingerprint_hashed },
+        { is_trusted: true },
+      ],
+    });
+    if (!device_fingerprint) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.DEVICE_FINGERPRINT.NOT_FOUND,
+      };
+    }
     return {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.DEVICE_FINGERPRINT_TRUSTED,
-      data: device_fingerprint,
+      data: device_fingerprint as DeviceFingerprintDoc,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpStatus, HttpCode } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import type { UserNeo4jDoc } from './interfaces/user-neo4j-doc.interface';
 import type { Response } from './interfaces/response.interface';
@@ -11,6 +11,12 @@ export class Neo4jdbSyncController {
   constructor(
     private readonly rabbitMQInfrastructure: RabbitMQInfrastructure,
   ) {}
+
+  @Get('health')
+  @HttpCode(HttpStatus.OK)
+  checkHealth(): { status: string } {
+    return { status: 'ok' };
+  }
 
   @MessagePattern('create_user_request')
   async createUser(user: CreateUserDto): Promise<Response<UserNeo4jDoc>> {

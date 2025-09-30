@@ -508,7 +508,6 @@ export class TwoFactorAuthService {
           device_fingerprint_id:
             verify_device_fingerprint_session_value.device_fingerprint_id,
         });
-      console.log('devicefingerprint trust', trustDeviceFingerprintResponse);
       if (!trustDeviceFingerprintResponse.success) {
         return trustDeviceFingerprintResponse;
       }
