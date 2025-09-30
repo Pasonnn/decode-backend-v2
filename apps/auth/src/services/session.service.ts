@@ -157,7 +157,7 @@ export class SessionService {
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: MESSAGES.SUCCESS.SESSION_CREATED,
+        message: MESSAGES.SUCCESS.LOGIN_SUCCESSFUL,
         data: {
           ...session.toObject(),
           access_token,
