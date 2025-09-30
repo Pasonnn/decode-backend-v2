@@ -258,10 +258,6 @@ export class LoginService {
     if (checkAndInitOtpVerifyDeviceFingerprintResponse.success) {
       return checkAndInitOtpVerifyDeviceFingerprintResponse;
     }
-    console.log(
-      'checkAndInitOtpVerifyDeviceFingerprintResponse',
-      checkAndInitOtpVerifyDeviceFingerprintResponse,
-    );
     const verify_device_fingerprint_session_token =
       checkAndInitOtpVerifyDeviceFingerprintResponse.data as string;
     // Return untrusted device fingerprint login response
