@@ -101,6 +101,8 @@ services:
       NODE_ENV: production
       USER_PORT: 4002
       USER_HOST: 0.0.0.0
+      # Service communication URLs using Docker service names
+      AUTH_SERVICE_URL: http://auth:4001
     # No external port exposure - internal only
     networks:
       - decode-network
@@ -131,6 +133,8 @@ services:
       NODE_ENV: production
       EMAIL_PORT: 4003
       EMAIL_HOST: 0.0.0.0
+      # Service communication URLs using Docker service names
+      AUTH_SERVICE_URL: http://auth:4001
     # No external port exposure - internal only
     networks:
       - decode-network
@@ -161,6 +165,8 @@ services:
       NODE_ENV: production
       RELATIONSHIP_PORT: 4004
       RELATIONSHIP_HOST: 0.0.0.0
+      # Service communication URLs using Docker service names
+      AUTH_SERVICE_URL: http://auth:4001
     # No external port exposure - internal only
     networks:
       - decode-network
@@ -191,6 +197,8 @@ services:
       NODE_ENV: production
       WALLET_PORT: 4005
       WALLET_HOST: 0.0.0.0
+      # Service communication URLs using Docker service names
+      AUTH_SERVICE_URL: http://auth:4001
     # No external port exposure - internal only
     networks:
       - decode-network
@@ -221,6 +229,8 @@ services:
       NODE_ENV: production
       NOTIFICATION_PORT: 4006
       NOTIFICATION_HOST: 0.0.0.0
+      # Service communication URLs using Docker service names
+      AUTH_SERVICE_URL: http://auth:4001
     # No external port exposure - internal only
     networks:
       - decode-network
@@ -251,6 +261,8 @@ services:
       NODE_ENV: production
       NEO4JDB_SYNC_PORT: 4007
       NEO4JDB_SYNC_HOST: 0.0.0.0
+      # Service communication URLs using Docker service names
+      AUTH_SERVICE_URL: http://auth:4001
     # No external port exposure - internal only
     networks:
       - decode-network

@@ -290,7 +290,7 @@ export class AuthController {
   @Post('register/email-verification')
   @Public()
   @AuthRateLimit.register()
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.OK)
   async register(@Body() registerDto: RegisterInfoDto): Promise<Response> {
     return this.authService.register(registerDto);
   }

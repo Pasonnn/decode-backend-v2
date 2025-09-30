@@ -91,7 +91,7 @@ export class TwoFactorAuthService {
 
       return {
         success: true,
-        statusCode: HttpStatus.CREATED,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.OTP_SETUP_SUCCESS,
         data: {
           ...createdOtp.toObject(),
@@ -382,7 +382,7 @@ export class TwoFactorAuthService {
       }
       return {
         success: true,
-        statusCode: HttpStatus.CREATED,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.SESSION_CREATED,
         data: createSessionResponse.data,
       };
@@ -454,7 +454,7 @@ export class TwoFactorAuthService {
 
         return {
           success: true,
-          statusCode: HttpStatus.CREATED,
+          statusCode: HttpStatus.OK,
           message: MESSAGES.SUCCESS.SESSION_CREATED,
           data: createSessionResponse.data,
         };
@@ -523,7 +523,7 @@ export class TwoFactorAuthService {
       }
       return {
         success: true,
-        statusCode: HttpStatus.CREATED,
+        statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.SESSION_CREATED,
         data: createSessionResponse.data,
       };

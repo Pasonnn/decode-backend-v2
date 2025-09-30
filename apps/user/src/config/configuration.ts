@@ -11,34 +11,19 @@ export default () => ({
   environment: process.env.NODE_ENV || 'development',
   services: {
     auth: {
-      url:
-        process.env.AUTH_HOST && process.env.AUTH_PORT
-          ? `${process.env.AUTH_HOST}:${process.env.AUTH_PORT}`
-          : 'http://localhost:4001',
+      url: process.env.AUTH_SERVICE_URL || 'http://localhost:4001',
     },
     user: {
-      url:
-        process.env.USER_HOST && process.env.USER_PORT
-          ? `${process.env.USER_HOST}:${process.env.USER_PORT}`
-          : 'http://localhost:4002',
+      url: process.env.USER_SERVICE_URL || 'http://localhost:4002',
     },
     email: {
-      url:
-        process.env.EMAIL_HOST && process.env.EMAIL_PORT
-          ? `${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT}`
-          : 'http://localhost:4003',
+      url: process.env.EMAIL_SERVICE_URL || 'http://localhost:4003',
     },
     relationship: {
-      url:
-        process.env.RELATIONSHIP_HOST && process.env.RELATIONSHIP_PORT
-          ? `${process.env.RELATIONSHIP_HOST}:${process.env.RELATIONSHIP_PORT}`
-          : 'http://localhost:4004',
+      url: process.env.RELATIONSHIP_SERVICE_URL || 'http://localhost:4004',
     },
     wallet: {
-      url:
-        process.env.WALLET_HOST && process.env.WALLET_PORT
-          ? `${process.env.WALLET_HOST}:${process.env.WALLET_PORT}`
-          : 'http://localhost:4005',
+      url: process.env.WALLET_SERVICE_URL || 'http://localhost:4005',
     },
   },
 });
