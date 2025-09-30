@@ -8,7 +8,6 @@ export const validationSchema = Joi.object({
     .default('development'),
 
   // Service Hosts and Ports
-  AUTH_HOST: Joi.string().uri().default('0.0.0.0'),
   AUTH_HOST: Joi.string().uri().default('http://localhost'),
   AUTH_PORT: Joi.number().default(4001),
   USER_HOST: Joi.string().uri().default('http://localhost'),

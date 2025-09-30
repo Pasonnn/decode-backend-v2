@@ -20,6 +20,13 @@ services:
       NODE_ENV: production
       API_GATEWAY_PORT: 4000
       API_GATEWAY_HOST: 0.0.0.0
+      # Service communication URLs using Docker service names
+      AUTH_SERVICE_URL: http://auth:4001
+      USER_SERVICE_URL: http://user:4002
+      EMAIL_SERVICE_URL: http://email-worker:4003
+      RELATIONSHIP_SERVICE_URL: http://relationship:4004
+      WALLET_SERVICE_URL: http://wallet:4005
+      NOTIFICATION_SERVICE_URL: http://notification:4006
     ports:
       - "4000:4000" # Exposed to external traffic
     depends_on:
@@ -57,6 +64,12 @@ services:
       NODE_ENV: production
       AUTH_PORT: 4001
       AUTH_HOST: 0.0.0.0
+      # Service communication URLs using Docker service names
+      USER_SERVICE_URL: http://user:4002
+      EMAIL_SERVICE_URL: http://email-worker:4003
+      RELATIONSHIP_SERVICE_URL: http://relationship:4004
+      WALLET_SERVICE_URL: http://wallet:4005
+      NOTIFICATION_SERVICE_URL: http://notification:4006
     ports:
       - "4001:4001" # Exposed to external traffic
     networks:

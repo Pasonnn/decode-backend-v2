@@ -84,6 +84,7 @@ import { Otp, OtpSchema } from './schemas/otp';
 import authConfig from './config/auth.config';
 import jwtConfig from './config/jwt.config';
 import otpConfig from './config/otp.config';
+import servicesConfig from './config/services.config';
 
 /**
  * Authentication Module
@@ -123,6 +124,7 @@ import otpConfig from './config/otp.config';
     ConfigModule.forFeature(authConfig), // Load authentication-specific configuration
     ConfigModule.forFeature(jwtConfig), // Load JWT-specific configuration
     ConfigModule.forFeature(otpConfig), // Load OTP-specific configuration
+    ConfigModule.forFeature(servicesConfig), // Load services-specific configuration
     HttpModule,
     // Passport module for authentication strategies (JWT, Session-based)
     PassportModule,
