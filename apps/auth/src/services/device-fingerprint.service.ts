@@ -566,7 +566,12 @@ export class DeviceFingerprintService {
     const device_fingerprint = await this.deviceFingerprintModel.findOne({
       $and: [
         { user_id: new Types.ObjectId(user_id) },
-        { fingerprint_hashed: fingerprint_hashed },
+        {
+          $or: [
+            { fingerprint_hashed: fingerprint_hashed },
+            { _id: new Types.ObjectId(device_fingerprint_id) },
+          ],
+        },
         { is_trusted: true },
       ],
     });

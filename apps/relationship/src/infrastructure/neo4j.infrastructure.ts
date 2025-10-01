@@ -582,7 +582,6 @@ export class Neo4jInfrastructure implements OnModuleInit {
         this.logger.log(`No followers found for user: ${user_id}`);
         return [];
       }
-      console.log(result.records);
       return result.records.map(
         (record) => record.get('s') as NodeResponse<UserNeo4jDoc>,
       );
