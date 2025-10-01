@@ -82,6 +82,8 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.FRONTEND_URL || '*', // Allow requests from frontend or all origins
     credentials: true, // Allow credentials in CORS requests
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'Accept'],
   });
 
   // Configure global validation pipe for input validation and transformation

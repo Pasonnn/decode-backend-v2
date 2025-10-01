@@ -28,8 +28,10 @@ import { NotificationPushService } from '../services/notification-push.service';
  */
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || '*',
+    origin: '*',
     credentials: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
   },
   namespace: '/notifications',
 })

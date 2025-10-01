@@ -215,7 +215,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Notification Service (INTERNAL ONLY)
+  # Notification Service (EXPOSED for WebSocket)
   notification:
     build:
       context: .
@@ -231,7 +231,8 @@ services:
       NOTIFICATION_HOST: 0.0.0.0
       # Service communication URLs using Docker service names
       AUTH_SERVICE_URL: http://auth:4001
-    # No external port exposure - internal only
+    ports:
+      - "4006:4006" # Exposed for WebSocket connections
     networks:
       - decode-network
     healthcheck:
