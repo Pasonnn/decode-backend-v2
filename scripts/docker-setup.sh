@@ -92,7 +92,7 @@ create_directories() {
 build_images() {
     print_status "Building Docker images..."
 
-    if docker-compose build; then
+    if docker-compose -f docker-compose.prod.yml build; then
         print_success "Docker images built successfully"
     else
         print_error "Failed to build Docker images"
@@ -104,7 +104,7 @@ build_images() {
 start_services() {
     print_status "Starting services..."
 
-    if docker-compose up -d; then
+    if docker-compose -f docker-compose.prod.yml up -d; then
         print_success "Services started successfully"
     else
         print_error "Failed to start services"
@@ -139,22 +139,17 @@ wait_for_services() {
 show_status() {
     print_status "Service Status:"
     echo "================"
-    docker-compose ps
+    docker-compose -f docker-compose.prod.yml ps
 
     echo ""
     print_status "Service URLs:"
     echo "=============="
     echo "API Gateway:     http://localhost:4000"
     echo "API Docs:        http://localhost:4000/docs"
-    echo "MongoDB:         mongodb://localhost:27017"
-    echo "Redis:           redis://localhost:6379"
-    echo "Neo4j Browser:   http://localhost:7474"
-    echo "RabbitMQ UI:     http://localhost:15672"
+    echo "Auth Service:    http://localhost:4001"
     echo ""
-    echo "Default credentials:"
-    echo "MongoDB:         admin/password"
-    echo "Neo4j:           neo4j/password"
-    echo "RabbitMQ:        admin/password"
+    echo "Note: Using cloud databases (MongoDB, Redis, Neo4j, RabbitMQ)"
+    echo "Check your .env file for database connection details"
 }
 
 # Function to show health check
@@ -179,7 +174,7 @@ health_check() {
 show_logs() {
     print_status "Recent logs (last 20 lines):"
     echo "================================"
-    docker-compose logs --tail=20
+    docker-compose -f docker-compose.prod.yml logs --tail=20
 }
 
 # Function to show help
@@ -223,9 +218,10 @@ case "${1:-setup}" in
         print_success "Setup completed successfully!"
         echo ""
         print_status "Next steps:"
-        echo "1. Edit .env file with your configuration"
-        echo "2. Check service logs: docker-compose logs"
+        echo "1. Edit .env file with your cloud database configuration"
+        echo "2. Check service logs: docker-compose -f docker-compose.prod.yml logs"
         echo "3. Access API documentation: http://localhost:4000/docs"
+        echo "4. Verify cloud database connections in your .env file"
         ;;
     "start")
         start_services
@@ -234,12 +230,12 @@ case "${1:-setup}" in
         ;;
     "stop")
         print_status "Stopping services..."
-        docker-compose down
+        docker-compose -f docker-compose.prod.yml down
         print_success "Services stopped"
         ;;
     "restart")
         print_status "Restarting services..."
-        docker-compose restart
+        docker-compose -f docker-compose.prod.yml restart
         wait_for_services
         show_status
         ;;
@@ -257,7 +253,7 @@ case "${1:-setup}" in
         ;;
     "clean")
         print_status "Cleaning up Docker resources..."
-        docker-compose down -v --remove-orphans
+        docker-compose -f docker-compose.prod.yml down -v --remove-orphans
         docker system prune -f
         print_success "Cleanup completed"
         ;;

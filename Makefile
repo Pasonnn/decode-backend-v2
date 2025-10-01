@@ -13,13 +13,13 @@ help: ## Show this help message
 # ==================== BUILD COMMANDS ====================
 
 build: ## Build all Docker images
-	docker-compose build
+	docker-compose -f docker-compose.prod.yml build
 
 build-no-cache: ## Build all Docker images without cache
-	docker-compose build --no-cache
+	docker-compose -f docker-compose.prod.yml build --no-cache
 
 build-service: ## Build specific service (usage: make build-service SERVICE=api-gateway)
-	docker-compose build $(SERVICE)
+	docker-compose -f docker-compose.prod.yml build $(SERVICE)
 
 # ==================== DEVELOPMENT COMMANDS ====================
 
@@ -64,32 +64,32 @@ prod-full-build: ## Build and start full production environment
 # ==================== SERVICE MANAGEMENT ====================
 
 up: ## Start all services
-	docker-compose up -d
+	docker-compose -f docker-compose.prod.yml up -d
 
 down: ## Stop all services
-	docker-compose down
+	docker-compose -f docker-compose.prod.yml down
 
 restart: ## Restart all services
-	docker-compose restart
+	docker-compose -f docker-compose.prod.yml restart
 
 restart-service: ## Restart specific service (usage: make restart-service SERVICE=api-gateway)
-	docker-compose restart $(SERVICE)
+	docker-compose -f docker-compose.prod.yml restart $(SERVICE)
 
 # ==================== LOGGING COMMANDS ====================
 
 logs: ## View logs for all services
-	docker-compose logs -f
+	docker-compose -f docker-compose.prod.yml logs -f
 
 logs-service: ## View logs for specific service (usage: make logs-service SERVICE=api-gateway)
-	docker-compose logs -f $(SERVICE)
+	docker-compose -f docker-compose.prod.yml logs -f $(SERVICE)
 
 logs-tail: ## View last 100 lines of logs
-	docker-compose logs --tail=100
+	docker-compose -f docker-compose.prod.yml logs --tail=100
 
 # ==================== STATUS AND HEALTH ====================
 
 status: ## Show status of all services
-	docker-compose ps
+	docker-compose -f docker-compose.prod.yml ps
 
 health: ## Check health of all services
 	@echo "Checking service health..."
@@ -145,10 +145,10 @@ stats: ## Show resource usage statistics
 	docker stats
 
 top: ## Show running processes in containers
-	docker-compose top
+	docker-compose -f docker-compose.prod.yml top
 
 inspect: ## Inspect specific service (usage: make inspect SERVICE=api-gateway)
-	docker-compose config $(SERVICE)
+	docker-compose -f docker-compose.prod.yml config $(SERVICE)
 
 # ==================== NETWORK COMMANDS ====================
 
@@ -224,7 +224,7 @@ debug: ## Debug information
 	@docker images | grep decode
 	@echo ""
 	@echo "Running containers:"
-	@docker-compose ps
+	@docker-compose -f docker-compose.prod.yml ps
 	@echo ""
 	@echo "Network information:"
 	@docker network ls | grep decode
