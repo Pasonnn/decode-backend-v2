@@ -527,6 +527,15 @@ export class AuthController {
 
   // ==================== Two-Factor Authentication (2FA) Endpoints ====================
 
+  @Get('2fa/status')
+  @UseGuards(AuthGuard)
+  async statusOtp(@CurrentUser() user: AuthenticatedUser): Promise<Response> {
+    const status_otp_response = await this.twoFactorAuthService.statusOtp({
+      user_id: user.userId,
+    });
+    return status_otp_response;
+  }
+
   /**
    * Sets up Two-Factor Authentication (2FA) for a user
    * Generates OTP secret and QR code for authenticator app setup

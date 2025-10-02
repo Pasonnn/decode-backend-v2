@@ -35,6 +35,7 @@ import {
   DisableOtpRequest,
   LoginVerifyOtpRequest,
   FingerprintTrustVerifyOtpRequest,
+  StatusOtpRequest,
 } from '../../interfaces/auth-service.interface';
 
 @Injectable()
@@ -259,6 +260,16 @@ export class AuthServiceClient extends BaseHttpClient {
   }
 
   // Two-Factor Authentication (2FA) Endpoints
+
+  async statusOtp(data: StatusOtpRequest): Promise<Response> {
+    const config = {
+      headers: {
+        Authorization: data.authorization,
+      },
+    };
+    return this.get('/auth/2fa/status', config);
+  }
+
   async setupOtp(data: SetupOtpRequest): Promise<Response> {
     const config = {
       headers: {

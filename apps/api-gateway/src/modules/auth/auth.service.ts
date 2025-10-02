@@ -807,6 +807,34 @@ export class AuthService {
   // Two-Factor Authentication (2FA) Methods
 
   /**
+   * Check if Two-Factor Authentication is enabled for current user
+   */
+  async statusOtp(authorization: string): Promise<Response> {
+    try {
+      this.logger.log('Checking if OTP is enabled for current user');
+
+      const response = await this.authServiceClient.statusOtp({
+        authorization,
+      });
+
+      if (!response.success) {
+        this.logger.error(
+          `Failed to check if OTP is enabled: ${response.message}`,
+        );
+      } else {
+        this.logger.log('Successfully checked if OTP is enabled');
+      }
+
+      return response;
+    } catch (error) {
+      this.logger.error(
+        `Failed to check if OTP is enabled: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Setup Two-Factor Authentication for current user
    */
   async setupOtp(authorization: string): Promise<Response> {

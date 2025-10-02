@@ -45,6 +45,40 @@ export class TwoFactorAuthService {
     this.logger = new Logger(TwoFactorAuthService.name);
   }
 
+  async statusOtp(input: { user_id: string }): Promise<Response<IOtpDoc>> {
+    const { user_id } = input;
+    try {
+      const findUserOtpResponse = await this.findOtpByUserId({ user_id });
+      if (!findUserOtpResponse.success) {
+        return findUserOtpResponse;
+      }
+      if (!findUserOtpResponse.data?.otp_enable) {
+        return {
+          success: false,
+          statusCode: HttpStatus.NOT_FOUND,
+          message: MESSAGES.OTP.OTP_NOT_ENABLED,
+          data: findUserOtpResponse.data as IOtpDoc,
+        };
+      }
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.OTP_ENABLED,
+        data: findUserOtpResponse.data,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error checking if OTP is enabled for user ${user_id}: ${error}`,
+      );
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.OTP.OTP_FETCH_FAILED,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
   async setUpOtp(input: { user_id: string }): Promise<Response<IOtpDoc>> {
     const { user_id } = input;
     try {
@@ -644,6 +678,7 @@ export class TwoFactorAuthService {
           message: MESSAGES.OTP.OTP_NOT_FOUND,
         };
       }
+
       return {
         success: true,
         statusCode: HttpStatus.OK,

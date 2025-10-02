@@ -117,6 +117,10 @@ export interface RevokeDeviceFingerprintRequest {
 
 // Two-Factor Authentication (2FA) Interfaces
 
+export interface StatusOtpRequest {
+  authorization: string;
+}
+
 export interface SetupOtpRequest {
   authorization: string;
 }

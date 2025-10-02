@@ -1030,6 +1030,24 @@ export class AuthController {
   // Two-Factor Authentication (2FA) Endpoints
 
   @ApiOperation({
+    summary: 'Check if Two-Factor Authentication is enabled',
+    description:
+      'Check if Two-Factor Authentication (2FA) is enabled for the authenticated user.',
+  })
+  @ApiResponse({ status: 200, description: '2FA is enabled' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth('JWT-auth')
+  @Get('2fa/status')
+  @UseGuards(AuthGuardWithFingerprint)
+  @UserRateLimit.standard()
+  @HttpCode(HttpStatus.OK)
+  async statusOtp(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.authService.statusOtp(authorization);
+  }
+
+  @ApiOperation({
     summary: 'Setup Two-Factor Authentication',
     description:
       'Setup Two-Factor Authentication (2FA) for the authenticated user. Generates OTP secret and QR code for authenticator app setup.',
