@@ -13,4 +13,6 @@ export type UserNeo4jDoc<T = unknown[]> = {
   is_blocked_by?: boolean;
   mutual_followers_number?: number;
   mutual_followers_list?: T;
+  shared_interests_count?: number;
+  shared_interests?: string[];
 };

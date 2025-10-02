@@ -4,6 +4,7 @@ import neo4j, { Driver, Session, auth } from 'neo4j-driver';
 import { PaginationResponse } from '../interfaces/pagination-response.interface';
 import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 import { NodeResponse } from '../interfaces/node-response.interface';
+import { Interest } from '../dto/interest.dto';
 
 @Injectable()
 export class Neo4jInfrastructure implements OnModuleInit {
@@ -590,6 +591,216 @@ export class Neo4jInfrastructure implements OnModuleInit {
         `Failed to get all followers: ${error instanceof Error ? error.message : String(error)}`,
       );
       return [];
+    } finally {
+      await session.close();
+    }
+  }
+
+  async createUserInterests(input: {
+    user_id: string;
+    interests: Interest[];
+  }): Promise<boolean> {
+    const session = this.getSession();
+    const { user_id, interests } = input;
+    try {
+      for (const interest of interests) {
+        const checkUserToInterestresponse = await this.checkUserToInterest({
+          user_id: user_id,
+          interest: interest,
+        });
+        if (checkUserToInterestresponse) {
+          continue;
+        }
+        const query = `MATCH (u:User {user_id: "${user_id}"})
+          MERGE (i:Interest {key: "${interest}"})
+          MERGE (u)-[r:INTERESTS]->(i)
+          SET r.timestamp = timestamp()`;
+        console.log(query);
+        await session.run(query);
+      }
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Failed to create user interests: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async getUsersWithSameInterests(input: {
+    user_id: string;
+    page: number;
+    limit: number;
+  }): Promise<PaginationResponse<NodeResponse<UserNeo4jDoc>[]>> {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unnecessary-type-assertion */
+    const session = this.getSession();
+    const { user_id, page, limit } = input;
+    const offset = page * limit;
+
+    try {
+      // First, get the user's interests
+      const userInterests = await this.listUserInterests({ user_id });
+
+      if (userInterests.length === 0) {
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: `No interests found for user`,
+          data: {
+            users: [],
+            meta: {
+              total: 0,
+              page: page,
+              limit: limit,
+              is_last_page: true,
+            },
+          },
+        };
+      }
+
+      // Get total count of users with shared interests
+      const totalCountQuery = `
+        MATCH (u:User {user_id: "${user_id}"})-[:INTERESTS]->(i:Interest)<-[:INTERESTS]-(suggested:User)
+        WHERE suggested.user_id <> "${user_id}"
+        WITH suggested, count(i) as shared_interests_count
+        WHERE shared_interests_count >= 1
+        RETURN count(DISTINCT suggested) as total
+      `;
+
+      const totalResult = await session.run(totalCountQuery);
+      const total =
+        (totalResult.records[0]?.get('total') as any)?.toNumber() || 0;
+
+      if (total === 0) {
+        return {
+          success: true,
+          statusCode: HttpStatus.OK,
+          message: `No users with shared interests found`,
+          data: {
+            users: [],
+            meta: {
+              total: 0,
+              page: page,
+              limit: limit,
+              is_last_page: true,
+            },
+          },
+        };
+      }
+
+      // Get paginated users with shared interests, ordered by number of shared interests
+      const usersQuery = `
+        MATCH (u:User {user_id: "${user_id}"})-[:INTERESTS]->(i:Interest)<-[:INTERESTS]-(suggested:User)
+        WHERE suggested.user_id <> "${user_id}"
+        WITH suggested, count(i) as shared_interests_count, collect(i.key) as shared_interests
+        WHERE shared_interests_count >= 1
+        RETURN suggested, shared_interests_count, shared_interests
+        ORDER BY shared_interests_count DESC, suggested.username ASC
+        SKIP ${offset}
+        LIMIT ${limit}
+      `;
+
+      const usersResult = await session.run(usersQuery);
+
+      const users: NodeResponse<UserNeo4jDoc>[] = usersResult.records.map(
+        (record) => {
+          const userNode = record.get('suggested') as any;
+          const sharedInterestsCount = (
+            record.get('shared_interests_count') as any
+          ).toNumber();
+          const sharedInterests = record.get('shared_interests') as any;
+
+          return {
+            properties: {
+              _id: userNode.properties._id,
+              user_id: userNode.properties.user_id,
+              username: userNode.properties.username,
+              role: userNode.properties.role,
+              display_name: userNode.properties.display_name,
+              avatar_ipfs_hash: userNode.properties.avatar_ipfs_hash,
+              following_number: userNode.properties.following_number || 0,
+              followers_number: userNode.properties.followers_number || 0,
+              shared_interests_count: sharedInterestsCount,
+              shared_interests: sharedInterests,
+            },
+            identity: userNode.identity,
+            labels: userNode.labels,
+            elementId: userNode.elementId,
+          };
+        },
+      );
+
+      const isLastPage = offset + limit >= total;
+
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: `Users with shared interests fetched successfully`,
+        data: {
+          users: users,
+          meta: {
+            total: total,
+            page: page,
+            limit: limit,
+            is_last_page: isLastPage,
+          },
+        },
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to get users with same interests: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: `Failed to get users with same interests`,
+      };
+    } finally {
+      await session.close();
+    }
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unnecessary-type-assertion */
+  }
+
+  async listUserInterests(input: {
+    user_id: string;
+  }): Promise<NodeResponse<Interest>[]> {
+    const session = this.getSession();
+    const { user_id } = input;
+    try {
+      const query = `MATCH (u:User {user_id: "${user_id}"})-[:INTERESTS]->(i:Interest)
+      RETURN i`;
+      const result = await session.run(query);
+      return result.records.map(
+        (record) => record.get('i') as NodeResponse<Interest>,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to list user interests: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return [];
+    } finally {
+      await session.close();
+    }
+  }
+
+  private async checkUserToInterest(input: {
+    user_id: string;
+    interest: Interest;
+  }): Promise<boolean> {
+    const session = this.getSession();
+    const { user_id, interest } = input;
+    try {
+      const query = `MATCH (u:User {user_id: "${user_id}"})-[:INTERESTS]->(i:Interest {key: "${interest}"})
+      RETURN i`;
+      const result = await session.run(query);
+      return result.records.length > 0;
+    } catch (error) {
+      this.logger.error(
+        `Failed to check user to interest: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
     } finally {
       await session.close();
     }

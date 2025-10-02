@@ -63,6 +63,7 @@ import { SuggestService } from './services/suggest.service'; // User suggestion 
 import { MutualService } from './services/mutual.service'; // Mutual connection discovery
 import { SearchService } from './services/search.service'; // User search functionality
 import { FollowerSnapshotService } from './services/follower-snapshot.service'; // Follower analytics and snapshots
+import { InterestService } from './services/interest.service'; // Interest management
 
 // Infrastructure services for external system integration
 import { Neo4jInfrastructure } from './infrastructure/neo4j.infrastructure'; // Neo4j graph database operations
@@ -185,6 +186,7 @@ import {
     MutualService, // Mutual connection discovery and analysis
     SearchService, // User search functionality and filtering
     FollowerSnapshotService, // Follower analytics and snapshot management
+    InterestService, // Interest management
 
     // Infrastructure services for external system integration
     Neo4jInfrastructure, // Neo4j graph database operations and queries

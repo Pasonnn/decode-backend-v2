@@ -15,6 +15,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 // Interface Import
 import type { Response } from './interfaces/response.interface';
+import type { PaginationResponse } from './interfaces/pagination-response.interface';
 import { UserNeo4jDoc } from './interfaces/user-neo4j-doc.interface';
 
 // DTOs
@@ -32,6 +33,7 @@ import { BlockDto, UnblockDto, GetBlockedUsersDto } from './dto/block.dto';
 import { MutualDto } from './dto/mutual.dto';
 import { SearchFollowersDto, SearchFollowingDto } from './dto/search.dto';
 import { GetSuggestionsPaginatedDto } from './dto/suggest.dto';
+import { GetInterestSuggestUserPaginatedDto } from './dto/interest.dto';
 
 // Service Import
 import { BlockService } from './services/block.service';
@@ -41,12 +43,14 @@ import { SearchService } from './services/search.service';
 import { SuggestService } from './services/suggest.service';
 import { UserService } from './services/user.service';
 import { FollowerSnapshotService } from './services/follower-snapshot.service';
+import { InterestService } from './services/interest.service';
 
 // Guards and Decorators
 import { CurrentUser } from './common/decorators/current-user.decorator';
 import { AuthGuard, Public } from './common/guards/auth.guard';
 import { OptionalAuthGuard } from './common/guards/optional-auth.guard';
 import type { AuthenticatedUser } from './interfaces/authenticated-user.interface';
+import { Interest, CreateUserInterestsDto } from './dto/interest.dto';
 
 @ApiTags('Relationship Management')
 @Controller('relationship')
@@ -60,6 +64,7 @@ export class RelationshipController {
     private readonly searchService: SearchService,
     private readonly suggestService: SuggestService,
     private readonly followerSnapshotService: FollowerSnapshotService,
+    private readonly interestService: InterestService,
   ) {}
 
   // ==================== HEALTH CHECK ====================
@@ -273,8 +278,44 @@ export class RelationshipController {
     });
   }
 
-  // ==================== FOLLOWER SNAPSHOT ENDPOINTS ====================
+  // ==================== INTEREST ENDPOINTS ====================
 
+  @Post('interest/create')
+  @UseGuards(AuthGuard)
+  async createInterest(
+    @Body() body: CreateUserInterestsDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response> {
+    return await this.interestService.createUserInterests({
+      user_id: user.userId,
+      interests: body.interest,
+    });
+  }
+
+  @Get('interest/list')
+  @UseGuards(AuthGuard)
+  async getInterests(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Response<Interest[]>> {
+    return await this.interestService.getUserInterests({
+      user_id: user.userId,
+    });
+  }
+
+  @Get('interest/suggest-user')
+  @UseGuards(AuthGuard)
+  async interestSuggestUser(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: GetInterestSuggestUserPaginatedDto,
+  ): Promise<PaginationResponse<UserNeo4jDoc[]>> {
+    return await this.interestService.interestSuggestUser({
+      user_id: user.userId,
+      page: query.page,
+      limit: query.limit,
+    });
+  }
+
+  // ==================== FOLLOWER SNAPSHOT ENDPOINTS ====================
   @Post('snapshot/trigger')
   @UseGuards(AuthGuard)
   @Roles('admin' as UserRole)
