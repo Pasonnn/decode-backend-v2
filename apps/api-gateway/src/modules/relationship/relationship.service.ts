@@ -20,6 +20,8 @@ import {
   GetFollowingByUserIdDto,
   GetFollowersByUserIdDto,
   GetFollowersSnapshotLastMonthDto,
+  CreateUserInterestsDto,
+  GetInterestSuggestUserPaginatedDto,
 } from './dto';
 
 @Injectable()
@@ -169,6 +171,37 @@ export class RelationshipService {
       `Getting user suggestions - page: ${data.page}, limit: ${data.limit}`,
     );
     return this.relationshipServiceClient.getSuggestions(data, authorization);
+  }
+
+  // ==================== INTEREST ENDPOINTS ====================
+
+  async createUserInterests(
+    data: CreateUserInterestsDto,
+    authorization: string,
+  ): Promise<Response> {
+    this.logger.log(`Creating user interests: ${data.interest.join(', ')}`);
+    return this.relationshipServiceClient.createUserInterests(
+      data,
+      authorization,
+    );
+  }
+
+  async getUserInterests(authorization: string): Promise<Response> {
+    this.logger.log('Getting user interests');
+    return this.relationshipServiceClient.getUserInterests(authorization);
+  }
+
+  async getInterestSuggestUser(
+    data: GetInterestSuggestUserPaginatedDto,
+    authorization: string,
+  ): Promise<Response> {
+    this.logger.log(
+      `Getting interest-based user suggestions - page: ${data.page}, limit: ${data.limit}`,
+    );
+    return this.relationshipServiceClient.getInterestSuggestUser(
+      data,
+      authorization,
+    );
   }
 
   // ==================== SNAPSHOT ENDPOINTS ====================

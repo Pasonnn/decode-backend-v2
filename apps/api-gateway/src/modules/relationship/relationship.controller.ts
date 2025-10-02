@@ -41,6 +41,8 @@ import {
   SearchFollowingDto,
   GetSuggestionsDto,
   GetFollowersSnapshotLastMonthDto,
+  CreateUserInterestsDto,
+  GetInterestSuggestUserPaginatedDto,
 } from './dto';
 
 // Guards and Decorators
@@ -75,6 +77,8 @@ import type { Response } from '../../interfaces/response.interface';
   SearchFollowingDto,
   GetSuggestionsDto,
   GetFollowersSnapshotLastMonthDto,
+  CreateUserInterestsDto,
+  GetInterestSuggestUserPaginatedDto,
 )
 export class RelationshipController {
   constructor(private readonly relationshipService: RelationshipService) {}
@@ -456,6 +460,116 @@ export class RelationshipController {
     @Headers('authorization') authorization: string,
   ): Promise<Response> {
     return this.relationshipService.getSuggestions(query, authorization);
+  }
+
+  // ==================== INTEREST ENDPOINTS ====================
+
+  @ApiOperation({
+    summary: 'Create user interests',
+    description: 'Create or update user interests',
+  })
+  @ApiBody({
+    type: CreateUserInterestsDto,
+    description: 'User interests to create',
+    examples: {
+      example1: {
+        summary: 'Create user interests',
+        value: {
+          interest: ['sport', 'movies', 'travel'],
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User interests created successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request or invalid interest values',
+  })
+  @Post('interest/create')
+  @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
+  @HttpCode(HttpStatus.OK)
+  async createUserInterests(
+    @Body() createUserInterestsDto: CreateUserInterestsDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.relationshipService.createUserInterests(
+      createUserInterestsDto,
+      authorization,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Get user interests',
+    description: 'Get list of user interests',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User interests retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: {
+          type: 'string',
+          example: 'User interests fetched successfully',
+        },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', example: 'Sport' },
+              category: { type: 'string', example: 'lifestyle' },
+              key: { type: 'string', example: 'sport' },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User interests not found',
+  })
+  @Get('interest/list')
+  @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
+  @HttpCode(HttpStatus.OK)
+  async getUserInterests(
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.relationshipService.getUserInterests(authorization);
+  }
+
+  @ApiOperation({
+    summary: 'Get interest-based user suggestions',
+    description: 'Get user suggestions based on shared interests',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Interest-based user suggestions retrieved successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid pagination parameters',
+  })
+  @Get('interest/suggest-user')
+  @UserRateLimit.standard()
+  @UseGuards(AuthGuardWithFingerprint)
+  @HttpCode(HttpStatus.OK)
+  async getInterestSuggestUser(
+    @Query() query: GetInterestSuggestUserPaginatedDto,
+    @Headers('authorization') authorization: string,
+  ): Promise<Response> {
+    return this.relationshipService.getInterestSuggestUser(
+      query,
+      authorization,
+    );
   }
 
   // ==================== SNAPSHOT ENDPOINTS ====================

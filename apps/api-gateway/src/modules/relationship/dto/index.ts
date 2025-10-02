@@ -18,3 +18,6 @@ export * from './user.dto';
 
 // Snapshot DTOs
 export * from './snapshot.dto';
+
+// Interest DTOs
+export * from './interest.dto';

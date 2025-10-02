@@ -27,6 +27,9 @@ import {
   GetFollowersByUserIdRequest,
 } from '../../interfaces/relationship-service.interface';
 
+// Interest DTOs
+import { Interest } from '../../modules/relationship/dto/interest.dto';
+
 @Injectable()
 export class RelationshipServiceClient extends BaseHttpClient {
   constructor(
@@ -393,6 +396,57 @@ export class RelationshipServiceClient extends BaseHttpClient {
     const url = queryString
       ? `/relationship/suggest?${queryString}`
       : '/relationship/suggest';
+
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.get(url, config);
+  }
+
+  // ==================== INTEREST ENDPOINTS ====================
+
+  /**
+   * Create user interests
+   */
+  async createUserInterests(
+    data: { interest: Interest[] },
+    authorization: string,
+  ): Promise<Response<void>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.post('/relationship/interest/create', data, config);
+  }
+
+  /**
+   * Get user interests
+   */
+  async getUserInterests(authorization: string): Promise<Response<Interest[]>> {
+    const config = {
+      headers: {
+        Authorization: authorization,
+      },
+    };
+    return this.get('/relationship/interest/list', config);
+  }
+
+  /**
+   * Get interest-based user suggestions
+   */
+  async getInterestSuggestUser(
+    data: { page: number; limit: number },
+    authorization: string,
+  ): Promise<Response<UserRelationshipDoc[]>> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', data.page.toString());
+    queryParams.append('limit', data.limit.toString());
+
+    const queryString = queryParams.toString();
+    const url = `/relationship/interest/suggest-user?${queryString}`;
 
     const config = {
       headers: {
