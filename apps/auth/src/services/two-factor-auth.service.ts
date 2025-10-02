@@ -54,8 +54,8 @@ export class TwoFactorAuthService {
       }
       if (!findUserOtpResponse.data?.otp_enable) {
         return {
-          success: false,
-          statusCode: HttpStatus.NOT_FOUND,
+          success: true,
+          statusCode: HttpStatus.OK,
           message: MESSAGES.OTP.OTP_NOT_ENABLED,
           data: findUserOtpResponse.data as IOtpDoc,
         };
