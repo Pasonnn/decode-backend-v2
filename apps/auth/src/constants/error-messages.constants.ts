@@ -267,6 +267,8 @@ export const MESSAGES = {
     OTP_VERIFIED: 'OTP verified successfully',
     OTP_ENABLED: 'OTP enabled successfully',
     OTP_DISABLED: 'OTP disabled successfully',
-    OTP_VERIFY: 'Please verify OTP to continue',
+    OTP_IS_ENABLED: 'OTP is enabled',
+    OTP_VERIFY_LOGIN: 'Please verify OTP to login',
+    OTP_VERIFY_FINGERPRINT: 'Please verify OTP to verify device fingerprint',
   },
 };

@@ -354,7 +354,7 @@ export class TwoFactorAuthService {
       return {
         success: true,
         statusCode: HttpStatus.OK,
-        message: MESSAGES.SUCCESS.OTP_VERIFY,
+        message: MESSAGES.SUCCESS.OTP_IS_ENABLED,
         data: findOtpByUserIdResponse.data as IOtpDoc,
       };
     } catch (error) {
@@ -469,7 +469,7 @@ export class TwoFactorAuthService {
         return {
           success: true,
           statusCode: HttpStatus.OK,
-          message: MESSAGES.SUCCESS.OTP_VERIFY,
+          message: MESSAGES.SUCCESS.OTP_VERIFY_LOGIN,
           data: {
             login_session_token: login_session_token,
           },
@@ -602,7 +602,7 @@ export class TwoFactorAuthService {
         return {
           success: true,
           statusCode: HttpStatus.OK,
-          message: MESSAGES.SUCCESS.OTP_VERIFY,
+          message: MESSAGES.SUCCESS.OTP_VERIFY_FINGERPRINT,
           data: {
             verify_device_fingerprint_session_token:
               verify_device_fingerprint_session_token,
