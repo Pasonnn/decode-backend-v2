@@ -664,6 +664,7 @@ export class Neo4jInfrastructure implements OnModuleInit {
       const totalCountQuery = `
         MATCH (u:User {user_id: "${user_id}"})-[:INTERESTS]->(i:Interest)<-[:INTERESTS]-(suggested:User)
         WHERE suggested.user_id <> "${user_id}"
+          AND NOT (suggested)-[:FOLLOWS]->(u)
         WITH suggested, count(i) as shared_interests_count
         WHERE shared_interests_count >= 1
         RETURN count(DISTINCT suggested) as total
