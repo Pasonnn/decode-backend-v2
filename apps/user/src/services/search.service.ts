@@ -28,23 +28,96 @@ export class SearchService {
     sortOrder: string;
   }): Promise<PaginationResponse<UserDoc[]>> {
     const { email_or_username, page, limit, sortBy, sortOrder } = input;
+    const skip = page * limit;
+
     try {
-      const users = await this.userModel
-        .find({
-          $or: [
-            { username: { $regex: email_or_username, $options: 'i' } },
-            { display_name: { $regex: email_or_username, $options: 'i' } },
-          ],
-        })
-        .skip(page * limit)
-        .limit(limit)
-        .sort({ [sortBy]: sortOrder as 'asc' | 'desc' | 1 | -1 })
-        .select({
-          email: 0,
-          password_hashed: 0,
-          updatedAt: 0,
-          createdAt: 0,
-        });
+      const pipeline: any[] = [
+        {
+          $search: {
+            index: 'user_search', // Atlas Search Index name
+            compound: {
+              should: [
+                {
+                  autocomplete: {
+                    query: email_or_username,
+                    path: 'username',
+                    fuzzy: { maxEdits: 1 },
+                  },
+                },
+                {
+                  autocomplete: {
+                    query: email_or_username,
+                    path: 'display_name',
+                    fuzzy: { maxEdits: 1 },
+                  },
+                },
+                {
+                  text: {
+                    query: email_or_username,
+                    path: 'email',
+                    fuzzy: { maxEdits: 1 },
+                  },
+                },
+              ],
+            },
+          },
+        },
+        { $sort: { [sortBy]: sortOrder === 'asc' ? 1 : -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            email: 0,
+            password_hashed: 0,
+            updatedAt: 0,
+            createdAt: 0,
+          },
+        },
+      ];
+
+      const users = await this.userModel.aggregate(pipeline);
+
+      // For total count, run a separate aggregation with $count after $search
+      const countPipeline: any[] = [
+        {
+          $search: {
+            index: 'user_search',
+            compound: {
+              should: [
+                {
+                  autocomplete: {
+                    query: email_or_username,
+                    path: 'username',
+                    fuzzy: { maxEdits: 1 },
+                  },
+                },
+                {
+                  autocomplete: {
+                    query: email_or_username,
+                    path: 'display_name',
+                    fuzzy: { maxEdits: 1 },
+                  },
+                },
+                {
+                  text: {
+                    query: email_or_username,
+                    path: 'email',
+                    fuzzy: { maxEdits: 1 },
+                  },
+                },
+              ],
+            },
+          },
+        },
+        { $count: 'total' },
+      ];
+
+      const countResult = await this.userModel.aggregate(countPipeline);
+      const total =
+        countResult.length > 0
+          ? (countResult[0] as { total: number }).total
+          : 0;
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -52,10 +125,10 @@ export class SearchService {
         data: {
           users: users as UserDoc[],
           meta: {
-            total: users.length,
+            total: total,
             page: page,
             limit: limit,
-            is_last_page: users.length < limit,
+            is_last_page: skip + (users as UserDoc[]).length >= total,
           },
         },
       };
