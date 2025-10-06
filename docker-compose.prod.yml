@@ -119,38 +119,6 @@ services:
       retries: 3
       start_period: 40s
 
-  # Email Worker Service (INTERNAL ONLY)
-  email-worker:
-    build:
-      context: .
-      dockerfile: apps/email-worker/Dockerfile
-      target: production
-    container_name: decode-email-worker
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      NODE_ENV: production
-      EMAIL_PORT: 4003
-      EMAIL_HOST: 0.0.0.0
-      # Service communication URLs using Docker service names
-      AUTH_SERVICE_URL: http://auth:4001
-    # No external port exposure - internal only
-    networks:
-      - decode-network
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://localhost:4003/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
   # Relationship Service (INTERNAL ONLY)
   relationship:
     build:

@@ -180,10 +180,13 @@ export class UsersService {
 
       // Get user primary wallet with graceful degradation
       let user_primary_wallet_data: WalletDoc | undefined = undefined;
+      let user_wallets_data: WalletDoc[] | undefined = undefined;
 
       try {
         const get_my_primary_wallet_response: Response<WalletDoc> =
           await this.walletServiceClient.getPrimaryWallet(authorization);
+        const get_my_wallets_response: Response<WalletDoc[]> =
+          await this.walletServiceClient.getWallets(authorization);
 
         if (
           get_my_primary_wallet_response.success &&
@@ -193,8 +196,13 @@ export class UsersService {
           this.logger.log(
             'Successfully fetched primary wallet for current user',
           );
+          if (get_my_wallets_response.success && get_my_wallets_response.data) {
+            user_wallets_data = get_my_wallets_response.data;
+          } else {
+            this.logger.warn('Wallets not found for current user');
+          }
         } else {
-          this.logger.warn('Primary wallet not found for current user');
+          this.logger.warn('Wallets not found for current user');
         }
       } catch (error) {
         this.logger.warn(
@@ -207,6 +215,7 @@ export class UsersService {
       const full_user_profile_data: UserDoc = {
         ...get_my_profile_response.data,
         primary_wallet: user_primary_wallet_data,
+        wallets: user_wallets_data,
       };
 
       // Get user relationship data with graceful degradation

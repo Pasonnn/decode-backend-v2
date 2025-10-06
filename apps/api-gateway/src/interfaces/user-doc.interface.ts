@@ -11,6 +11,7 @@ export interface UserDoc {
   avatar_ipfs_hash: string;
   last_login: Date;
   primary_wallet?: WalletDoc;
+  wallets?: WalletDoc[];
   following_number?: number;
   followers_number?: number;
   is_following?: boolean;
