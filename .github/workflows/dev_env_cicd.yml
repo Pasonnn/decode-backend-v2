@@ -45,5 +45,4 @@ jobs:
             git reset --hard origin/main
             git clean -fd
             npm ci
-            npm run build:all
-            pm2 restart ecosystem.config.js --update-env
+            make prod-build
