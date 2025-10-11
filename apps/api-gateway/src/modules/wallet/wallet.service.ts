@@ -248,14 +248,10 @@ export class WalletService {
    */
   async getWalletsByUserId(
     data: GetWalletsByUserIdRequest,
-    authorization: string,
   ): Promise<Response<WalletDoc[]>> {
     try {
       this.logger.log(`Getting wallets for user: ${data.user_id}`);
-      const response = await this.walletServiceClient.getWalletsByUserId(
-        data,
-        authorization,
-      );
+      const response = await this.walletServiceClient.getWalletsByUserId(data);
 
       if (!response.success) {
         this.logger.error(

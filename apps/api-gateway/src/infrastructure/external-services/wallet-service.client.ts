@@ -106,14 +106,8 @@ export class WalletServiceClient extends BaseHttpClient {
 
   async getWalletsByUserId(
     data: GetWalletsByUserIdRequest,
-    authorization: string,
   ): Promise<Response<WalletDoc[]>> {
-    const config = {
-      headers: {
-        Authorization: authorization,
-      },
-    };
-    return this.get(`/wallets/link/${data.user_id}`, config);
+    return this.get(`/wallets/link/${data.user_id}`);
   }
   // Primary Endpoints
   async generatePrimaryWalletChallenge(

@@ -293,12 +293,8 @@ export class WalletController {
   @HttpCode(HttpStatus.OK)
   async getWalletsByUserId(
     @Param('user_id') userId: string,
-    @Headers('authorization') authorization: string,
   ): Promise<Response<WalletDoc[]>> {
-    return await this.walletService.getWalletsByUserId(
-      { user_id: userId },
-      authorization,
-    );
+    return await this.walletService.getWalletsByUserId({ user_id: userId });
   }
 
   @Delete('link/unlink/:address')

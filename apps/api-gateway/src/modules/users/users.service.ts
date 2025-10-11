@@ -968,6 +968,7 @@ export class UsersService {
 
       // Get user primary wallet with graceful degradation
       let user_primary_wallet_data: WalletDoc | undefined = undefined;
+      let user_wallets_data: WalletDoc[] | undefined = undefined;
 
       try {
         const user_primary_wallet_response: Response<WalletDoc> =
@@ -975,6 +976,11 @@ export class UsersService {
             { user_id: data.user_id },
             authorization,
           );
+
+        const user_wallets_response: Response<WalletDoc[]> =
+          await this.walletServiceClient.getWalletsByUserId({
+            user_id: data.user_id,
+          });
 
         if (
           user_primary_wallet_response.success &&
@@ -989,6 +995,11 @@ export class UsersService {
             `Primary wallet not found for user: ${data.user_id}`,
           );
         }
+        if (user_wallets_response.success && user_wallets_response.data) {
+          user_wallets_data = user_wallets_response.data;
+        } else {
+          this.logger.warn(`Wallets not found for user: ${data.user_id}`);
+        }
       } catch (error) {
         this.logger.warn(
           `Failed to fetch primary wallet for user ${data.user_id}: ${
@@ -1000,6 +1011,7 @@ export class UsersService {
       const full_user_profile_data: UserDoc = {
         ...user_profile_data,
         primary_wallet: user_primary_wallet_data,
+        wallets: user_wallets_data,
       };
       return {
         success: true,

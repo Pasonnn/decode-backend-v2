@@ -95,7 +95,6 @@ export class WalletController {
     return this.linkService.getWallets({ user_id: user.userId });
   }
 
-  @UseGuards(AuthGuard)
   @Get('link/:user_id')
   async getWalletsByUserId(
     @Param('user_id') user_id: string,
