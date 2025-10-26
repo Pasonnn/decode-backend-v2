@@ -116,8 +116,17 @@ export class EmailService {
         message: MESSAGES.USER_INFO.USER_NOT_FOUND,
       };
     }
-    // Check if new email already exists
+    // Check if new email is current email
     if (user.email === new_email) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: MESSAGES.EMAIL_CHANGE.EMAIL_NEW_IS_CURRENT,
+      };
+    }
+    // Check if email is already exists
+    const existed_email = await this.userModel.findOne({ email: new_email });
+    if (existed_email) {
       return {
         success: false,
         statusCode: HttpStatus.BAD_REQUEST,

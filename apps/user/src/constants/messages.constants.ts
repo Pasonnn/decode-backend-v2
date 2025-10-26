@@ -168,6 +168,7 @@ export const MESSAGES = {
     EMAIL_CHANGE_INITIATION_FAILED: 'Failed to initiate email change',
     EMAIL_CHANGE_VERIFICATION_FAILED: 'Failed to verify email change code',
     EMAIL_CHANGE_FAILED: 'Failed to change email',
+    EMAIL_NEW_IS_CURRENT: 'New email is current email',
     NEW_EMAIL_ALREADY_EXISTS: 'New email already exists',
     NEW_EMAIL_INVALID_FORMAT: 'Invalid new email format',
     EMAIL_CHANGE_CODE_INVALID: 'Invalid email change verification code',
