@@ -8,7 +8,7 @@ services:
 
   # API Gateway - Main entry point (EXPOSED)
   api-gateway:
-    image: ghcr.io/pason/decode-api-gateway:latest
+    image: ghcr.io/decode-labs-web3/decode-api-gateway:latest
     container_name: decode-api-gateway
     restart: unless-stopped
     env_file:
@@ -48,7 +48,7 @@ services:
 
   # Auth Service (EXPOSED)
   auth:
-    image: ghcr.io/pason/decode-auth:latest
+    image: ghcr.io/decode-labs-web3/decode-auth:latest
     container_name: decode-auth
     restart: unless-stopped
     env_file:
@@ -81,7 +81,7 @@ services:
 
   # User Service (INTERNAL ONLY)
   user:
-    image: ghcr.io/pason/decode-user:latest
+    image: ghcr.io/decode-labs-web3/decode-user:latest
     container_name: decode-user
     restart: unless-stopped
     env_file:
@@ -110,7 +110,7 @@ services:
 
   # Relationship Service (INTERNAL ONLY)
   relationship:
-    image: ghcr.io/pason/decode-relationship:latest
+    image: ghcr.io/decode-labs-web3/decode-relationship:latest
     container_name: decode-relationship
     restart: unless-stopped
     env_file:
@@ -139,7 +139,7 @@ services:
 
   # Wallet Service (INTERNAL ONLY)
   wallet:
-    image: ghcr.io/pason/decode-wallet:latest
+    image: ghcr.io/decode-labs-web3/decode-wallet:latest
     container_name: decode-wallet
     restart: unless-stopped
     env_file:
@@ -168,7 +168,7 @@ services:
 
   # Notification Service (EXPOSED for WebSocket)
   notification:
-    image: ghcr.io/pason/decode-notification:latest
+    image: ghcr.io/decode-labs-web3/decode-notification:latest
     container_name: decode-notification
     restart: unless-stopped
     env_file:
@@ -198,7 +198,7 @@ services:
 
   # Neo4j DB Sync Service (INTERNAL ONLY)
   neo4jdb-sync:
-    image: ghcr.io/pason/decode-neo4jdb-sync:latest
+    image: ghcr.io/decode-labs-web3/decode-neo4jdb-sync:latest
     container_name: decode-neo4jdb-sync
     restart: unless-stopped
     env_file:

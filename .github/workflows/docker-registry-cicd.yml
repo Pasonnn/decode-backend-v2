@@ -86,15 +86,16 @@ jobs:
         run: |
           echo "Waiting for image to be available in registry..."
           sleep 10
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:latest
+          # Convert repository owner to lowercase for Docker registry compatibility
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker pull ${{ env.REGISTRY }}/$REPO_OWNER_LOWER/decode-${{ matrix.service }}:latest
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:latest
-          format: 'sarif'
-          output: 'trivy-results-${{ matrix.service }}.sarif'
+        run: |
+          # Convert repository owner to lowercase for Docker registry compatibility
+          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          trivy image --format sarif --output trivy-results-${{ matrix.service }}.sarif ${{ env.REGISTRY }}/$REPO_OWNER_LOWER/decode-${{ matrix.service }}:latest
 
       - name: Upload Trivy scan results
         if: github.event_name != 'pull_request'

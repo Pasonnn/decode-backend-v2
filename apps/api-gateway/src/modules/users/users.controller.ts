@@ -379,7 +379,7 @@ export class UsersController {
   // ==================== SEARCH ENDPOINTS ====================
 
   @Get('search')
-  @UseGuards(AuthGuardWithFingerprint)
+  @UseGuards(AuthGuard)
   @UserRateLimit.standard()
   @ApiOperation({ summary: 'Search users by username or email' })
   @ApiResponse({
