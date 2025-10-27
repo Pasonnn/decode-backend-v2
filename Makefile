@@ -97,7 +97,6 @@ health: ## Check health of all services
 	@curl -s http://localhost:4000/health && echo " ✅ API Gateway" || echo " ❌ API Gateway"
 	@curl -s http://localhost:4001/health && echo " ✅ Auth Service" || echo " ❌ Auth Service"
 	@curl -s http://localhost:4002/health && echo " ✅ User Service" || echo " ❌ User Service"
-	@curl -s http://localhost:4003/health && echo " ✅ Email Worker" || echo " ❌ Email Worker"
 	@curl -s http://localhost:4004/health && echo " ✅ Relationship Service" || echo " ❌ Relationship Service"
 	@curl -s http://localhost:4005/health && echo " ✅ Wallet Service" || echo " ❌ Wallet Service"
 	@curl -s http://localhost:4006/health && echo " ✅ Notification Service" || echo " ❌ Notification Service"
@@ -192,6 +191,29 @@ dev-test: ## Run tests
 
 dev-build: ## Build all services locally
 	npm run build:all
+
+# ==================== REGISTRY COMMANDS ====================
+
+registry-login: ## Login to GitHub Container Registry
+	@echo "Logging in to GitHub Container Registry..."
+	@echo $(GITHUB_TOKEN) | docker login ghcr.io -u $(GITHUB_USER) --password-stdin
+
+registry-pull: ## Pull all images from registry
+	@echo "Pulling latest images from registry..."
+	docker compose -f docker-compose.prod.yml pull
+
+registry-deploy: registry-pull ## Deploy from registry images
+	@echo "Deploying from registry images..."
+	docker compose -f docker-compose.prod.yml up -d --remove-orphans
+	@echo "Deployed from registry. Running health checks..."
+	@sleep 10
+	make health
+
+registry-logs: ## View logs from registry deployment
+	docker compose -f docker-compose.prod.yml logs -f
+
+registry-status: ## Show status of registry deployment
+	docker compose -f docker-compose.prod.yml ps
 
 # ==================== QUICK COMMANDS ====================
 

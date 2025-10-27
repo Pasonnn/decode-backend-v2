@@ -128,6 +128,10 @@ jobs:
             echo "📦 Pulling latest images..."
             docker compose -f docker-compose.prod.yml pull
 
+            # Stop existing services gracefully
+            echo "🛑 Stopping existing services..."
+            docker compose -f docker-compose.prod.yml down --remove-orphans
+
             # Deploy services
             echo "🚀 Deploying services..."
             docker compose -f docker-compose.prod.yml up -d --remove-orphans

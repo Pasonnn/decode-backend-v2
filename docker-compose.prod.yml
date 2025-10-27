@@ -8,10 +8,7 @@ services:
 
   # API Gateway - Main entry point (EXPOSED)
   api-gateway:
-    build:
-      context: .
-      dockerfile: apps/api-gateway/Dockerfile
-      target: production
+    image: ghcr.io/pason/decode-api-gateway:latest
     container_name: decode-api-gateway
     restart: unless-stopped
     env_file:
@@ -23,7 +20,6 @@ services:
       # Service communication URLs using Docker service names
       AUTH_SERVICE_URL: http://auth:4001
       USER_SERVICE_URL: http://user:4002
-      EMAIL_SERVICE_URL: http://email-worker:4003
       RELATIONSHIP_SERVICE_URL: http://relationship:4004
       WALLET_SERVICE_URL: http://wallet:4005
       NOTIFICATION_SERVICE_URL: http://notification:4006
@@ -52,10 +48,7 @@ services:
 
   # Auth Service (EXPOSED)
   auth:
-    build:
-      context: .
-      dockerfile: apps/auth/Dockerfile
-      target: production
+    image: ghcr.io/pason/decode-auth:latest
     container_name: decode-auth
     restart: unless-stopped
     env_file:
@@ -66,7 +59,6 @@ services:
       AUTH_HOST: 0.0.0.0
       # Service communication URLs using Docker service names
       USER_SERVICE_URL: http://user:4002
-      EMAIL_SERVICE_URL: http://email-worker:4003
       RELATIONSHIP_SERVICE_URL: http://relationship:4004
       WALLET_SERVICE_URL: http://wallet:4005
       NOTIFICATION_SERVICE_URL: http://notification:4006
@@ -89,10 +81,7 @@ services:
 
   # User Service (INTERNAL ONLY)
   user:
-    build:
-      context: .
-      dockerfile: apps/user/Dockerfile
-      target: production
+    image: ghcr.io/pason/decode-user:latest
     container_name: decode-user
     restart: unless-stopped
     env_file:
@@ -121,10 +110,7 @@ services:
 
   # Relationship Service (INTERNAL ONLY)
   relationship:
-    build:
-      context: .
-      dockerfile: apps/relationship/Dockerfile
-      target: production
+    image: ghcr.io/pason/decode-relationship:latest
     container_name: decode-relationship
     restart: unless-stopped
     env_file:
@@ -153,10 +139,7 @@ services:
 
   # Wallet Service (INTERNAL ONLY)
   wallet:
-    build:
-      context: .
-      dockerfile: apps/wallet/Dockerfile
-      target: production
+    image: ghcr.io/pason/decode-wallet:latest
     container_name: decode-wallet
     restart: unless-stopped
     env_file:
@@ -185,10 +168,7 @@ services:
 
   # Notification Service (EXPOSED for WebSocket)
   notification:
-    build:
-      context: .
-      dockerfile: apps/notification/Dockerfile
-      target: production
+    image: ghcr.io/pason/decode-notification:latest
     container_name: decode-notification
     restart: unless-stopped
     env_file:
@@ -218,10 +198,7 @@ services:
 
   # Neo4j DB Sync Service (INTERNAL ONLY)
   neo4jdb-sync:
-    build:
-      context: .
-      dockerfile: apps/neo4jdb-sync/Dockerfile
-      target: production
+    image: ghcr.io/pason/decode-neo4jdb-sync:latest
     container_name: decode-neo4jdb-sync
     restart: unless-stopped
     env_file:
