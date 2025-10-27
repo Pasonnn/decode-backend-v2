@@ -1,0 +1,360 @@
+name: Docker Registry CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - rollback
+      image_tag:
+        description: 'Image tag for rollback (e.g., sha-abc1234)'
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/decode
+
+jobs:
+  # ==================== BUILD AND PUSH IMAGES ====================
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-gateway, auth, user, relationship, wallet, notification, neo4jdb-sync]
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=sha-{{sha}},enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/${{ matrix.service }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,key=${{ runner.os }}-${{ matrix.service }}-${{ github.sha }}
+          cache-to: type=gha,mode=max,key=${{ runner.os }}-${{ matrix.service }}-${{ github.sha }}
+          target: production
+
+      - name: Run Trivy vulnerability scanner
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.meta.outputs.tags }}
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
+
+      - name: Upload Trivy scan results
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+
+  # ==================== DEPLOY TO CLOUD ====================
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          password: ${{ secrets.DROPLET_PASS }}
+          script: |
+            set -e
+            echo "🚀 Starting deployment to production..."
+
+            # Navigate to project directory
+            cd ~/decode-backend-v2
+
+            # Update code
+            echo "📥 Updating code from repository..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Login to GitHub Container Registry
+            echo "🔐 Logging in to GitHub Container Registry..."
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Pull latest images
+            echo "📦 Pulling latest images..."
+            docker compose -f docker-compose.prod.yml pull
+
+            # Deploy services
+            echo "🚀 Deploying services..."
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # Clean up unused resources
+            echo "🧹 Cleaning up unused Docker resources..."
+            docker system prune -af --volumes
+
+            # Wait for services to stabilize
+            echo "⏳ Waiting for services to stabilize..."
+            sleep 30
+
+            echo "✅ Deployment completed successfully!"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          password: ${{ secrets.DROPLET_PASS }}
+          script: |
+            echo "🔍 Verifying deployment..."
+
+            # Check container status
+            echo "📊 Container status:"
+            docker compose -f docker-compose.prod.yml ps
+
+            # Health checks
+            echo "🏥 Running health checks..."
+            cd ~/decode-backend-v2
+
+            # Check API Gateway
+            if curl -f -s http://localhost:4000/health > /dev/null; then
+              echo "✅ API Gateway is healthy"
+            else
+              echo "❌ API Gateway health check failed"
+              exit 1
+            fi
+
+            # Check Auth Service
+            if curl -f -s http://localhost:4001/health > /dev/null; then
+              echo "✅ Auth Service is healthy"
+            else
+              echo "❌ Auth Service health check failed"
+              exit 1
+            fi
+
+            # Check User Service
+            if curl -f -s http://localhost:4002/health > /dev/null; then
+              echo "✅ User Service is healthy"
+            else
+              echo "❌ User Service health check failed"
+              exit 1
+            fi
+
+            # Check Relationship Service
+            if curl -f -s http://localhost:4004/health > /dev/null; then
+              echo "✅ Relationship Service is healthy"
+            else
+              echo "❌ Relationship Service health check failed"
+              exit 1
+            fi
+
+            # Check Wallet Service
+            if curl -f -s http://localhost:4005/health > /dev/null; then
+              echo "✅ Wallet Service is healthy"
+            else
+              echo "❌ Wallet Service health check failed"
+              exit 1
+            fi
+
+            # Check Notification Service
+            if curl -f -s http://localhost:4006/health > /dev/null; then
+              echo "✅ Notification Service is healthy"
+            else
+              echo "❌ Notification Service health check failed"
+              exit 1
+            fi
+
+            # Check Neo4j DB Sync Service
+            if curl -f -s http://localhost:4007/health > /dev/null; then
+              echo "✅ Neo4j DB Sync Service is healthy"
+            else
+              echo "❌ Neo4j DB Sync Service health check failed"
+              exit 1
+            fi
+
+            echo "🎉 All services are healthy and running!"
+
+  # ==================== ROLLBACK ====================
+  rollback:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Rollback production
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          password: ${{ secrets.DROPLET_PASS }}
+          script: |
+            set -e
+            echo "🔄 Starting rollback to tag: ${{ github.event.inputs.image_tag }}"
+
+            # Navigate to project directory
+            cd ~/decode-backend-v2
+
+            # Login to GitHub Container Registry
+            echo "🔐 Logging in to GitHub Container Registry..."
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Update docker-compose.prod.yml with specific tag
+            TAG="${{ github.event.inputs.image_tag }}"
+            if [ -z "$TAG" ]; then
+              echo "❌ No image tag specified for rollback"
+              exit 1
+            fi
+
+            echo "📦 Pulling images with tag: $TAG"
+
+            # Pull specific tagged images
+            docker pull ghcr.io/${{ github.repository_owner }}/decode-api-gateway:$TAG
+            docker pull ghcr.io/${{ github.repository_owner }}/decode-auth:$TAG
+            docker pull ghcr.io/${{ github.repository_owner }}/decode-user:$TAG
+            docker pull ghcr.io/${{ github.repository_owner }}/decode-relationship:$TAG
+            docker pull ghcr.io/${{ github.repository_owner }}/decode-wallet:$TAG
+            docker pull ghcr.io/${{ github.repository_owner }}/decode-notification:$TAG
+            docker pull ghcr.io/${{ github.repository_owner }}/decode-neo4jdb-sync:$TAG
+
+            # Update docker-compose.prod.yml to use specific tags
+            sed -i "s/:latest/:$TAG/g" docker-compose.prod.yml
+
+            # Deploy with specific tags
+            echo "🚀 Deploying with rollback images..."
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # Wait for services to stabilize
+            echo "⏳ Waiting for services to stabilize..."
+            sleep 30
+
+            # Health checks
+            echo "🏥 Running health checks..."
+            if curl -f -s http://localhost:4000/health > /dev/null; then
+              echo "✅ Rollback completed successfully!"
+            else
+              echo "❌ Rollback health check failed"
+              exit 1
+            fi
+
+  # ==================== NOTIFICATION ====================
+  notify-success:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: success() && github.ref == 'refs/heads/main'
+    steps:
+      - name: Notify deployment success
+        uses: Ilshidur/action-discord@master
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: '🚀 Production Deployment Successful'
+          description: 'All services are healthy and running!'
+          color: 0x00ff00
+          fields: |
+            [
+              {
+                "name": "Repository",
+                "value": "${{ github.repository }}",
+                "inline": true
+              },
+              {
+                "name": "Branch",
+                "value": "${{ github.ref_name }}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "${{ github.sha }}",
+                "inline": true
+              },
+              {
+                "name": "Services Deployed",
+                "value": "API Gateway, Auth, User, Relationship, Wallet, Notification, Neo4j DB Sync",
+                "inline": false
+              }
+            ]
+          footer: 'GitHub Actions'
+          timestamp: true
+
+  notify-failure:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: failure() && github.ref == 'refs/heads/main'
+    steps:
+      - name: Notify deployment failure
+        uses: Ilshidur/action-discord@master
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: '❌ Production Deployment Failed'
+          description: 'Deployment failed! Check the logs for details.'
+          color: 0xff0000
+          fields: |
+            [
+              {
+                "name": "Repository",
+                "value": "${{ github.repository }}",
+                "inline": true
+              },
+              {
+                "name": "Branch",
+                "value": "${{ github.ref_name }}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "${{ github.sha }}",
+                "inline": true
+              },
+              {
+                "name": "Action URL",
+                "value": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+                "inline": false
+              }
+            ]
+          footer: 'GitHub Actions'
+          timestamp: true
