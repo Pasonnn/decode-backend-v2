@@ -172,7 +172,7 @@ jobs:
             cd ~/decode-backend-v2
 
             # Check API Gateway
-            if curl -f -s http://localhost:4000/health/health > /dev/null; then
+            if curl -f -s http://localhost:4000/health > /dev/null; then
               echo "✅ API Gateway is healthy"
             else
               echo "❌ API Gateway health check failed"
