@@ -92,10 +92,11 @@ jobs:
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
-        run: |
-          # Convert repository owner to lowercase for Docker registry compatibility
-          REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          trivy image --format sarif --output trivy-results-${{ matrix.service }}.sarif ${{ env.REGISTRY }}/$REPO_OWNER_LOWER/decode-${{ matrix.service }}:latest
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/decode-labs-web3/decode-${{ matrix.service }}:latest
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
 
       - name: Upload Trivy scan results
         if: github.event_name != 'pull_request'
