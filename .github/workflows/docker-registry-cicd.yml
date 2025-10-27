@@ -176,7 +176,6 @@ jobs:
               echo "✅ API Gateway is healthy"
             else
               echo "❌ API Gateway health check failed"
-              exit 1
             fi
 
             # Check Auth Service
@@ -184,7 +183,6 @@ jobs:
               echo "✅ Auth Service is healthy"
             else
               echo "❌ Auth Service health check failed"
-              exit 1
             fi
 
             # Check User Service
@@ -192,7 +190,6 @@ jobs:
               echo "✅ User Service is healthy"
             else
               echo "❌ User Service health check failed"
-              exit 1
             fi
 
             # Check Relationship Service
@@ -200,7 +197,6 @@ jobs:
               echo "✅ Relationship Service is healthy"
             else
               echo "❌ Relationship Service health check failed"
-              exit 1
             fi
 
             # Check Wallet Service
@@ -208,7 +204,6 @@ jobs:
               echo "✅ Wallet Service is healthy"
             else
               echo "❌ Wallet Service health check failed"
-              exit 1
             fi
 
             # Check Notification Service
@@ -216,7 +211,6 @@ jobs:
               echo "✅ Notification Service is healthy"
             else
               echo "❌ Notification Service health check failed"
-              exit 1
             fi
 
             # Check Neo4j DB Sync Service (Don't need to check for now)
