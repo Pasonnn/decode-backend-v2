@@ -104,6 +104,27 @@ export class WalletController {
     return this.walletService.checkHealth();
   }
 
+  @Get('health')
+  @Public()
+  @ApiOperation({
+    summary: 'Check wallet service health (Docker)',
+    description:
+      'Returns the health status of the wallet service for Docker health checks. This endpoint is public and does not require authentication.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Wallet service is healthy',
+    type: HealthCheckResponseDto,
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Service unavailable',
+    type: ServiceUnavailableResponseDto,
+  })
+  checkHealthDocker(): Response<{ status: string }> {
+    return this.walletService.checkHealth();
+  }
+
   // ==================== AUTH ENDPOINTS ====================
 
   @Post('auth/challenge')

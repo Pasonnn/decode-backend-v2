@@ -70,6 +70,12 @@ export class NotificationController {
     return this.notificationService.checkHealth();
   }
 
+  @Get('health')
+  @HttpCode(HttpStatus.OK)
+  async checkHealthDocker(): Promise<Response> {
+    return this.notificationService.checkHealth();
+  }
+
   // ==================== NOTIFICATION ENDPOINTS ====================
 
   @ApiOperation({

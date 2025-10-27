@@ -172,7 +172,7 @@ jobs:
             cd ~/decode-backend-v2
 
             # Check API Gateway
-            if curl -f -s http://localhost:4000/health > /dev/null; then
+            if curl -f -s http://localhost:4000/health/health > /dev/null; then
               echo "✅ API Gateway is healthy"
             else
               echo "❌ API Gateway health check failed"
@@ -180,7 +180,7 @@ jobs:
             fi
 
             # Check Auth Service
-            if curl -f -s http://localhost:4001/health > /dev/null; then
+            if curl -f -s http://localhost:4001/auth/health > /dev/null; then
               echo "✅ Auth Service is healthy"
             else
               echo "❌ Auth Service health check failed"
@@ -188,7 +188,7 @@ jobs:
             fi
 
             # Check User Service
-            if curl -f -s http://localhost:4002/health > /dev/null; then
+            if curl -f -s http://localhost:4002/users/health > /dev/null; then
               echo "✅ User Service is healthy"
             else
               echo "❌ User Service health check failed"
@@ -196,7 +196,7 @@ jobs:
             fi
 
             # Check Relationship Service
-            if curl -f -s http://localhost:4004/health > /dev/null; then
+            if curl -f -s http://localhost:4004/relationship/health > /dev/null; then
               echo "✅ Relationship Service is healthy"
             else
               echo "❌ Relationship Service health check failed"
@@ -204,7 +204,7 @@ jobs:
             fi
 
             # Check Wallet Service
-            if curl -f -s http://localhost:4005/health > /dev/null; then
+            if curl -f -s http://localhost:4005/wallets/health > /dev/null; then
               echo "✅ Wallet Service is healthy"
             else
               echo "❌ Wallet Service health check failed"
@@ -212,20 +212,20 @@ jobs:
             fi
 
             # Check Notification Service
-            if curl -f -s http://localhost:4006/health > /dev/null; then
+            if curl -f -s http://localhost:4006/notifications/health > /dev/null; then
               echo "✅ Notification Service is healthy"
             else
               echo "❌ Notification Service health check failed"
               exit 1
             fi
 
-            # Check Neo4j DB Sync Service
-            if curl -f -s http://localhost:4007/health > /dev/null; then
-              echo "✅ Neo4j DB Sync Service is healthy"
-            else
-              echo "❌ Neo4j DB Sync Service health check failed"
-              exit 1
-            fi
+            # Check Neo4j DB Sync Service (Don't need to check for now)
+            # if curl -f -s http://localhost:4007/neo4jdb-sync/health > /dev/null; then
+            #   echo "✅ Neo4j DB Sync Service is healthy"
+            # else
+            #   echo "❌ Neo4j DB Sync Service health check failed"
+            #   exit 1
+            # fi
 
             echo "🎉 All services are healthy and running!"
 

@@ -1359,4 +1359,12 @@ export class AuthController {
   async checkHealth(): Promise<Response> {
     return this.authService.checkHealth();
   }
+
+  @Get('health')
+  @Public()
+  @UserRateLimit.standard()
+  @HttpCode(HttpStatus.OK)
+  async checkHealthDocker(): Promise<Response> {
+    return this.authService.checkHealth();
+  }
 }

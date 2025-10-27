@@ -87,6 +87,31 @@ export class UsersController {
     return this.usersService.checkHealth();
   }
 
+  @Get('health')
+  @Public()
+  @ApiOperation({ summary: 'Check user service health (Docker)' })
+  @ApiResponse({
+    status: 200,
+    description: 'User service is healthy',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        statusCode: { type: 'number', example: 200 },
+        message: { type: 'string', example: 'User service is healthy' },
+        data: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', example: 'ok' },
+          },
+        },
+      },
+    },
+  })
+  checkHealthDocker(): Response<{ status: string }> {
+    return this.usersService.checkHealth();
+  }
+
   // ==================== PROFILE ENDPOINTS ====================
 
   @Get('profile/me')

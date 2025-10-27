@@ -114,6 +114,12 @@ export class RelationshipController {
     return this.relationshipService.checkHealth();
   }
 
+  @Get('health')
+  @HttpCode(HttpStatus.OK)
+  async checkHealthDocker(): Promise<Response> {
+    return this.relationshipService.checkHealth();
+  }
+
   // ==================== USER ENDPOINTS ====================
 
   @ApiOperation({

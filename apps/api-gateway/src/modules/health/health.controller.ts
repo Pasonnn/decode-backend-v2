@@ -4,7 +4,7 @@ import { HealthService } from './health.service';
 import type { Response } from '../../interfaces/response.interface';
 
 @ApiTags('health')
-@Controller('health')
+@Controller()
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
@@ -36,9 +36,8 @@ export class HealthController {
    * Health check endpoint to verify service availability
    * @returns Service status object
    */
-  @Get('healthz')
+  @Get('health')
   checkHealth(): Response {
     const health_check_response = this.healthService.checkHealth();
     return health_check_response;
   }
-}
