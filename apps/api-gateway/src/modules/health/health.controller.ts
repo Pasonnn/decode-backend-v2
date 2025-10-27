@@ -41,3 +41,4 @@ export class HealthController {
     const health_check_response = this.healthService.checkHealth();
     return health_check_response;
   }
+}
