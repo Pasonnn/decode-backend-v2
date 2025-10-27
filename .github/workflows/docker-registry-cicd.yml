@@ -77,6 +77,17 @@ jobs:
           cache-to: type=gha,mode=max,key=${{ runner.os }}-${{ matrix.service }}-${{ github.sha }}
           target: production
 
+      - name: Log in to Container Registry for Trivy
+        if: github.event_name != 'pull_request'
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Wait for image availability
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "Waiting for image to be available in registry..."
+          sleep 10
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:latest
+
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
