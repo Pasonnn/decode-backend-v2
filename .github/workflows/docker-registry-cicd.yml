@@ -81,7 +81,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ steps.meta.outputs.tags }}
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}:latest
           format: 'sarif'
           output: 'trivy-results-${{ matrix.service }}.sarif'
 
@@ -292,73 +292,83 @@ jobs:
     runs-on: ubuntu-latest
     if: success() && github.ref == 'refs/heads/main'
     steps:
-      - name: Notify deployment success
-        uses: Ilshidur/action-discord@master
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          title: '🚀 Production Deployment Successful'
-          description: 'All services are healthy and running!'
-          color: 0x00ff00
-          fields: |
-            [
-              {
-                "name": "Repository",
-                "value": "${{ github.repository }}",
-                "inline": true
-              },
-              {
-                "name": "Branch",
-                "value": "${{ github.ref_name }}",
-                "inline": true
-              },
-              {
-                "name": "Commit",
-                "value": "${{ github.sha }}",
-                "inline": true
-              },
-              {
-                "name": "Services Deployed",
-                "value": "API Gateway, Auth, User, Relationship, Wallet, Notification, Neo4j DB Sync",
-                "inline": false
-              }
-            ]
-          footer: 'GitHub Actions'
-          timestamp: true
+      - name: Send Discord success notification
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "🚀 Production Deployment Successful",
+                   "description": "All services are healthy and running!",
+                   "color": 65280,
+                   "fields": [
+                     {
+                       "name": "Repository",
+                       "value": "${{ github.repository }}",
+                       "inline": true
+                     },
+                     {
+                       "name": "Branch",
+                       "value": "${{ github.ref_name }}",
+                       "inline": true
+                     },
+                     {
+                       "name": "Commit",
+                       "value": "`${{ github.sha }}`",
+                       "inline": false
+                     },
+                     {
+                       "name": "Services Deployed",
+                       "value": "API Gateway, Auth, User, Relationship, Wallet, Notification, Neo4j DB Sync",
+                       "inline": false
+                     }
+                   ],
+                   "footer": {
+                     "text": "GitHub Actions"
+                   },
+                   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+                 }]
+               }' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   notify-failure:
     needs: [deploy]
     runs-on: ubuntu-latest
     if: failure() && github.ref == 'refs/heads/main'
     steps:
-      - name: Notify deployment failure
-        uses: Ilshidur/action-discord@master
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          title: '❌ Production Deployment Failed'
-          description: 'Deployment failed! Check the logs for details.'
-          color: 0xff0000
-          fields: |
-            [
-              {
-                "name": "Repository",
-                "value": "${{ github.repository }}",
-                "inline": true
-              },
-              {
-                "name": "Branch",
-                "value": "${{ github.ref_name }}",
-                "inline": true
-              },
-              {
-                "name": "Commit",
-                "value": "${{ github.sha }}",
-                "inline": true
-              },
-              {
-                "name": "Action URL",
-                "value": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-                "inline": false
-              }
-            ]
-          footer: 'GitHub Actions'
-          timestamp: true
+      - name: Send Discord failure notification
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "❌ Production Deployment Failed",
+                   "description": "Deployment failed! Check the logs for details.",
+                   "color": 16711680,
+                   "fields": [
+                     {
+                       "name": "Repository",
+                       "value": "${{ github.repository }}",
+                       "inline": true
+                     },
+                     {
+                       "name": "Branch",
+                       "value": "${{ github.ref_name }}",
+                       "inline": true
+                     },
+                     {
+                       "name": "Commit",
+                       "value": "`${{ github.sha }}`",
+                       "inline": false
+                     },
+                     {
+                       "name": "Action URL",
+                       "value": "[View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+                       "inline": false
+                     }
+                   ],
+                   "footer": {
+                     "text": "GitHub Actions"
+                   },
+                   "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+                 }]
+               }' \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
