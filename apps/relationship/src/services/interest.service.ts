@@ -64,6 +64,7 @@ export class InterestService {
         success: false,
         statusCode: HttpStatus.NOT_FOUND,
         message: `User interests not found`,
+        data: [],
       };
     }
     const filter_user_interests = this.filterUserInterests({

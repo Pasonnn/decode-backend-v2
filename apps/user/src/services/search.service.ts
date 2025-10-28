@@ -26,8 +26,10 @@ export class SearchService {
     limit: number;
     sortBy: string;
     sortOrder: string;
+    user_id: string;
   }): Promise<PaginationResponse<UserDoc[]>> {
-    const { email_or_username, page, limit, sortBy, sortOrder } = input;
+    const { email_or_username, page, limit, sortBy, sortOrder, user_id } =
+      input;
     const skip = page * limit;
 
     try {
@@ -60,6 +62,12 @@ export class SearchService {
                 },
               ],
             },
+          },
+        },
+        // Exclude the current user's own document
+        {
+          $match: {
+            _id: { $ne: user_id },
           },
         },
         { $sort: { [sortBy]: sortOrder === 'asc' ? 1 : -1 } },
