@@ -131,6 +131,9 @@ export class InterestService {
         from_user_id: user_id,
       });
 
+      // Clear Redis cache after getting suggestions
+      await this.redisInfrastructure.del(cache_key);
+
       // Step 6: Return filtered, paginated results
       return {
         success: true,

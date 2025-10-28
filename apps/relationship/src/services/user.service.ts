@@ -106,6 +106,13 @@ export class UserService {
           if (!filtered_user) {
             return null;
           }
+          const filtered_following_user = await this.filterFollowingUser({
+            user: user,
+            user_id_from: from_user_id,
+          });
+          if (!filtered_following_user) {
+            return null;
+          }
           return filtered_user;
         }),
       );
@@ -169,6 +176,29 @@ export class UserService {
     } catch (error) {
       this.logger.error(
         `Failed to filter user: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return null;
+    }
+  }
+
+  private async filterFollowingUser(input: {
+    user: NodeResponse<UserNeo4jDoc>;
+    user_id_from: string;
+  }): Promise<UserNeo4jDoc | null> {
+    const { user, user_id_from } = input;
+    const user_neo4j: UserNeo4jDoc = user.properties;
+    try {
+      const is_following = await this.isFollowing({
+        user_id_from: user_id_from,
+        user_id_to: user_neo4j.user_id,
+      });
+      if (is_following) {
+        return null;
+      }
+      return user_neo4j;
+    } catch (error) {
+      this.logger.error(
+        `Failed to filter following user: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
     }

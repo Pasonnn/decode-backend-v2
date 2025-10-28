@@ -1,5 +1,5 @@
 import { Injectable, Logger, HttpStatus } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 // Interfaces Import
@@ -67,7 +67,7 @@ export class SearchService {
         // Exclude the current user's own document
         {
           $match: {
-            _id: { $ne: user_id },
+            _id: { $ne: new Types.ObjectId(user_id) },
           },
         },
         { $sort: { [sortBy]: sortOrder === 'asc' ? 1 : -1 } },
@@ -115,6 +115,12 @@ export class SearchService {
                 },
               ],
             },
+          },
+        },
+        // Exclude the current user's own document from count as well
+        {
+          $match: {
+            _id: { $ne: new Types.ObjectId(user_id) },
           },
         },
         { $count: 'total' },
