@@ -20,4 +20,5 @@ export interface UserDoc {
   is_blocked_by?: boolean;
   mutual_followers_number?: number;
   mutual_followers_list?: string[];
+  is_online?: boolean;
 }

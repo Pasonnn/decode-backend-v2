@@ -6,6 +6,7 @@ import { WalletServiceClient } from '../../infrastructure/external-services/wall
 import { RelationshipServiceClient } from '../../infrastructure/external-services/relationship-service.client';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
+import { OnlineService } from './online.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { AuthGuardWithFingerprint } from '../../common/guards/auth-with-fingerprint.guard';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -41,6 +42,7 @@ import { CacheService } from '../../infrastructure/cache/cache.service';
   providers: [
     UserServiceClient,
     UsersService,
+    OnlineService,
     WalletServiceClient,
     RelationshipServiceClient,
     AuthGuard,
@@ -51,6 +53,7 @@ import { CacheService } from '../../infrastructure/cache/cache.service';
   exports: [
     UserServiceClient,
     UsersService,
+    OnlineService,
     WalletServiceClient,
     RelationshipServiceClient,
     ClientsModule,

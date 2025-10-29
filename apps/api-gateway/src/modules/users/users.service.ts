@@ -30,6 +30,7 @@ import type {
 import { MESSAGES } from 'apps/wallet/src/constants/messages.constants';
 import { UserNeo4jDoc } from 'apps/neo4jdb-sync/src/interfaces/user-neo4j-doc.interface';
 import { CacheService } from '../../infrastructure/cache/cache.service';
+import { OnlineService } from './online.service';
 
 @Injectable()
 export class UsersService {
@@ -42,6 +43,7 @@ export class UsersService {
     @Inject('NEO4JDB_SYNC_SERVICE')
     private readonly neo4jdbUpdateUserService: ClientProxy,
     private readonly cacheService: CacheService,
+    private readonly onlineService: OnlineService,
   ) {}
 
   // ==================== PROFILE METHODS ====================
@@ -146,6 +148,20 @@ export class UsersService {
         );
       }
 
+      // Get user online status
+      try {
+        const isOnline = await this.onlineService.isOnline(data.user_id);
+        full_user_profile_data.is_online = isOnline;
+        this.logger.log(`User ${data.user_id} online status: ${isOnline}`);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to check online status for user ${data.user_id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        full_user_profile_data.is_online = false; // Default to offline if check fails
+      }
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -220,9 +236,9 @@ export class UsersService {
 
       // Get user relationship data with graceful degradation
       let user_relationship_data: UserRelationshipDoc | undefined = undefined;
+      const user_id = get_my_profile_response.data._id;
 
       try {
-        const user_id = get_my_profile_response.data._id;
         let user_relationship_response: Response<UserRelationshipDoc> =
           await this.relationshipServiceClient.getUser(
             {
@@ -270,6 +286,20 @@ export class UsersService {
             error instanceof Error ? error.message : String(error)
           }`,
         );
+      }
+
+      // Get current user online status
+      try {
+        const isOnline = await this.onlineService.isOnline(user_id);
+        full_user_profile_data.is_online = isOnline;
+        this.logger.log(`Current user ${user_id} online status: ${isOnline}`);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to check online status for current user ${user_id}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        full_user_profile_data.is_online = false; // Default to offline if check fails
       }
 
       const responseMessage = user_primary_wallet_data
@@ -769,7 +799,21 @@ export class UsersService {
               );
             }
 
-            // Enrich user data with wallet and relationship information
+            // Get user online status
+            let isOnline = false;
+            try {
+              isOnline = await this.onlineService.isOnline(user._id);
+              this.logger.log(`User ${user._id} online status: ${isOnline}`);
+            } catch (error) {
+              this.logger.warn(
+                `Failed to check online status for user ${user._id}: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              );
+              isOnline = false; // Default to offline if check fails
+            }
+
+            // Enrich user data with wallet, relationship, and online status information
             const enriched_user: UserDoc = {
               ...user,
               primary_wallet: user_primary_wallet_data,
@@ -783,6 +827,7 @@ export class UsersService {
                 user_relationship_data?.mutual_followers_number,
               mutual_followers_list:
                 user_relationship_data?.mutual_followers_list,
+              is_online: isOnline,
             };
 
             return enriched_user;
