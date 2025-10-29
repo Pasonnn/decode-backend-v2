@@ -90,7 +90,7 @@ export class UserService {
     }
   }
 
-  async filterUsers(input: {
+  async filterFollowingUsers(input: {
     users: NodeResponse<UserNeo4jDoc>[];
     from_user_id: string;
   }): Promise<UserNeo4jDoc[]> {
@@ -111,6 +111,37 @@ export class UserService {
             user_id_from: from_user_id,
           });
           if (!filtered_following_user) {
+            return null;
+          }
+          return filtered_user;
+        }),
+      );
+      const full_users_response_filtered = full_users_response.filter(
+        (user) => user !== null,
+      );
+      return full_users_response_filtered;
+    } catch (error) {
+      this.logger.error(
+        `Failed to filter users: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return [];
+    }
+  }
+
+  async filterUsers(input: {
+    users: NodeResponse<UserNeo4jDoc>[];
+    from_user_id: string;
+  }): Promise<UserNeo4jDoc[]> {
+    const { users, from_user_id } = input;
+    try {
+      // Full followers response
+      const full_users_response = await Promise.all(
+        users.map(async (user) => {
+          const filtered_user = await this.filterUser({
+            user: user,
+            user_id_from: from_user_id,
+          });
+          if (!filtered_user) {
             return null;
           }
           return filtered_user;

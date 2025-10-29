@@ -126,7 +126,7 @@ export class InterestService {
       }
 
       // Step 5: Filter users with additional information (blocked status, etc.)
-      const suggestion_users = await this.userService.filterUsers({
+      const suggestion_users = await this.userService.filterFollowingUsers({
         users: not_cached_suggestion_users,
         from_user_id: user_id,
       });
