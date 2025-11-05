@@ -7,7 +7,7 @@ FROM node:18-alpine AS base
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies needed for native module compilation
 RUN apk add --no-cache \
     python3 \
     make \
@@ -18,13 +18,11 @@ RUN apk add --no-cache \
 COPY package*.json ./
 COPY nest-cli.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
-
 # Stage 2: Development dependencies
 FROM base AS development
 
 # Install all dependencies including dev dependencies
+# This ensures native modules like dd-trace are built correctly
 RUN npm ci && npm cache clean --force
 
 # Copy source code
