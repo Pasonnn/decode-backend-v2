@@ -46,6 +46,9 @@ import { Transport } from '@nestjs/microservices';
 // Application module
 import { Neo4jDbSyncModule } from './neo4jdb-sync.module';
 
+// Datadog observability
+import 'dd-trace/init';
+
 /**
  * Bootstrap function to initialize and configure the Neo4j Database Sync microservice
  *

@@ -64,6 +64,9 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor';
 
+// Datadog observability
+import 'dd-trace/init';
+
 /**
  * Bootstrap function to initialize and configure the API Gateway application
  *

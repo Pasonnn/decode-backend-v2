@@ -46,6 +46,9 @@ import { ValidationPipe } from '@nestjs/common';
 // Application module
 import { RelationshipModule } from './relationship.module';
 
+// Datadog observability
+import 'dd-trace/init';
+
 /**
  * Bootstrap function to initialize and configure the Relationship Service application
  *

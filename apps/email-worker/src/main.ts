@@ -42,6 +42,9 @@ import { Transport } from '@nestjs/microservices';
 // Application module
 import { EmailWorkerModule } from './email-worker.module';
 
+// Datadog observability
+import 'dd-trace/init';
+
 /**
  * Bootstrap function to initialize and configure the Email Worker microservice
  *

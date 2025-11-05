@@ -44,6 +44,9 @@ import { ValidationPipe } from '@nestjs/common';
 // Application module
 import { WalletModule } from './wallet.module';
 
+// Datadog observability
+import 'dd-trace/init';
+
 // Global exception filters for centralized error handling
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';

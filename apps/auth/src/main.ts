@@ -39,6 +39,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 
+// Datadog observability
+import 'dd-trace/init';
+
 /**
  * Bootstrap function to initialize and start the Authentication Service
  *

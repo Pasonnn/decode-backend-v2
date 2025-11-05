@@ -48,6 +48,9 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 // Application module
 import { NotificationModule } from './notification.module';
 
+// Datadog observability
+import 'dd-trace/init';
+
 /**
  * Bootstrap function to initialize and configure the Notification Service application
  *
