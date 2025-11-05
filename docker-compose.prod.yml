@@ -259,28 +259,6 @@ services:
       retries: 3
       start_period: 40s
 
-  # ==================== DATADOG AGENT ====================
-  datadog-agent:
-    image: gcr.io/datadoghq/agent:7
-    container_name: dd-agent
-    restart: unless-stopped
-    env_file:
-      - .env.decode-observe
-    environment:
-      - DD_SITE=ap1.datadoghq.com
-      - DD_ENV=prod
-      - DD_PROCESS_AGENT_ENABLED=true
-      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
-      - DD_APM_NON_LOCAL_TRAFFIC=true
-      - DD_CONTAINER_EXCLUDE="name:dd-agent"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /proc/:/host/proc/:ro
-      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-    networks:
-      - decode-network
-
 
 # ==================== NETWORKS ====================
 networks:
