@@ -35,7 +35,6 @@ services:
       - wallet
       - relationship
       - notification
-      - datadog-agent
     networks:
       - decode-network
     healthcheck:
