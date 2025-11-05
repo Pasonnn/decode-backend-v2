@@ -23,7 +23,8 @@ FROM base AS development
 
 # Install all dependencies including dev dependencies
 # This ensures native modules like dd-trace are built correctly
-RUN npm ci && npm cache clean --force
+# Using npm install instead of npm ci to handle lock file inconsistencies
+RUN npm install && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -44,10 +45,15 @@ RUN addgroup -g 1001 -S nodejs && \
 # Set working directory
 WORKDIR /app
 
-# Copy built application and dependencies from build stage
-COPY --from=build --chown=nestjs:nodejs /app/dist ./dist
-COPY --from=build --chown=nestjs:nodejs /app/node_modules ./node_modules
+# Copy package files
 COPY --from=build --chown=nestjs:nodejs /app/package*.json ./
+
+# Install only production dependencies
+# Using npm install instead of npm ci to handle lock file inconsistencies
+RUN npm install --only=production && npm cache clean --force
+
+# Copy built application
+COPY --from=build --chown=nestjs:nodejs /app/dist ./dist
 
 # Switch to non-root user
 USER nestjs

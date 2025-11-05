@@ -14,12 +14,11 @@ RUN apk add --no-cache \
 COPY package*.json ./
 COPY nest-cli.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
-
 # Development stage
 FROM base AS development
-RUN npm ci && npm cache clean --force
+# Install all dependencies including dev dependencies for building
+# Using npm install instead of npm ci to handle lock file inconsistencies
+RUN npm install && npm cache clean --force
 COPY . .
 
 # Build stage
@@ -35,10 +34,15 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
+# Copy package files
+COPY --from=build --chown=nestjs:nodejs /app/package*.json ./
+
+# Install only production dependencies
+# Using npm install instead of npm ci to handle lock file inconsistencies
+RUN npm install --only=production && npm cache clean --force
+
 # Copy built application
 COPY --from=build --chown=nestjs:nodejs /app/dist ./dist
-COPY --from=build --chown=nestjs:nodejs /app/node_modules ./node_modules
-COPY --from=build --chown=nestjs:nodejs /app/package*.json ./
 
 USER nestjs
 
