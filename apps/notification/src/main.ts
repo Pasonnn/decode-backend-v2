@@ -39,6 +39,9 @@
  * @since 2024
  */
 
+// Datadog observability
+import 'dd-trace/init';
+
 // Core NestJS modules for application initialization
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -47,9 +50,6 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 // Application module
 import { NotificationModule } from './notification.module';
-
-// Datadog observability
-import 'dd-trace/init';
 
 /**
  * Bootstrap function to initialize and configure the Notification Service application

@@ -35,15 +35,15 @@
  * @since 2024
  */
 
+// Datadog observability
+import 'dd-trace/init';
+
 // Core NestJS modules for microservice initialization
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 
 // Application module
 import { EmailWorkerModule } from './email-worker.module';
-
-// Datadog observability
-import 'dd-trace/init';
 
 /**
  * Bootstrap function to initialize and configure the Email Worker microservice

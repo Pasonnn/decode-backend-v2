@@ -33,14 +33,14 @@
  * @since 2024
  */
 
+// Datadog observability
+import 'dd-trace/init';
+
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.module';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
-
-// Datadog observability
-import 'dd-trace/init';
 
 /**
  * Bootstrap function to initialize and start the Authentication Service

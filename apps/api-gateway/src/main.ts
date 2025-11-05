@@ -41,6 +41,9 @@
  * @since 2024
  */
 
+// Datadog observability
+import 'dd-trace/init';
+
 // Core NestJS modules for application initialization and configuration
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -63,9 +66,6 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 // Global interceptors for request/response transformation
 import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor';
-
-// Datadog observability
-import 'dd-trace/init';
 
 /**
  * Bootstrap function to initialize and configure the API Gateway application
