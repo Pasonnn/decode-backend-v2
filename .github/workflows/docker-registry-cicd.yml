@@ -137,6 +137,10 @@ jobs:
             echo "🛑 Stopping and removing existing containers..."
             docker compose -f docker-compose.prod.yml down --remove-orphans || true
 
+            # Force remove any existing datadog-agent container (in case it was created outside docker-compose)
+            echo "🧹 Removing any existing datadog-agent container..."
+            docker rm -f datadog-agent 2>/dev/null || true
+
             # Pull latest images
             echo "📦 Pulling latest images..."
             docker compose -f docker-compose.prod.yml pull
