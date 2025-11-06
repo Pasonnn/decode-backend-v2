@@ -12,6 +12,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Response } from '../../interfaces/response.interface';
+import { MetricsService } from '../../common/datadog/metrics.service';
 
 @Injectable()
 export abstract class BaseHttpClient {
@@ -20,12 +21,16 @@ export abstract class BaseHttpClient {
   constructor(
     protected readonly httpService: HttpService,
     protected baseURL: string,
+    protected readonly metricsService?: MetricsService,
   ) {}
 
   protected async get<T>(
     url: string,
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
+    const serviceName = this.extractServiceName();
+    const startTime = Date.now();
+
     try {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
@@ -38,8 +43,15 @@ export abstract class BaseHttpClient {
           requestConfig,
         ),
       );
+
+      const duration = Date.now() - startTime;
+      this.recordMetrics('GET', url, serviceName, response.status, duration);
+
       return response.data;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      const statusCode = error?.response?.status || 500;
+      this.recordMetrics('GET', url, serviceName, statusCode, duration, true);
       this.handleError(error, 'GET', url);
     }
   }
@@ -49,6 +61,9 @@ export abstract class BaseHttpClient {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
+    const serviceName = this.extractServiceName();
+    const startTime = Date.now();
+
     try {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
@@ -62,8 +77,15 @@ export abstract class BaseHttpClient {
           requestConfig,
         ),
       );
+
+      const duration = Date.now() - startTime;
+      this.recordMetrics('POST', url, serviceName, response.status, duration);
+
       return this.handleUnsuccessfulResponse(response);
     } catch (error) {
+      const duration = Date.now() - startTime;
+      const statusCode = error?.response?.status || 500;
+      this.recordMetrics('POST', url, serviceName, statusCode, duration, true);
       this.handleError(error, 'POST', url);
     }
   }
@@ -73,6 +95,9 @@ export abstract class BaseHttpClient {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
+    const serviceName = this.extractServiceName();
+    const startTime = Date.now();
+
     try {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
@@ -86,8 +111,15 @@ export abstract class BaseHttpClient {
           requestConfig,
         ),
       );
+
+      const duration = Date.now() - startTime;
+      this.recordMetrics('PUT', url, serviceName, response.status, duration);
+
       return response.data;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      const statusCode = error?.response?.status || 500;
+      this.recordMetrics('PUT', url, serviceName, statusCode, duration, true);
       this.handleError(error, 'PUT', url);
     }
   }
@@ -97,6 +129,9 @@ export abstract class BaseHttpClient {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
+    const serviceName = this.extractServiceName();
+    const startTime = Date.now();
+
     try {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
@@ -110,8 +145,15 @@ export abstract class BaseHttpClient {
           requestConfig,
         ),
       );
+
+      const duration = Date.now() - startTime;
+      this.recordMetrics('PATCH', url, serviceName, response.status, duration);
+
       return response.data;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      const statusCode = error?.response?.status || 500;
+      this.recordMetrics('PATCH', url, serviceName, statusCode, duration, true);
       this.handleError(error, 'PATCH', url);
     }
   }
@@ -120,6 +162,9 @@ export abstract class BaseHttpClient {
     url: string,
     config?: AxiosRequestConfig,
   ): Promise<Response<T>> {
+    const serviceName = this.extractServiceName();
+    const startTime = Date.now();
+
     try {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
@@ -132,8 +177,22 @@ export abstract class BaseHttpClient {
           requestConfig,
         ),
       );
+
+      const duration = Date.now() - startTime;
+      this.recordMetrics('DELETE', url, serviceName, response.status, duration);
+
       return response.data;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      const statusCode = error?.response?.status || 500;
+      this.recordMetrics(
+        'DELETE',
+        url,
+        serviceName,
+        statusCode,
+        duration,
+        true,
+      );
       this.handleError(error, 'DELETE', url);
     }
   }
@@ -173,6 +232,90 @@ export abstract class BaseHttpClient {
     }
 
     throw new Error(`Network error: ${errorMessage}`);
+  }
+
+  /**
+   * Extract service name from baseURL
+   */
+  private extractServiceName(): string {
+    try {
+      const url = new URL(this.baseURL);
+      const hostname = url.hostname;
+      // Extract service name from hostname (e.g., auth:4001 -> auth)
+      if (hostname.includes('auth')) return 'auth';
+      if (hostname.includes('user')) return 'user';
+      if (hostname.includes('wallet')) return 'wallet';
+      if (hostname.includes('relationship')) return 'relationship';
+      if (hostname.includes('notification')) return 'notification';
+      return 'unknown';
+    } catch {
+      return 'unknown';
+    }
+  }
+
+  /**
+   * Record metrics for service calls
+   */
+  private recordMetrics(
+    method: string,
+    url: string,
+    serviceName: string,
+    statusCode: number,
+    duration: number,
+    isError: boolean = false,
+  ): void {
+    if (!this.metricsService) return;
+
+    const endpoint = this.normalizeEndpoint(url);
+
+    // Record service call duration
+    this.metricsService.timing('gateway.service.call.duration', duration, {
+      service_name: serviceName,
+      endpoint,
+      status_code: statusCode.toString(),
+    });
+
+    // Record service call count
+    this.metricsService.increment('gateway.service.call.count', 1, {
+      service_name: serviceName,
+      endpoint,
+      status_code: statusCode.toString(),
+    });
+
+    // Record errors
+    if (isError || statusCode >= 400) {
+      this.metricsService.increment('gateway.service.call.failed', 1, {
+        service_name: serviceName,
+        endpoint,
+        status_code: statusCode.toString(),
+        error_type: statusCode >= 500 ? 'server_error' : 'client_error',
+      });
+    }
+
+    // Record timeouts (if applicable)
+    if (duration >= 10000) {
+      this.metricsService.increment('gateway.service.call.timeout', 1, {
+        service_name: serviceName,
+      });
+    }
+  }
+
+  /**
+   * Normalize endpoint URL by replacing IDs with placeholders
+   */
+  private normalizeEndpoint(url: string): string {
+    // Remove query parameters
+    const pathWithoutQuery = url.split('?')[0];
+    // Replace MongoDB ObjectIds
+    const normalized = pathWithoutQuery.replace(
+      /\/[0-9a-fA-F]{24}\//g,
+      '/:id/',
+    );
+    // Replace UUIDs
+    return normalized.replace(
+      /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//g,
+      '/:id/',
+    );
   }
 
   private handleUnsuccessfulResponse(

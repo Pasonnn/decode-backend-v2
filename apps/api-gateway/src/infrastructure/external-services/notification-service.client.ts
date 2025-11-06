@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { BaseHttpClient } from './base-http.client';
 import { AxiosRequestConfig } from 'axios';
+import { MetricsService } from '../../common/datadog/metrics.service';
 
 // Response and Doc Interfaces
 import { Response } from '../../interfaces/response.interface';
@@ -18,11 +19,13 @@ export class NotificationServiceClient extends BaseHttpClient {
   constructor(
     private readonly configService: ConfigService,
     httpService: HttpService,
+    metricsService: MetricsService,
   ) {
     super(
       httpService,
       configService.get<string>('services.notification.url') ||
         'http://localhost:4006',
+      metricsService,
     );
   }
 

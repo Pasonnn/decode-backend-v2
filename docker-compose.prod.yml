@@ -24,9 +24,27 @@ services:
       RELATIONSHIP_SERVICE_URL: http://relationship:4004
       WALLET_SERVICE_URL: http://wallet:4005
       NOTIFICATION_SERVICE_URL: http://notification:4006
-      # Datadog observability
+      # Datadog observability - APM
       DD_SERVICE: decode-api-gateway
       DD_VERSION: 1.0.0
+      DD_AGENT_HOST: host.docker.internal
+      DD_APM_ENABLED: true
+      DD_TRACE_ENABLED: true
+      DD_TRACE_SAMPLE_RATE: 1.0
+      DD_TRACE_STARTUP_LOGS: false
+      # Datadog observability - Logs
+      DD_LOGS_ENABLED: true
+      DD_LOGS_INJECTION: true
+      DD_LOGS_CONFIG_PROCESSING_RULES: '[{"type": "multi_line", "name": "log_start_with_date", "pattern" : "\\d{4}-\\d{2}-\\d{2}"}]'
+      # Datadog observability - Metrics
+      DD_DOGSTATSD_PORT: 8125
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: true
+      DD_DOGSTATSD_SOCKET: /var/run/datadog/dsd.socket
+      # Datadog observability - Runtime
+      DD_RUNTIME_METRICS_ENABLED: true
+      DD_PROFILING_ENABLED: true
+      DD_ENV: prod
+      DD_TAGS: env:prod,service:api-gateway
     ports:
       - "4000:4000" # Exposed to external traffic
     depends_on:
@@ -67,9 +85,27 @@ services:
       RELATIONSHIP_SERVICE_URL: http://relationship:4004
       WALLET_SERVICE_URL: http://wallet:4005
       NOTIFICATION_SERVICE_URL: http://notification:4006
-      # Datadog observability
+      # Datadog observability - APM
       DD_SERVICE: decode-auth
       DD_VERSION: 1.0.0
+      DD_AGENT_HOST: host.docker.internal
+      DD_APM_ENABLED: true
+      DD_TRACE_ENABLED: true
+      DD_TRACE_SAMPLE_RATE: 1.0
+      DD_TRACE_STARTUP_LOGS: false
+      # Datadog observability - Logs
+      DD_LOGS_ENABLED: true
+      DD_LOGS_INJECTION: true
+      DD_LOGS_CONFIG_PROCESSING_RULES: '[{"type": "multi_line", "name": "log_start_with_date", "pattern" : "\\d{4}-\\d{2}-\\d{2}"}]'
+      # Datadog observability - Metrics
+      DD_DOGSTATSD_PORT: 8125
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: true
+      DD_DOGSTATSD_SOCKET: /var/run/datadog/dsd.socket
+      # Datadog observability - Runtime
+      DD_RUNTIME_METRICS_ENABLED: true
+      DD_PROFILING_ENABLED: true
+      DD_ENV: prod
+      DD_TAGS: env:prod,service:auth
     ports:
       - "4001:4001" # Exposed to external traffic
 
@@ -102,9 +138,27 @@ services:
       USER_HOST: 0.0.0.0
       # Service communication URLs using Docker service names
       AUTH_SERVICE_URL: http://auth:4001
-      # Datadog observability
+      # Datadog observability - APM
       DD_SERVICE: decode-user
       DD_VERSION: 1.0.0
+      DD_AGENT_HOST: host.docker.internal
+      DD_APM_ENABLED: true
+      DD_TRACE_ENABLED: true
+      DD_TRACE_SAMPLE_RATE: 1.0
+      DD_TRACE_STARTUP_LOGS: false
+      # Datadog observability - Logs
+      DD_LOGS_ENABLED: true
+      DD_LOGS_INJECTION: true
+      DD_LOGS_CONFIG_PROCESSING_RULES: '[{"type": "multi_line", "name": "log_start_with_date", "pattern" : "\\d{4}-\\d{2}-\\d{2}"}]'
+      # Datadog observability - Metrics
+      DD_DOGSTATSD_PORT: 8125
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: true
+      DD_DOGSTATSD_SOCKET: /var/run/datadog/dsd.socket
+      # Datadog observability - Runtime
+      DD_RUNTIME_METRICS_ENABLED: true
+      DD_PROFILING_ENABLED: true
+      DD_ENV: prod
+      DD_TAGS: env:prod,service:user
     # No external port exposure - internal only
 
     networks:
@@ -136,9 +190,27 @@ services:
       RELATIONSHIP_HOST: 0.0.0.0
       # Service communication URLs using Docker service names
       AUTH_SERVICE_URL: http://auth:4001
-      # Datadog observability
+      # Datadog observability - APM
       DD_SERVICE: decode-relationship
       DD_VERSION: 1.0.0
+      DD_AGENT_HOST: host.docker.internal
+      DD_APM_ENABLED: true
+      DD_TRACE_ENABLED: true
+      DD_TRACE_SAMPLE_RATE: 1.0
+      DD_TRACE_STARTUP_LOGS: false
+      # Datadog observability - Logs
+      DD_LOGS_ENABLED: true
+      DD_LOGS_INJECTION: true
+      DD_LOGS_CONFIG_PROCESSING_RULES: '[{"type": "multi_line", "name": "log_start_with_date", "pattern" : "\\d{4}-\\d{2}-\\d{2}"}]'
+      # Datadog observability - Metrics
+      DD_DOGSTATSD_PORT: 8125
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: true
+      DD_DOGSTATSD_SOCKET: /var/run/datadog/dsd.socket
+      # Datadog observability - Runtime
+      DD_RUNTIME_METRICS_ENABLED: true
+      DD_PROFILING_ENABLED: true
+      DD_ENV: prod
+      DD_TAGS: env:prod,service:relationship
     # No external port exposure - internal only
 
     networks:
@@ -170,9 +242,27 @@ services:
       WALLET_HOST: 0.0.0.0
       # Service communication URLs using Docker service names
       AUTH_SERVICE_URL: http://auth:4001
-      # Datadog observability
+      # Datadog observability - APM
       DD_SERVICE: decode-wallet
       DD_VERSION: 1.0.0
+      DD_AGENT_HOST: host.docker.internal
+      DD_APM_ENABLED: true
+      DD_TRACE_ENABLED: true
+      DD_TRACE_SAMPLE_RATE: 1.0
+      DD_TRACE_STARTUP_LOGS: false
+      # Datadog observability - Logs
+      DD_LOGS_ENABLED: true
+      DD_LOGS_INJECTION: true
+      DD_LOGS_CONFIG_PROCESSING_RULES: '[{"type": "multi_line", "name": "log_start_with_date", "pattern" : "\\d{4}-\\d{2}-\\d{2}"}]'
+      # Datadog observability - Metrics
+      DD_DOGSTATSD_PORT: 8125
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: true
+      DD_DOGSTATSD_SOCKET: /var/run/datadog/dsd.socket
+      # Datadog observability - Runtime
+      DD_RUNTIME_METRICS_ENABLED: true
+      DD_PROFILING_ENABLED: true
+      DD_ENV: prod
+      DD_TAGS: env:prod,service:wallet
     # No external port exposure - internal only
     networks:
       - decode-network
@@ -203,9 +293,27 @@ services:
       NOTIFICATION_HOST: 0.0.0.0
       # Service communication URLs using Docker service names
       AUTH_SERVICE_URL: http://auth:4001
-      # Datadog observability
+      # Datadog observability - APM
       DD_SERVICE: decode-notification
       DD_VERSION: 1.0.0
+      DD_AGENT_HOST: host.docker.internal
+      DD_APM_ENABLED: true
+      DD_TRACE_ENABLED: true
+      DD_TRACE_SAMPLE_RATE: 1.0
+      DD_TRACE_STARTUP_LOGS: false
+      # Datadog observability - Logs
+      DD_LOGS_ENABLED: true
+      DD_LOGS_INJECTION: true
+      DD_LOGS_CONFIG_PROCESSING_RULES: '[{"type": "multi_line", "name": "log_start_with_date", "pattern" : "\\d{4}-\\d{2}-\\d{2}"}]'
+      # Datadog observability - Metrics
+      DD_DOGSTATSD_PORT: 8125
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: true
+      DD_DOGSTATSD_SOCKET: /var/run/datadog/dsd.socket
+      # Datadog observability - Runtime
+      DD_RUNTIME_METRICS_ENABLED: true
+      DD_PROFILING_ENABLED: true
+      DD_ENV: prod
+      DD_TAGS: env:prod,service:notification
     ports:
       - "4006:4006" # Exposed for WebSocket connections
 
@@ -238,9 +346,27 @@ services:
       NEO4JDB_SYNC_HOST: 0.0.0.0
       # Service communication URLs using Docker service names
       AUTH_SERVICE_URL: http://auth:4001
-      # Datadog observability
+      # Datadog observability - APM
       DD_SERVICE: decode-neo4jdb-sync
       DD_VERSION: 1.0.0
+      DD_AGENT_HOST: host.docker.internal
+      DD_APM_ENABLED: true
+      DD_TRACE_ENABLED: true
+      DD_TRACE_SAMPLE_RATE: 1.0
+      DD_TRACE_STARTUP_LOGS: false
+      # Datadog observability - Logs
+      DD_LOGS_ENABLED: true
+      DD_LOGS_INJECTION: true
+      DD_LOGS_CONFIG_PROCESSING_RULES: '[{"type": "multi_line", "name": "log_start_with_date", "pattern" : "\\d{4}-\\d{2}-\\d{2}"}]'
+      # Datadog observability - Metrics
+      DD_DOGSTATSD_PORT: 8125
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: true
+      DD_DOGSTATSD_SOCKET: /var/run/datadog/dsd.socket
+      # Datadog observability - Runtime
+      DD_RUNTIME_METRICS_ENABLED: true
+      DD_PROFILING_ENABLED: true
+      DD_ENV: prod
+      DD_TAGS: env:prod,service:neo4jdb-sync
     # No external port exposure - internal only
 
     networks:

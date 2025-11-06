@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { BaseHttpClient } from './base-http.client';
+import { MetricsService } from '../../common/datadog/metrics.service';
 
 // Response and Doc Interfaces
 import { Response } from '../../interfaces/response.interface';
@@ -25,11 +26,13 @@ export class WalletServiceClient extends BaseHttpClient {
   constructor(
     private readonly configService: ConfigService,
     httpService: HttpService,
+    metricsService: MetricsService,
   ) {
     super(
       httpService,
       configService.get<string>('services.wallet.url') ||
         'http://localhost:4005',
+      metricsService,
     );
   }
 

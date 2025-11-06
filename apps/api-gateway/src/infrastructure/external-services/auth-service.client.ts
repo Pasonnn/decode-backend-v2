@@ -4,6 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { BaseHttpClient } from './base-http.client';
 import { Response } from '../../interfaces/response.interface';
 import { AxiosRequestConfig } from 'axios';
+import { MetricsService } from '../../common/datadog/metrics.service';
 
 // Auth Service Interfaces
 import {
@@ -43,10 +44,12 @@ export class AuthServiceClient extends BaseHttpClient {
   constructor(
     private readonly configService: ConfigService,
     httpService: HttpService,
+    metricsService: MetricsService,
   ) {
     super(
       httpService,
       configService.get<string>('services.auth.url') || 'http://localhost:4001',
+      metricsService,
     );
   }
 

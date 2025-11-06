@@ -66,6 +66,8 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 // Global interceptors for request/response transformation
 import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor';
+import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
+import { MetricsService } from './common/datadog/metrics.service';
 
 /**
  * Bootstrap function to initialize and configure the API Gateway application
@@ -99,9 +101,11 @@ async function bootstrap() {
   app.use(requestLoggerMiddleware.use.bind(requestLoggerMiddleware)); // Log all requests
 
   // Configure global interceptors for request/response processing
+  const metricsService = app.get(MetricsService);
   app.useGlobalInterceptors(
     new RequestIdInterceptor(), // Add request ID to all responses
     new ResponseTransformInterceptor(), // Transform responses to standard format
+    new MetricsInterceptor(metricsService), // Collect HTTP request metrics
   );
 
   // Configure global exception filters for centralized error handling

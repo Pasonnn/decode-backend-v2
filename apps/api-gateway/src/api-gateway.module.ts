@@ -66,6 +66,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 // Infrastructure modules for shared services and utilities
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { GuardsModule } from './common/guards/guards.module';
+import { MetricsModule } from './common/datadog/metrics.module';
 
 /**
  * API Gateway Module
@@ -113,6 +114,7 @@ import { GuardsModule } from './common/guards/guards.module';
     // Infrastructure modules for shared services
     CacheModule, // Redis caching layer for performance optimization
     GuardsModule, // Global authentication and authorization guards
+    MetricsModule, // Datadog metrics collection
 
     // Feature modules for different service domains
     HealthModule, // Health check and monitoring endpoints

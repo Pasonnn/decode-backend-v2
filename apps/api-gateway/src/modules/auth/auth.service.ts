@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AuthServiceClient } from '../../infrastructure/external-services/auth-service.client';
+import { MetricsService } from '../../common/datadog/metrics.service';
 import { Response } from '../../interfaces/response.interface';
 import {
   LoginDto,
@@ -13,7 +14,10 @@ import { LoginVerifyOtpDto, FingerprintTrustVerifyOtpDto } from './dto/2fa.dto';
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  constructor(private readonly authServiceClient: AuthServiceClient) {}
+  constructor(
+    private readonly authServiceClient: AuthServiceClient,
+    private readonly metricsService?: MetricsService,
+  ) {}
 
   /**
    * Health check endpoint to verify service availability
@@ -36,22 +40,36 @@ export class AuthService {
    * Authenticate user with email/username and password
    */
   async login(loginDto: LoginDto): Promise<Response> {
+    const startTime = Date.now();
     try {
       this.logger.log(`Login attempt for user: ${loginDto.email_or_username}`);
+      this.metricsService?.increment('auth.login.attempts', 1);
 
       const response = await this.authServiceClient.login(loginDto);
 
+      const duration = Date.now() - startTime;
       if (response.success) {
+        this.metricsService?.increment('auth.login.success', 1);
+        this.metricsService?.timing('auth.login.duration', duration);
         this.logger.log(
           `Login successful for user: ${loginDto.email_or_username}`,
         );
       } else {
+        this.metricsService?.increment('auth.login.failed', 1);
+        this.metricsService?.timing('auth.login.duration', duration, {
+          error: 'true',
+        });
         this.logger.error(
           `Login failed for user ${loginDto.email_or_username}: ${response.message}`,
         );
       }
       return response;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.increment('auth.login.failed', 1);
+      this.metricsService?.timing('auth.login.duration', duration, {
+        error: 'true',
+      });
       this.logger.error(
         `Login failed for user ${loginDto.email_or_username}: ${error}`,
       );
@@ -65,6 +83,7 @@ export class AuthService {
   async verifyFingerprint(
     verificationDto: FingerprintEmailVerificationDto,
   ): Promise<Response> {
+    const startTime = Date.now();
     try {
       this.logger.log('Device fingerprint verification attempt');
 
@@ -73,9 +92,23 @@ export class AuthService {
           verificationDto,
         );
 
+      const duration = Date.now() - startTime;
       if (response.success) {
+        this.metricsService?.increment('auth.fingerprint.verified', 1);
+        this.metricsService?.timing(
+          'auth.fingerprint.verification.duration',
+          duration,
+        );
         this.logger.log('Device fingerprint verification successful');
       } else {
+        this.metricsService?.increment('auth.fingerprint.failed', 1);
+        this.metricsService?.timing(
+          'auth.fingerprint.verification.duration',
+          duration,
+          {
+            error: 'true',
+          },
+        );
         this.logger.error(
           `Fingerprint verification failed: ${response.message}`,
         );
@@ -83,6 +116,15 @@ export class AuthService {
 
       return response;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.increment('auth.fingerprint.failed', 1);
+      this.metricsService?.timing(
+        'auth.fingerprint.verification.duration',
+        duration,
+        {
+          error: 'true',
+        },
+      );
       this.logger.error(
         `Fingerprint verification failed: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -127,29 +169,40 @@ export class AuthService {
    * Register new user with email verification
    */
   async register(registerDto: RegisterInfoDto): Promise<Response> {
+    const startTime = Date.now();
     try {
       this.logger.log(
         `Registration attempt for user: ${registerDto.username} (${registerDto.email})`,
       );
+      this.metricsService?.increment('auth.register.initiated', 1);
 
       const response =
         await this.authServiceClient.emailVerificationRegister(registerDto);
 
+      const duration = Date.now() - startTime;
       if (response.success) {
+        this.metricsService?.increment('auth.register.success', 1);
+        this.metricsService?.timing('auth.register.duration', duration);
         this.logger.log(
           `Registration successful for user: ${registerDto.username}`,
         );
       } else {
+        this.metricsService?.increment('auth.register.failed', 1);
+        this.metricsService?.timing('auth.register.duration', duration, {
+          error: 'true',
+        });
         this.logger.error(
           `Registration failed for user ${registerDto.username}: ${response.message}`,
         );
       }
 
-      this.logger.log(
-        `Registration successful for user: ${registerDto.username}`,
-      );
       return response;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.increment('auth.register.failed', 1);
+      this.metricsService?.timing('auth.register.duration', duration, {
+        error: 'true',
+      });
       this.logger.error(
         `Registration failed for user ${registerDto.username}: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -161,20 +214,44 @@ export class AuthService {
    * Verify email for registration
    */
   async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<Response> {
+    const startTime = Date.now();
     try {
       this.logger.log('Email verification attempt');
+
       const response =
         await this.authServiceClient.verifyEmailRegister(verifyEmailDto);
 
+      const duration = Date.now() - startTime;
       if (response.success) {
+        this.metricsService?.increment('auth.email.verified', 1);
+        this.metricsService?.timing(
+          'auth.email.verification.duration',
+          duration,
+        );
         this.logger.log('Email verification successful');
       } else {
+        this.metricsService?.increment('auth.email.verification.failed', 1);
+        this.metricsService?.timing(
+          'auth.email.verification.duration',
+          duration,
+          {
+            error: 'true',
+          },
+        );
         this.logger.error(`Email verification failed: ${response.message}`);
       }
 
-      this.logger.log('Email verification successful');
       return response;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.increment('auth.email.verification.failed', 1);
+      this.metricsService?.timing(
+        'auth.email.verification.duration',
+        duration,
+        {
+          error: 'true',
+        },
+      );
       this.logger.error(
         `Email verification failed: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -211,20 +288,31 @@ export class AuthService {
    * Refresh session token
    */
   async refreshSession(refreshTokenDto: RefreshTokenDto): Promise<Response> {
+    const startTime = Date.now();
     try {
       this.logger.log('Token refresh attempt');
 
       const response =
         await this.authServiceClient.refreshSession(refreshTokenDto);
 
+      const duration = Date.now() - startTime;
       if (response.success) {
+        this.metricsService?.increment('auth.session.refreshed', 1);
+        this.metricsService?.timing('auth.session.refresh.duration', duration);
         this.logger.log('Token refresh successful');
       } else {
+        this.metricsService?.timing('auth.session.refresh.duration', duration, {
+          error: 'true',
+        });
         this.logger.error(`Token refresh failed: ${response.message}`);
       }
 
       return response;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('auth.session.refresh.duration', duration, {
+        error: 'true',
+      });
       this.logger.error(
         `Token refresh failed: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -555,24 +643,37 @@ export class AuthService {
    * Initiate forgot password process
    */
   async initiateForgotPassword(email_or_username: string): Promise<Response> {
+    const startTime = Date.now();
     try {
       this.logger.log('Initiating forgot password for current user');
+      this.metricsService?.increment('auth.password.reset.initiated', 1);
 
       const response = await this.authServiceClient.post(
         '/auth/password/forgot/email-verification',
         { email_or_username },
       );
 
+      const duration = Date.now() - startTime;
       if (!response.success) {
+        this.metricsService?.increment('auth.password.reset.failed', 1);
+        this.metricsService?.timing('auth.password.reset.duration', duration, {
+          error: 'true',
+        });
         this.logger.error(
           `Failed to initiate forgot password: ${response.message}`,
         );
       } else {
+        this.metricsService?.timing('auth.password.reset.duration', duration);
         this.logger.log('Successfully initiated forgot password');
       }
 
       return response;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.increment('auth.password.reset.failed', 1);
+      this.metricsService?.timing('auth.password.reset.duration', duration, {
+        error: 'true',
+      });
       this.logger.error(
         `Failed to initiate forgot password: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -617,6 +718,7 @@ export class AuthService {
     code: string,
     new_password: string,
   ): Promise<Response> {
+    const startTime = Date.now();
     try {
       this.logger.log('Changing password for forgot password');
 
@@ -624,9 +726,36 @@ export class AuthService {
         '/auth/password/forgot/change',
         { code, new_password },
       );
-      this.logger.log('Successfully changed password for forgot password');
+
+      const duration = Date.now() - startTime;
+      if (response.success) {
+        this.metricsService?.increment('auth.password.reset.success', 1);
+        this.metricsService?.timing(
+          'auth.password.reset.change.duration',
+          duration,
+        );
+        this.logger.log('Successfully changed password for forgot password');
+      } else {
+        this.metricsService?.increment('auth.password.reset.failed', 1);
+        this.metricsService?.timing(
+          'auth.password.reset.change.duration',
+          duration,
+          {
+            error: 'true',
+          },
+        );
+      }
       return response;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.increment('auth.password.reset.failed', 1);
+      this.metricsService?.timing(
+        'auth.password.reset.change.duration',
+        duration,
+        {
+          error: 'true',
+        },
+      );
       this.logger.error(
         `Failed to change password for forgot password: ${error instanceof Error ? error.message : String(error)}`,
       );

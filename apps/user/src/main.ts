@@ -38,6 +38,9 @@
  * @since 2024
  */
 
+// Datadog observability
+import 'dd-trace/init';
+
 // Core NestJS modules for application initialization
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';

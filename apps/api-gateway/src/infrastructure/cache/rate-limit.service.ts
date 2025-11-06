@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import { MetricsService } from '../../common/datadog/metrics.service';
 
 export interface RateLimitInfo {
   limit: number;
@@ -15,7 +16,10 @@ export class RateLimitService {
   private readonly redis: Redis;
   private readonly keyPrefix: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly metricsService?: MetricsService,
+  ) {
     // Use REDIS_URI like other services for consistency
     const redisUri = this.configService.get<string>('REDIS_URI');
 
@@ -103,6 +107,27 @@ export class RateLimitService {
         reset: Math.floor(resetTime.getTime() / 1000),
         resetTime,
       };
+
+      // Record rate limit metrics
+      this.metricsService?.increment('rate_limit.checked', 1, {
+        endpoint: key,
+        result: allowed ? 'allowed' : 'denied',
+      });
+
+      if (!allowed) {
+        this.metricsService?.increment('rate_limit.exceeded', 1, {
+          endpoint: key,
+          key_type: key.includes('user:')
+            ? 'user'
+            : key.includes('ip:')
+              ? 'ip'
+              : 'other',
+        });
+      } else {
+        this.metricsService?.gauge('rate_limit.remaining', remaining, {
+          endpoint: key,
+        });
+      }
 
       return { allowed, info };
     } catch (error) {

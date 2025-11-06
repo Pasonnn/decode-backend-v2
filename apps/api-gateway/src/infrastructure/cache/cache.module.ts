@@ -3,11 +3,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RateLimitService } from './rate-limit.service';
 import { RedisInfrastructure } from './redis.infrastructure';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { MetricsModule } from '../datadog/metrics.module';
 
 @Global()
 @Module({
   imports: [
     ConfigModule,
+    MetricsModule,
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -17,7 +19,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
       inject: [ConfigService],
     }),
   ],
-  providers: [RateLimitService, RedisInfrastructure],
-  exports: [RateLimitService, RedisInfrastructure],
+  providers: [RateLimitService, RedisInfrastructure, CacheService],
+  exports: [RateLimitService, RedisInfrastructure, CacheService],
 })
 export class CacheModule {}
