@@ -44,6 +44,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+// Datadog metrics module
+import { MetricsModule } from './common/datadog/metrics.module';
+
 // HTTP controller for email worker endpoints
 import { EmailWorkerController } from './email-worker.controller';
 
@@ -87,6 +90,9 @@ import emailConfig from './config/email.config'; // Email service configuration
       isGlobal: true, // Make configuration available throughout the application
     }),
     ConfigModule.forFeature(emailConfig), // Load email-specific configuration
+
+    // Datadog metrics module for observability
+    MetricsModule, // Metrics service for custom metrics
   ],
 
   // HTTP controllers that handle incoming requests and route them to appropriate services

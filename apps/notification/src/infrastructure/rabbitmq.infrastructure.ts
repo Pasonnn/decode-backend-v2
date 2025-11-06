@@ -4,6 +4,7 @@ import { NotificationGateway } from '../gateways/notification.gateway';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy, ClientProxyFactory } from '@nestjs/microservices';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class RabbitMQInfrastructure {
@@ -14,6 +15,7 @@ export class RabbitMQInfrastructure {
     private readonly notificationService: NotificationService,
     private readonly notificationGateway: NotificationGateway,
     private readonly configService: ConfigService,
+    private readonly metricsService?: MetricsService,
   ) {
     this.client = ClientProxyFactory.create({
       options: {
@@ -61,6 +63,11 @@ export class RabbitMQInfrastructure {
     );
 
     try {
+      this.metricsService?.increment('queue.message.consumed', 1, {
+        queue_name: 'notification_queue',
+        message_type: request.type,
+      });
+
       // Create notification in database
       const notification = await this.notificationService.create(request);
 
@@ -72,6 +79,14 @@ export class RabbitMQInfrastructure {
         );
 
       const duration = Date.now() - startTime;
+      this.metricsService?.timing(
+        'queue.message.processing.duration',
+        duration,
+        {
+          queue_name: 'notification_queue',
+          message_type: request.type,
+        },
+      );
 
       if (webSocketSent) {
         this.logger.log(
@@ -84,6 +99,20 @@ export class RabbitMQInfrastructure {
       }
     } catch (error) {
       const duration = Date.now() - startTime;
+      this.metricsService?.timing(
+        'queue.message.processing.duration',
+        duration,
+        {
+          queue_name: 'notification_queue',
+          message_type: request.type,
+          error: 'true',
+        },
+      );
+      this.metricsService?.increment('queue.message.failed', 1, {
+        queue_name: 'notification_queue',
+        message_type: request.type,
+        operation: 'consume',
+      });
       this.logger.error(
         `Create notification processing failed after ${duration}ms: ${request.type} for user ${request.user_id}`,
         error instanceof Error ? error.stack : String(error),

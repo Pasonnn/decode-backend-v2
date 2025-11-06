@@ -21,6 +21,7 @@ import { Notification } from '../schema/notification.schema';
 import { JwtStrategy } from '../strategy/jwt.strategy';
 import { Response } from '../interfaces/response.interface';
 import { NotificationPushService } from '../services/notification-push.service';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 /**
  * WebSocket Gateway for real-time notifications
@@ -51,6 +52,7 @@ export class NotificationGateway
     private readonly notificationService: NotificationService,
     @Inject(forwardRef(() => NotificationPushService))
     private readonly notificationPushService: NotificationPushService,
+    private readonly metricsService?: MetricsService,
   ) {}
 
   /**
@@ -107,6 +109,16 @@ export class NotificationGateway
       const userRoom = `user_${userId}`;
       await client.join(userRoom);
 
+      // Record WebSocket connection metrics
+      this.metricsService?.increment('websocket.connection', 1, {
+        user_id: userId,
+        status: 'success',
+      });
+      this.metricsService?.gauge(
+        'websocket.connections.active',
+        this.connections.size,
+      );
+
       this.logger.log(`User ${userId} connected with socket ${client.id}`);
 
       // Notify user of successful connection
@@ -137,6 +149,8 @@ export class NotificationGateway
   async handleDisconnect(client: Socket): Promise<void> {
     const connection = this.connections.get(client.id);
     if (connection) {
+      const connectionDuration = Date.now() - connection.connectedAt.getTime();
+
       this.logger.log(
         `User ${connection.userId} disconnected (socket: ${client.id})`,
       );
@@ -148,8 +162,27 @@ export class NotificationGateway
       );
 
       this.connections.delete(client.id);
+
+      // Record WebSocket disconnection metrics
+      this.metricsService?.increment('websocket.disconnection', 1, {
+        user_id: connection.userId,
+      });
+      this.metricsService?.gauge(
+        'websocket.connections.active',
+        this.connections.size,
+      );
+      this.metricsService?.timing(
+        'websocket.connection.duration',
+        connectionDuration,
+        {
+          user_id: connection.userId,
+        },
+      );
     } else {
       this.logger.log(`Unknown client disconnected: ${client.id}`);
+      this.metricsService?.increment('websocket.disconnection', 1, {
+        status: 'unknown',
+      });
     }
   }
 
@@ -171,11 +204,23 @@ export class NotificationGateway
       // Update last activity
       connection.lastActivity = new Date();
 
+      const startTime = Date.now();
+
       // Mark notification as read in database
       const notification = await this.notificationService.markAsRead(
         data.notificationId,
         connection.userId,
       );
+
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('websocket.message.duration', duration, {
+        event_type: 'mark_notification_read',
+        user_id: connection.userId,
+      });
+      this.metricsService?.increment('websocket.message.received', 1, {
+        event_type: 'mark_notification_read',
+        user_id: connection.userId,
+      });
 
       if (!notification) {
         this.sendError(client, 'NOT_FOUND', 'Notification not found');
@@ -215,6 +260,7 @@ export class NotificationGateway
     userId: string,
     notification: Notification,
   ): Promise<boolean> {
+    const startTime = Date.now();
     try {
       // Check if user is connected via WebSocket
       const isUserConnected = await this.isUserConnected(userId);
@@ -223,6 +269,11 @@ export class NotificationGateway
         this.logger.log(
           `User ${userId} is not connected via WebSocket. Notification ${notification.title} will not be delivered in real-time.`,
         );
+        this.metricsService?.increment('websocket.message.failed', 1, {
+          event_type: 'notification_received',
+          user_id: userId,
+          reason: 'user_not_connected',
+        });
         return false;
       }
 
@@ -250,6 +301,18 @@ export class NotificationGateway
       // Send to all sockets in the user's room
       this.server.to(userRoom).emit('notification_received', message);
 
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('websocket.message.duration', duration, {
+        event_type: 'notification_received',
+        user_id: userId,
+        notification_type: notification.type,
+      });
+      this.metricsService?.increment('websocket.message.sent', 1, {
+        event_type: 'notification_received',
+        user_id: userId,
+        notification_type: notification.type,
+      });
+
       this.logger.log(
         `Notification sent to user ${userId} via WebSocket: ${notification.title}`,
       );
@@ -261,6 +324,17 @@ export class NotificationGateway
 
       return true;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('websocket.message.duration', duration, {
+        event_type: 'notification_received',
+        user_id: userId,
+        error: 'true',
+      });
+      this.metricsService?.increment('websocket.message.failed', 1, {
+        event_type: 'notification_received',
+        user_id: userId,
+        reason: 'error',
+      });
       this.logger.error(`Error sending notification to user ${userId}:`, error);
       return false;
     }

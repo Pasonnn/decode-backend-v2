@@ -77,6 +77,9 @@ import { JwtStrategy } from './strategy/jwt.strategy'; // JWT validation strateg
 import jwtConfig from './config/jwt.config'; // JWT configuration
 import configuration from './config/configuration'; // Notification service configuration
 
+// Datadog metrics module
+import { MetricsModule } from './common/datadog/metrics.module'; // Metrics service for Datadog
+
 /**
  * Notification Module
  *
@@ -158,6 +161,9 @@ import configuration from './config/configuration'; // Notification service conf
     MongooseModule.forFeature([
       { name: Notification.name, schema: NotificationSchema }, // Notification data model
     ]),
+
+    // Datadog metrics module for observability
+    MetricsModule, // Metrics service for custom metrics
   ],
 
   // HTTP controllers and RabbitMQ message consumers

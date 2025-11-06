@@ -48,6 +48,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+
+// Datadog metrics module
+import { MetricsModule } from './common/datadog/metrics.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { HttpModule } from '@nestjs/axios';
@@ -147,6 +150,9 @@ import jwtConfig from './config/jwt.config'; // JWT configuration
 
     // MongoDB schema registration for data models
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), // User data model
+
+    // Datadog metrics module for observability
+    MetricsModule, // Metrics service for custom metrics
 
     // Redis module configuration for caching and temporary data storage
     RedisModule.forRootAsync({

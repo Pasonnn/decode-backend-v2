@@ -48,6 +48,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+// Datadog metrics module
+import { MetricsModule } from './common/datadog/metrics.module';
+
 // HTTP controller for Neo4j sync endpoints
 import { Neo4jdbSyncController } from './neo4jdb-sync.controller';
 
@@ -98,6 +101,9 @@ import { RabbitMQInfrastructure } from './infrastructure/rabbitmq.infrastructure
       isGlobal: true, // Make configuration available throughout the application
     }),
     ConfigModule.forFeature(neo4jdbSyncConfig), // Load Neo4j sync-specific configuration
+
+    // Datadog metrics module for observability
+    MetricsModule, // Metrics service for custom metrics
   ],
 
   // HTTP controllers that handle incoming requests and route them to appropriate services

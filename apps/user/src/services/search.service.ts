@@ -12,11 +12,15 @@ import { User } from '../schemas/user.schema';
 
 // Constants Import
 import { MESSAGES } from '../constants/messages.constants';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class SearchService {
   private readonly logger: Logger;
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private readonly metricsService?: MetricsService,
+  ) {
     this.logger = new Logger(SearchService.name);
   }
 
