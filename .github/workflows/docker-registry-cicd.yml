@@ -90,14 +90,14 @@ jobs:
           REPO_OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker pull ${{ env.REGISTRY }}/$REPO_OWNER_LOWER/decode-${{ matrix.service }}:latest
 
-      # - name: Run Trivy vulnerability scanner
-      #   if: github.event_name != 'pull_request'
-      #   uses: aquasecurity/trivy-action@master
-      #   with:
-      #     # Use dynamic owner reference (works for org or personal repo)
-      #     image-ref: ghcr.io/${{ github.repository_owner }}/decode-${{ matrix.service }}:latest
-      #     format: 'sarif'
-      #     output: 'trivy-results-${{ matrix.service }}.sarif'
+      - name: Run Trivy vulnerability scanner
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@master
+        with:
+          # Use dynamic owner reference (works for org or personal repo)
+          image-ref: ghcr.io/${{ toLower(github.repository_owner) }}/decode-${{ matrix.service }}:latest
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
 
 
   # ==================== DEPLOY TO CLOUD ====================
