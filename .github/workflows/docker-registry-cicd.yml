@@ -133,13 +133,13 @@ jobs:
             echo "🔐 Logging in to GitHub Container Registry..."
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+            # Stop and remove existing containers to avoid conflicts
+            echo "🛑 Stopping and removing existing containers..."
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
+
             # Pull latest images
             echo "📦 Pulling latest images..."
             docker compose -f docker-compose.prod.yml pull
-
-            # Stop existing services gracefully
-            echo "🛑 Stopping existing services..."
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             # Deploy services
             echo "🚀 Deploying services..."
