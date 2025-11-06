@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { ClientProxy, ClientProxyFactory } from '@nestjs/microservices';
 import { EmailService } from './email-worker.service';
 import { EmailRequestDto } from '../dto/email.dto';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class RabbitMQService implements OnModuleInit {
@@ -12,6 +13,7 @@ export class RabbitMQService implements OnModuleInit {
   constructor(
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
+    private readonly metricsService?: MetricsService,
   ) {
     this.client = ClientProxyFactory.create({
       options: {
@@ -50,8 +52,17 @@ export class RabbitMQService implements OnModuleInit {
   async sendEmailRequest(request: EmailRequestDto): Promise<void> {
     try {
       await this.client.emit('email_request', request).toPromise();
+      this.metricsService?.increment('queue.message.published', 1, {
+        queue_name: 'email_queue',
+        message_type: request.type,
+      });
       this.logger.log(`Email request queued: ${request.type}`);
     } catch (error) {
+      this.metricsService?.increment('queue.message.failed', 1, {
+        queue_name: 'email_queue',
+        message_type: request.type,
+        operation: 'publish',
+      });
       this.logger.error(
         `Failed to queue email request: ${request.type}`,
         error instanceof Error ? error.stack : String(error),
@@ -64,14 +75,41 @@ export class RabbitMQService implements OnModuleInit {
     const startTime = Date.now();
     this.logger.log(`Processing email request ${request.type}`);
     try {
+      this.metricsService?.increment('queue.message.consumed', 1, {
+        queue_name: 'email_queue',
+        message_type: request.type,
+      });
+
       await this.emailService.sendEmail(request);
 
       const duration = Date.now() - startTime;
+      this.metricsService?.timing(
+        'queue.message.processing.duration',
+        duration,
+        {
+          queue_name: 'email_queue',
+          message_type: request.type,
+        },
+      );
       this.logger.log(
         `Email processed successfully in ${duration}ms: ${request.type}`,
       );
     } catch (error) {
       const duration = Date.now() - startTime;
+      this.metricsService?.timing(
+        'queue.message.processing.duration',
+        duration,
+        {
+          queue_name: 'email_queue',
+          message_type: request.type,
+          error: 'true',
+        },
+      );
+      this.metricsService?.increment('queue.message.failed', 1, {
+        queue_name: 'email_queue',
+        message_type: request.type,
+        operation: 'consume',
+      });
       this.logger.error(
         `Email processing failed after ${duration}ms: ${request.type}`,
         error instanceof Error ? error.stack : String(error),

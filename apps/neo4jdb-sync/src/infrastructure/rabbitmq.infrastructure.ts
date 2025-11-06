@@ -4,6 +4,7 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy, ClientProxyFactory } from '@nestjs/microservices';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class RabbitMQInfrastructure {
@@ -13,6 +14,7 @@ export class RabbitMQInfrastructure {
   constructor(
     private readonly userSyncService: UserSyncService,
     private readonly configService: ConfigService,
+    private readonly metricsService?: MetricsService,
   ) {
     this.client = ClientProxyFactory.create({
       options: {
@@ -50,13 +52,40 @@ export class RabbitMQInfrastructure {
     const startTime = Date.now();
     this.logger.log(`Processing create user request ${request._id}`);
     try {
+      this.metricsService?.increment('queue.message.consumed', 1, {
+        queue_name: 'neo4j_sync_queue',
+        message_type: 'create_user',
+      });
+
       await this.userSyncService.createUser(request);
       const duration = Date.now() - startTime;
+      this.metricsService?.timing(
+        'queue.message.processing.duration',
+        duration,
+        {
+          queue_name: 'neo4j_sync_queue',
+          message_type: 'create_user',
+        },
+      );
       this.logger.log(
         `Create user processed successfully in ${duration}ms: ${request._id}`,
       );
     } catch (error) {
       const duration = Date.now() - startTime;
+      this.metricsService?.timing(
+        'queue.message.processing.duration',
+        duration,
+        {
+          queue_name: 'neo4j_sync_queue',
+          message_type: 'create_user',
+          error: 'true',
+        },
+      );
+      this.metricsService?.increment('queue.message.failed', 1, {
+        queue_name: 'neo4j_sync_queue',
+        message_type: 'create_user',
+        operation: 'consume',
+      });
       this.logger.error(
         `Create user processing failed after ${duration}ms: ${request._id}`,
         error instanceof Error ? error.stack : String(error),
@@ -69,13 +98,40 @@ export class RabbitMQInfrastructure {
     const startTime = Date.now();
     this.logger.log(`Processing update user request ${request._id}`);
     try {
+      this.metricsService?.increment('queue.message.consumed', 1, {
+        queue_name: 'neo4j_sync_queue',
+        message_type: 'update_user',
+      });
+
       await this.userSyncService.updateUser(request);
       const duration = Date.now() - startTime;
+      this.metricsService?.timing(
+        'queue.message.processing.duration',
+        duration,
+        {
+          queue_name: 'neo4j_sync_queue',
+          message_type: 'update_user',
+        },
+      );
       this.logger.log(
         `Update user processed successfully in ${duration}ms: ${request._id}`,
       );
     } catch (error) {
       const duration = Date.now() - startTime;
+      this.metricsService?.timing(
+        'queue.message.processing.duration',
+        duration,
+        {
+          queue_name: 'neo4j_sync_queue',
+          message_type: 'update_user',
+          error: 'true',
+        },
+      );
+      this.metricsService?.increment('queue.message.failed', 1, {
+        queue_name: 'neo4j_sync_queue',
+        message_type: 'update_user',
+        operation: 'consume',
+      });
       this.logger.error(
         `Update user processing failed after ${duration}ms: ${request._id}`,
         error instanceof Error ? error.stack : String(error),

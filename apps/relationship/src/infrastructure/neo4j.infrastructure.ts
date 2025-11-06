@@ -5,12 +5,16 @@ import { PaginationResponse } from '../interfaces/pagination-response.interface'
 import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 import { NodeResponse } from '../interfaces/node-response.interface';
 import { Interest } from '../dto/interest.dto';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class Neo4jInfrastructure implements OnModuleInit {
   private readonly logger = new Logger(Neo4jInfrastructure.name);
   private driver: Driver;
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly metricsService?: MetricsService,
+  ) {}
 
   onModuleInit(): void {
     const neo4j_uri = this.configService.get('NEO4J_URI') as string;
@@ -98,17 +102,46 @@ export class Neo4jInfrastructure implements OnModuleInit {
   }): Promise<boolean> {
     const session = this.getSession();
     const { user_id_from, user_id_to, relationship_type } = input;
+    const startTime = Date.now();
     try {
       // Find relationship_type of user_id_from to user_id_to
       const query = `MATCH (s)-[r:${relationship_type}]->(t)
       WHERE s.user_id = "${user_id_from}" AND t.user_id = "${user_id_to}"
       RETURN r`;
       const result = await session.run(query);
+
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'find_relationship',
+        relationship_type,
+      });
+      this.metricsService?.increment('db.neo4j.query.count', 1, {
+        query_type: 'find_relationship',
+        relationship_type,
+      });
+
+      if (duration > 200) {
+        this.metricsService?.increment('db.neo4j.query.slow', 1, {
+          query_type: 'find_relationship',
+          relationship_type,
+        });
+      }
+
       if (result.records.length === 0) {
         return false;
       }
       return true;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'find_relationship',
+        relationship_type,
+        error: 'true',
+      });
+      this.metricsService?.increment('db.neo4j.query.errors', 1, {
+        query_type: 'find_relationship',
+        relationship_type,
+      });
       this.logger.error(
         `Failed to find user relationship: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -126,10 +159,37 @@ export class Neo4jInfrastructure implements OnModuleInit {
   }): Promise<NodeResponse<UserNeo4jDoc>[]> {
     const session = this.getSession();
     const { user_id, relationship_type, page, limit } = input;
+    const startTime = Date.now();
     try {
       const query = `MATCH (s:User {user_id: "${user_id}"})-[r:${relationship_type}]->(t)
       RETURN t SKIP ${page * limit} LIMIT ${limit}`;
       const result = await session.run(query);
+
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'find_from_relationship',
+        relationship_type,
+      });
+      this.metricsService?.increment('db.neo4j.query.count', 1, {
+        query_type: 'find_from_relationship',
+        relationship_type,
+      });
+      this.metricsService?.histogram(
+        'db.neo4j.query.results',
+        result.records.length,
+        {
+          query_type: 'find_from_relationship',
+          relationship_type,
+        },
+      );
+
+      if (duration > 200) {
+        this.metricsService?.increment('db.neo4j.query.slow', 1, {
+          query_type: 'find_from_relationship',
+          relationship_type,
+        });
+      }
+
       if (result.records.length === 0) {
         return [];
       }
@@ -138,6 +198,16 @@ export class Neo4jInfrastructure implements OnModuleInit {
       );
       return users;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'find_from_relationship',
+        relationship_type,
+        error: 'true',
+      });
+      this.metricsService?.increment('db.neo4j.query.errors', 1, {
+        query_type: 'find_from_relationship',
+        relationship_type,
+      });
       this.logger.error(
         `Failed to find user from relationship: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -182,17 +252,49 @@ export class Neo4jInfrastructure implements OnModuleInit {
   }): Promise<boolean> {
     const session = this.getSession();
     const { user_id_from, user_id_to } = input;
+    const startTime = Date.now();
     try {
       // Create relationship
       const query = `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"})
          CREATE (s)-[r:FOLLOWING]->(t)
          SET r.timestamp = timestamp(), s.following_number = s.following_number + 1, t.followers_number = t.followers_number + 1`;
       await session.run(query);
+
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'create_relationship',
+        relationship_type: 'FOLLOWING',
+      });
+      this.metricsService?.increment('db.neo4j.query.count', 1, {
+        query_type: 'create_relationship',
+        relationship_type: 'FOLLOWING',
+      });
+      this.metricsService?.increment('db.neo4j.relationships.created', 1, {
+        relationship_type: 'FOLLOWING',
+      });
+
+      if (duration > 200) {
+        this.metricsService?.increment('db.neo4j.query.slow', 1, {
+          query_type: 'create_relationship',
+          relationship_type: 'FOLLOWING',
+        });
+      }
+
       this.logger.log(
         `User following relationship created successfully: ${user_id_from} to ${user_id_to}`,
       );
       return true;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'create_relationship',
+        relationship_type: 'FOLLOWING',
+        error: 'true',
+      });
+      this.metricsService?.increment('db.neo4j.query.errors', 1, {
+        query_type: 'create_relationship',
+        relationship_type: 'FOLLOWING',
+      });
       this.logger.error(
         `Failed to create user following relationship: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -208,16 +310,48 @@ export class Neo4jInfrastructure implements OnModuleInit {
   }): Promise<boolean> {
     const session = this.getSession();
     const { user_id_from, user_id_to } = input;
+    const startTime = Date.now();
     try {
       // Create relationship
       const query = `MATCH (s:User {user_id: "${user_id_from}"}), (t:User {user_id: "${user_id_to}"})
       CREATE (s)-[r:BLOCKED]->(t);`;
       await session.run(query);
+
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'create_relationship',
+        relationship_type: 'BLOCKED',
+      });
+      this.metricsService?.increment('db.neo4j.query.count', 1, {
+        query_type: 'create_relationship',
+        relationship_type: 'BLOCKED',
+      });
+      this.metricsService?.increment('db.neo4j.relationships.created', 1, {
+        relationship_type: 'BLOCKED',
+      });
+
+      if (duration > 200) {
+        this.metricsService?.increment('db.neo4j.query.slow', 1, {
+          query_type: 'create_relationship',
+          relationship_type: 'BLOCKED',
+        });
+      }
+
       this.logger.log(
         `User blocked relationship created successfully: ${user_id_from} to ${user_id_to}`,
       );
       return true;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'create_relationship',
+        relationship_type: 'BLOCKED',
+        error: 'true',
+      });
+      this.metricsService?.increment('db.neo4j.query.errors', 1, {
+        query_type: 'create_relationship',
+        relationship_type: 'BLOCKED',
+      });
       this.logger.error(
         `Failed to create user blocked relationship: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -233,17 +367,49 @@ export class Neo4jInfrastructure implements OnModuleInit {
   }): Promise<boolean> {
     const session = this.getSession();
     const { user_id_from, user_id_to } = input;
+    const startTime = Date.now();
     try {
       // Delete relationship
       const query = `MATCH (s:User {user_id: "${user_id_from}"})-[r:FOLLOWING]->(t:User {user_id: "${user_id_to}"})
       DELETE r
       SET s.following_number = s.following_number - 1, t.followers_number = t.followers_number - 1`;
       await session.run(query);
+
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'delete_relationship',
+        relationship_type: 'FOLLOWING',
+      });
+      this.metricsService?.increment('db.neo4j.query.count', 1, {
+        query_type: 'delete_relationship',
+        relationship_type: 'FOLLOWING',
+      });
+      this.metricsService?.increment('db.neo4j.relationships.deleted', 1, {
+        relationship_type: 'FOLLOWING',
+      });
+
+      if (duration > 200) {
+        this.metricsService?.increment('db.neo4j.query.slow', 1, {
+          query_type: 'delete_relationship',
+          relationship_type: 'FOLLOWING',
+        });
+      }
+
       this.logger.log(
         `User following relationship deleted successfully: ${user_id_from} to ${user_id_to}`,
       );
       return true;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('db.neo4j.query.duration', duration, {
+        query_type: 'delete_relationship',
+        relationship_type: 'FOLLOWING',
+        error: 'true',
+      });
+      this.metricsService?.increment('db.neo4j.query.errors', 1, {
+        query_type: 'delete_relationship',
+        relationship_type: 'FOLLOWING',
+      });
       this.logger.error(
         `Failed to delete user following relationship: ${error instanceof Error ? error.message : String(error)}`,
       );

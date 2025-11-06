@@ -49,6 +49,9 @@
 // Core NestJS modules for application structure and configuration
 import { Module } from '@nestjs/common';
 import { RedisModule } from '@nestjs-modules/ioredis';
+
+// Datadog metrics module
+import { MetricsModule } from './common/datadog/metrics.module';
 import { HttpModule } from '@nestjs/axios';
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -171,6 +174,9 @@ import {
     MongooseModule.forFeature([
       { name: FollowerSnapshot.name, schema: FollowerSnapshotSchema }, // Follower snapshot data model
     ]),
+
+    // Datadog metrics module for observability
+    MetricsModule, // Metrics service for custom metrics
   ],
 
   // HTTP controllers that handle incoming requests and route them to appropriate services

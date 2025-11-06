@@ -37,6 +37,9 @@
 // Core NestJS modules for application structure and configuration
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+
+// Datadog metrics module
+import { MetricsModule } from './common/datadog/metrics.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -147,6 +150,9 @@ import servicesConfig from './config/services.config';
       { name: DeviceFingerprint.name, schema: DeviceFingerprintSchema }, // Device tracking
       { name: Otp.name, schema: OtpSchema }, // OTP secrets and 2FA configuration
     ]),
+
+    // Datadog metrics module for observability
+    MetricsModule, // Metrics service for custom metrics
 
     // JWT module configuration for access token generation and validation
     // Uses async configuration to load secrets and options from environment variables
