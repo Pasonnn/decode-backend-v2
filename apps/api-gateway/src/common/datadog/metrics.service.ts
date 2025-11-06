@@ -108,12 +108,17 @@ export class MetricsService implements OnModuleDestroy {
     sampleRate?: number,
   ): void {
     try {
-      this.client.increment(
-        metricName,
-        value,
-        this.getDefaultTags(tags),
-        sampleRate,
-      );
+      // hot-shots API: increment(stat, value, sampleRate?, tags?, callback?)
+      if (sampleRate !== undefined) {
+        this.client.increment(
+          metricName,
+          value,
+          sampleRate,
+          this.getDefaultTags(tags),
+        );
+      } else {
+        this.client.increment(metricName, value, this.getDefaultTags(tags));
+      }
     } catch (error) {
       this.logger.error(
         `Failed to increment metric ${metricName}: ${error instanceof Error ? error.message : String(error)}`,
@@ -167,12 +172,17 @@ export class MetricsService implements OnModuleDestroy {
     sampleRate?: number,
   ): void {
     try {
-      this.client.histogram(
-        metricName,
-        value,
-        this.getDefaultTags(tags),
-        sampleRate,
-      );
+      // hot-shots API: histogram(stat, value, sampleRate?, tags?, callback?)
+      if (sampleRate !== undefined) {
+        this.client.histogram(
+          metricName,
+          value,
+          sampleRate,
+          this.getDefaultTags(tags),
+        );
+      } else {
+        this.client.histogram(metricName, value, this.getDefaultTags(tags));
+      }
     } catch (error) {
       this.logger.error(
         `Failed to record histogram metric ${metricName}: ${error instanceof Error ? error.message : String(error)}`,
@@ -194,12 +204,17 @@ export class MetricsService implements OnModuleDestroy {
     sampleRate?: number,
   ): void {
     try {
-      this.client.timing(
-        metricName,
-        durationMs,
-        this.getDefaultTags(tags),
-        sampleRate,
-      );
+      // hot-shots API: timing(stat, value, sampleRate?, tags?, callback?)
+      if (sampleRate !== undefined) {
+        this.client.timing(
+          metricName,
+          durationMs,
+          sampleRate,
+          this.getDefaultTags(tags),
+        );
+      } else {
+        this.client.timing(metricName, durationMs, this.getDefaultTags(tags));
+      }
     } catch (error) {
       this.logger.error(
         `Failed to record timing metric ${metricName}: ${error instanceof Error ? error.message : String(error)}`,
