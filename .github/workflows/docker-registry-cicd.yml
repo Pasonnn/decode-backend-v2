@@ -94,7 +94,8 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/decode-labs-web3/decode-${{ matrix.service }}:latest
+          # Use dynamic owner reference (works for org or personal repo)
+          image-ref: ghcr.io/${{ github.repository_owner }}/decode-${{ matrix.service }}:latest
           format: 'sarif'
           output: 'trivy-results-${{ matrix.service }}.sarif'
 
