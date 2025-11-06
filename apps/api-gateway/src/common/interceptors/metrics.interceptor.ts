@@ -100,7 +100,7 @@ export class MetricsInterceptor implements NestInterceptor {
           method,
           route,
           status_code: errorStatusCode.toString(),
-          error_type,
+          error_type: errorType,
         });
 
         // Record error duration

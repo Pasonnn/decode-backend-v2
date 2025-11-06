@@ -3,7 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RateLimitService } from './rate-limit.service';
 import { RedisInfrastructure } from './redis.infrastructure';
 import { RedisModule } from '@nestjs-modules/ioredis';
-import { MetricsModule } from '../datadog/metrics.module';
+import { MetricsModule } from '../../common/datadog/metrics.module';
+import { CacheService } from './cache.service';
 
 @Global()
 @Module({

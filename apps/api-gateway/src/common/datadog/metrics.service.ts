@@ -39,7 +39,7 @@ export interface TimerOptions {
 @Injectable()
 export class MetricsService implements OnModuleDestroy {
   private readonly logger = new Logger(MetricsService.name);
-  private readonly client: StatsD;
+  private readonly client: InstanceType<typeof StatsD>;
   private readonly serviceName: string;
   private readonly environment: string;
 
@@ -54,14 +54,14 @@ export class MetricsService implements OnModuleDestroy {
       this.configService.get<string>('DD_DOGSTATSD_PORT') || '8125',
       10,
     );
-    const socket =
-      this.configService.get<string>('DD_DOGSTATSD_SOCKET') || undefined;
 
     // Initialize DogStatsD client
+    // Note: DD_DOGSTATSD_SOCKET is a file path string, not a Socket object
+    // hot-shots socket option expects a Socket object, so we omit it here
+    // If socket-based communication is needed, it should be configured separately
     this.client = new StatsD({
       host,
       port,
-      socket,
       prefix: '',
       bufferFlushInterval: 1000,
       telegraf: false,
