@@ -13,6 +13,7 @@ import { WalletDoc } from '../interfaces/wallet-doc.interface';
 import { CryptoUtils } from '../utils/crypto.utils';
 import { MESSAGES } from '../constants/messages.constants';
 import { WALLET_CONSTANTS } from '../constants/wallet.constants';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class PrimaryService {
@@ -20,6 +21,7 @@ export class PrimaryService {
   constructor(
     @InjectModel(Wallet.name) private walletModel: Model<Wallet>,
     private cryptoUtils: CryptoUtils,
+    private readonly metricsService?: MetricsService,
   ) {}
 
   async generatePrimaryWalletChallenge(input: {
@@ -108,14 +110,29 @@ export class PrimaryService {
         address: address_lowercase,
       });
       if (!setPrimaryWallet.success) {
+        this.metricsService?.increment('wallet.primary.set', 1, {
+          operation: 'validatePrimaryWalletChallenge',
+          status: 'failed',
+        });
         return setPrimaryWallet;
       }
+
+      // Record business metric
+      this.metricsService?.increment('wallet.primary.set', 1, {
+        operation: 'validatePrimaryWalletChallenge',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PRIMARY_CHALLENGE_VALIDATED,
       };
     } catch (error) {
+      this.metricsService?.increment('wallet.primary.set', 1, {
+        operation: 'validatePrimaryWalletChallenge',
+        status: 'failed',
+      });
       return {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

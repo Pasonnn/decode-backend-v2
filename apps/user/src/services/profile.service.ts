@@ -251,6 +251,11 @@ export class ProfileService {
           operation: 'save',
         });
       }
+      // Record business metric
+      this.metricsService?.increment('user.profile.updated', 1, {
+        operation: 'updateBio',
+        status: 'success',
+      });
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -258,6 +263,10 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
+      this.metricsService?.increment('user.profile.updated', 1, {
+        operation: 'updateBio',
+        status: 'failed',
+      });
       this.logger.error(`Error updating user bio: ${error as string}`);
       throw new InternalServerErrorException(error);
     }
@@ -300,6 +309,11 @@ export class ProfileService {
           operation: 'save',
         });
       }
+      // Record business metric
+      this.metricsService?.increment('user.profile.updated', 1, {
+        operation: 'updateAvatar',
+        status: 'success',
+      });
       await this.neo4jdbUpdateUserService
         .emit('update_user_request', user as UserDoc)
         .toPromise();
@@ -310,6 +324,10 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
+      this.metricsService?.increment('user.profile.updated', 1, {
+        operation: 'updateAvatar',
+        status: 'failed',
+      });
       this.logger.error(`Error updating user avatar: ${error as string}`);
       throw new InternalServerErrorException(error);
     }
@@ -351,6 +369,11 @@ export class ProfileService {
           operation: 'save',
         });
       }
+      // Record business metric
+      this.metricsService?.increment('user.profile.updated', 1, {
+        operation: 'updateRole',
+        status: 'success',
+      });
       await this.neo4jdbUpdateUserService
         .emit('update_user_request', user as UserDoc)
         .toPromise();
@@ -361,6 +384,10 @@ export class ProfileService {
         data: user as UserDoc,
       };
     } catch (error) {
+      this.metricsService?.increment('user.profile.updated', 1, {
+        operation: 'updateRole',
+        status: 'failed',
+      });
       this.logger.error(`Error updating user role: ${error as string}`);
       throw new InternalServerErrorException(error);
     }

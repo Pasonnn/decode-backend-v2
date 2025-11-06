@@ -136,6 +136,15 @@ export class SearchService {
           ? (countResult[0] as { total: number }).total
           : 0;
 
+      // Record business metrics
+      this.metricsService?.increment('user.search.executed', 1, {
+        operation: 'searchUsers',
+        status: 'success',
+      });
+      this.metricsService?.histogram('user.search.results', users.length, {
+        operation: 'searchUsers',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -151,6 +160,10 @@ export class SearchService {
         },
       };
     } catch (error: unknown) {
+      this.metricsService?.increment('user.search.executed', 1, {
+        operation: 'searchUsers',
+        status: 'failed',
+      });
       this.logger.error(`Error searching users: ${error as string}`);
       return {
         success: false,
@@ -174,18 +187,32 @@ export class SearchService {
         },
       );
       if (user) {
+        this.metricsService?.increment('user.search.executed', 1, {
+          operation: 'searchExistingUsername',
+          status: 'success',
+          result: 'exists',
+        });
         return {
           success: true,
           statusCode: HttpStatus.OK,
           message: MESSAGES.SUCCESS.USERNAME_ALREADY_EXISTS,
         };
       }
+      this.metricsService?.increment('user.search.executed', 1, {
+        operation: 'searchExistingUsername',
+        status: 'success',
+        result: 'available',
+      });
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.USERNAME_AVAILABLE,
       };
     } catch (error: unknown) {
+      this.metricsService?.increment('user.search.executed', 1, {
+        operation: 'searchExistingUsername',
+        status: 'failed',
+      });
       this.logger.error(
         `Error searching existing username: ${error as string}`,
       );
@@ -209,18 +236,32 @@ export class SearchService {
         },
       );
       if (user) {
+        this.metricsService?.increment('user.search.executed', 1, {
+          operation: 'searchExistingEmail',
+          status: 'success',
+          result: 'exists',
+        });
         return {
           success: true,
           statusCode: HttpStatus.OK,
           message: MESSAGES.SUCCESS.EMAIL_ALREADY_EXISTS,
         };
       }
+      this.metricsService?.increment('user.search.executed', 1, {
+        operation: 'searchExistingEmail',
+        status: 'success',
+        result: 'available',
+      });
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_AVAILABLE,
       };
     } catch (error: unknown) {
+      this.metricsService?.increment('user.search.executed', 1, {
+        operation: 'searchExistingEmail',
+        status: 'failed',
+      });
       this.logger.error(`Error searching existing email: ${error as string}`);
       return {
         success: false,

@@ -14,6 +14,7 @@ import { CryptoUtils } from '../utils/crypto.utils';
 // Constants
 import { WALLET_CONSTANTS } from '../constants/wallet.constants';
 import { MESSAGES } from '../constants/messages.constants';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class LinkService {
@@ -21,6 +22,7 @@ export class LinkService {
   constructor(
     private readonly cryptoUtils: CryptoUtils,
     @InjectModel(Wallet.name) private walletModel: Model<Wallet>,
+    private readonly metricsService?: MetricsService,
   ) {}
 
   async generateLinkChallenge(input: { address: string }): Promise<Response> {
@@ -110,19 +112,45 @@ export class LinkService {
         };
       }
       // Link wallet
+      const linkStartTime = Date.now();
       const linkedWallet = await this.linkWallet({
         user_id,
         address: address_lowercase,
       });
+      const linkDuration = Date.now() - linkStartTime;
+
       if (!linkedWallet.success) {
+        this.metricsService?.timing('wallet.operation.duration', linkDuration, {
+          operation: 'validateLinkChallenge',
+          status: 'failed',
+        });
+        this.metricsService?.increment('wallet.linked', 1, {
+          operation: 'validateLinkChallenge',
+          status: 'failed',
+        });
         return linkedWallet;
       }
+
+      // Record business metrics
+      this.metricsService?.timing('wallet.operation.duration', linkDuration, {
+        operation: 'validateLinkChallenge',
+        status: 'success',
+      });
+      this.metricsService?.increment('wallet.linked', 1, {
+        operation: 'validateLinkChallenge',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.LINK_CHALLENGE_VALIDATED,
       };
     } catch (error) {
+      this.metricsService?.increment('wallet.linked', 1, {
+        operation: 'validateLinkChallenge',
+        status: 'failed',
+      });
       return {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -146,23 +174,53 @@ export class LinkService {
       if (!validUnlinkWallet.success) {
         return validUnlinkWallet;
       }
+      const unlinkStartTime = Date.now();
       const deletedWallet = await this.walletModel.deleteOne({
         address: address_lowercase,
         user_id: new Types.ObjectId(user_id),
       });
-      if (!deletedWallet) {
+      const unlinkDuration = Date.now() - unlinkStartTime;
+
+      if (!deletedWallet || deletedWallet.deletedCount === 0) {
+        this.metricsService?.timing(
+          'wallet.operation.duration',
+          unlinkDuration,
+          {
+            operation: 'unlinkWallet',
+            status: 'failed',
+          },
+        );
+        this.metricsService?.increment('wallet.unlinked', 1, {
+          operation: 'unlinkWallet',
+          status: 'failed',
+        });
         return {
           success: false,
           statusCode: HttpStatus.BAD_REQUEST,
           message: MESSAGES.WALLET_LINK.WALLET_UNLINKING_FAILED,
         };
       }
+
+      // Record business metrics
+      this.metricsService?.timing('wallet.operation.duration', unlinkDuration, {
+        operation: 'unlinkWallet',
+        status: 'success',
+      });
+      this.metricsService?.increment('wallet.unlinked', 1, {
+        operation: 'unlinkWallet',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.WALLET_UNLINKED,
       };
     } catch (error) {
+      this.metricsService?.increment('wallet.unlinked', 1, {
+        operation: 'unlinkWallet',
+        status: 'failed',
+      });
       return {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

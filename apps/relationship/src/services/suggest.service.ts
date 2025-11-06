@@ -11,6 +11,8 @@ import { NodeResponse } from '../interfaces/node-response.interface';
 
 // Service Import
 import { UserService } from './user.service';
+import { MetricsService } from '../common/datadog/metrics.service';
+
 @Injectable()
 export class SuggestService {
   private readonly logger = new Logger(SuggestService.name);
@@ -18,6 +20,7 @@ export class SuggestService {
     private readonly neo4jInfrastructure: Neo4jInfrastructure,
     private readonly redisInfrastructure: RedisInfrastructure,
     private readonly userService: UserService,
+    private readonly metricsService?: MetricsService,
   ) {
     this.logger = new Logger(SuggestService.name);
     this.neo4jInfrastructure = neo4jInfrastructure;
@@ -43,6 +46,14 @@ export class SuggestService {
 
       // Early return if Neo4j query failed or returned no data
       if (!suggestions.success || !suggestions.data) {
+        this.metricsService?.increment(
+          'relationship.suggestions.generated',
+          1,
+          {
+            operation: 'getSuggestionsPaginated',
+            status: 'failed',
+          },
+        );
         return {
           success: false,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -78,6 +89,19 @@ export class SuggestService {
         from_user_id: user_id,
       });
 
+      // Record business metrics
+      this.metricsService?.increment('relationship.suggestions.generated', 1, {
+        operation: 'getSuggestionsPaginated',
+        status: 'success',
+      });
+      this.metricsService?.histogram(
+        'relationship.suggestions.results',
+        suggestion_users.length,
+        {
+          operation: 'getSuggestionsPaginated',
+        },
+      );
+
       // Step 6: Return filtered, paginated results
       return {
         success: true,
@@ -94,6 +118,10 @@ export class SuggestService {
         },
       };
     } catch (error) {
+      this.metricsService?.increment('relationship.suggestions.generated', 1, {
+        operation: 'getSuggestionsPaginated',
+        status: 'failed',
+      });
       // Comprehensive error logging for debugging and monitoring
       this.logger.error(
         `Failed to get suggestions for user ${user_id}: ${error instanceof Error ? error.message : String(error)}`,

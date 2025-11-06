@@ -11,6 +11,7 @@ import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 // Service Import
 import { FollowService } from './follow.service';
 import { UserService } from './user.service';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class BlockService {
@@ -19,6 +20,7 @@ export class BlockService {
     private readonly neo4jInfrastructure: Neo4jInfrastructure,
     private readonly followService: FollowService,
     private readonly userService: UserService,
+    private readonly metricsService?: MetricsService,
   ) {
     this.logger = new Logger(BlockService.name);
     this.neo4jInfrastructure = neo4jInfrastructure;
@@ -94,18 +96,33 @@ export class BlockService {
           user_id_to: user_id_to,
         });
       if (!block_user_response) {
+        this.metricsService?.increment('relationship.block', 1, {
+          operation: 'blockUser',
+          status: 'failed',
+        });
         return {
           success: false,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: `Failed to block user`,
         };
       }
+
+      // Record business metric
+      this.metricsService?.increment('relationship.block', 1, {
+        operation: 'blockUser',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: `User blocked successfully`,
       };
     } catch (error) {
+      this.metricsService?.increment('relationship.block', 1, {
+        operation: 'blockUser',
+        status: 'failed',
+      });
       this.logger.error(
         `Failed to block user: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -202,18 +219,33 @@ export class BlockService {
           user_id_to: user_id_to,
         });
       if (!unblock_user_response) {
+        this.metricsService?.increment('relationship.unblock', 1, {
+          operation: 'unblockUser',
+          status: 'failed',
+        });
         return {
           success: false,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: `Failed to unblock user`,
         };
       }
+
+      // Record business metric
+      this.metricsService?.increment('relationship.unblock', 1, {
+        operation: 'unblockUser',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: `User unblocked successfully`,
       };
     } catch (error) {
+      this.metricsService?.increment('relationship.unblock', 1, {
+        operation: 'unblockUser',
+        status: 'failed',
+      });
       this.logger.error(
         `Failed to unblock user: ${error instanceof Error ? error.message : String(error)}`,
       );
