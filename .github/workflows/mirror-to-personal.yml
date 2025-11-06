@@ -1,4 +1,4 @@
-name: Mirror to Pason Repo
+name: Mirror to Pason
 
 on:
   push:
@@ -9,14 +9,20 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Push to Pason repo
+
+      - name: Push to Pason’s repo
         env:
           TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
           git config user.name "decode-bot"
           git config user.email "decode-bot@users.noreply.github.com"
-          git remote add pason https://${TOKEN}@github.com/Pasonnn/decode-backend-v2
+
+          # Replace remote URL — make sure ".git" is included
+          git remote add pason https://${TOKEN}@github.com/Pasonnn/decode-backend-v2.git
+
+          # Push main branch
           git push pason main --force
