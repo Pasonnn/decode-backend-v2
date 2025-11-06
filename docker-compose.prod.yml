@@ -392,9 +392,8 @@ services:
     env_file:
       - .env.decode-observe
     environment:
-      # Datadog API Configuration
-      DD_API_KEY: ${DD_API_KEY}
-      DD_SITE: ${DD_SITE:-ap1.datadoghq.com}
+      # Datadog API Configuration (loaded from .env.decode-observe via env_file)
+      # DD_API_KEY and DD_SITE are loaded from env_file above
       DD_ENV: prod
       # Enable APM
       DD_APM_ENABLED: true
