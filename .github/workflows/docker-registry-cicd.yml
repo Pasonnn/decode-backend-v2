@@ -28,7 +28,7 @@ env:
 jobs:
   # ==================== BUILD AND PUSH IMAGES ====================
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, do-runner-4-8]
     strategy:
       matrix:
         service: [api-gateway, auth, user, relationship, wallet, notification, neo4jdb-sync]
