@@ -42,4 +42,4 @@ jobs:
           git config user.name "decode-bot"
           git config user.email "decode-bot@users.noreply.github.com"
           git remote add pason 'https://${TOKEN}@github.com/Pasonnn/decode-backend-v2.git'
-          git push pason main --all --force
+          git push pason main --force
