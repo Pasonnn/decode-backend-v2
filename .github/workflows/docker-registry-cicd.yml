@@ -95,7 +95,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           # Use dynamic owner reference (works for org or personal repo)
-          image-ref: ghcr.io/${{ toLower(github.repository_owner) }}/decode-${{ matrix.service }}:latest
+          image-ref: ghcr.io/pasonnn/decode-${{ matrix.service }}:latest
           format: 'sarif'
           output: 'trivy-results-${{ matrix.service }}.sarif'
 
