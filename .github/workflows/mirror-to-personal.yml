@@ -1,7 +1,6 @@
 name: Mirror to Pason
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
