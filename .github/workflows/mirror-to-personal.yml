@@ -18,9 +18,12 @@ jobs:
         run: |
           echo "Testing GitHub access..."
           # Mask the token automatically so it never appears in logs
-          git ls-remote https://github.com/Pasonnn/decode-backend-v2.git \
-            && echo "✅ Repo reachable" \
-            || echo "❌ Cannot reach repo"
+          if git ls-remote https://${TOKEN}@github.com/Pasonnn/decode-backend-v2.git; then
+            echo "✅ Repo reachable"
+          else
+            echo "❌ Cannot reach repo"
+            exit 1
+          fi
 
       - name: Checkout source
         uses: actions/checkout@v4
