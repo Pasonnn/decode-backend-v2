@@ -1,4 +1,4 @@
-name: Mirror to Pason (debug safe)
+name: Mirror to Pason
 
 on:
   workflow_dispatch:
@@ -23,10 +23,11 @@ jobs:
         run: |
           echo "Testing GitHub access..."
           # Mask the token automatically so it never appears in logs
-          if git ls-remote https://${TOKEN}@github.com/Pasonnn/decode-backend-v2.git; then
+          if git ls-remote https://${TOKEN}@github.com/Pasonnn/decode-backend-v2.git > /dev/null 2>&1; then
             echo "✅ Repo reachable"
           else
             echo "❌ Cannot reach repo"
+            echo "Make sure the repository exists and the token has correct permissions"
             exit 1
           fi
 
@@ -35,11 +36,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push to Pason’s repo
+      - name: Push to Pason repo
         env:
           TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
+          echo "Token length: ${#TOKEN}"
           git config user.name "decode-bot"
           git config user.email "decode-bot@users.noreply.github.com"
-          git remote add pason 'https://${TOKEN}@github.com/Pasonnn/decode-backend-v2.git'
+          # Remove remote if it already exists
+          git remote remove pason || true
+          # Add remote with token
+          git remote add pason https://${TOKEN}@github.com/Pasonnn/decode-backend-v2.git
+          # Verify remote was added correctly
+          git remote -v
+          # Push to remote
           git push pason main --force
