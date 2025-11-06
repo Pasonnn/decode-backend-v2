@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { Response } from '../../interfaces/response.interface';
 import { MetricsService } from '../../common/datadog/metrics.service';
 
@@ -50,7 +50,9 @@ export abstract class BaseHttpClient {
       return response.data;
     } catch (error) {
       const duration = Date.now() - startTime;
-      const statusCode = error?.response?.status || 500;
+
+      const statusCode = (error as AxiosError)?.response?.status || 500;
+
       this.recordMetrics('GET', url, serviceName, statusCode, duration, true);
       this.handleError(error, 'GET', url);
     }
@@ -84,7 +86,9 @@ export abstract class BaseHttpClient {
       return this.handleUnsuccessfulResponse(response);
     } catch (error) {
       const duration = Date.now() - startTime;
-      const statusCode = error?.response?.status || 500;
+
+      const statusCode = (error as AxiosError)?.response?.status || 500;
+
       this.recordMetrics('POST', url, serviceName, statusCode, duration, true);
       this.handleError(error, 'POST', url);
     }
@@ -118,7 +122,9 @@ export abstract class BaseHttpClient {
       return response.data;
     } catch (error) {
       const duration = Date.now() - startTime;
-      const statusCode = error?.response?.status || 500;
+
+      const statusCode = (error as AxiosError)?.response?.status || 500;
+
       this.recordMetrics('PUT', url, serviceName, statusCode, duration, true);
       this.handleError(error, 'PUT', url);
     }
@@ -152,7 +158,9 @@ export abstract class BaseHttpClient {
       return response.data;
     } catch (error) {
       const duration = Date.now() - startTime;
-      const statusCode = error?.response?.status || 500;
+
+      const statusCode = (error as AxiosError)?.response?.status || 500;
+
       this.recordMetrics('PATCH', url, serviceName, statusCode, duration, true);
       this.handleError(error, 'PATCH', url);
     }
@@ -184,7 +192,9 @@ export abstract class BaseHttpClient {
       return response.data;
     } catch (error) {
       const duration = Date.now() - startTime;
-      const statusCode = error?.response?.status || 500;
+
+      const statusCode = (error as AxiosError)?.response?.status || 500;
+
       this.recordMetrics(
         'DELETE',
         url,

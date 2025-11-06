@@ -89,9 +89,10 @@ export class MetricsInterceptor implements NestInterceptor {
           });
         }
       }),
-      catchError((error) => {
+      catchError((error: unknown) => {
         const duration = Date.now() - startTime;
-        const errorStatusCode = error?.status || 500;
+
+        const errorStatusCode = (error as { status?: number })?.status || 500;
         const errorType =
           errorStatusCode >= 500 ? 'server_error' : 'client_error';
 
@@ -99,7 +100,8 @@ export class MetricsInterceptor implements NestInterceptor {
         this.metricsService.increment('http.request.error', 1, {
           method,
           route,
-          status_code: errorStatusCode.toString(),
+
+          status_code: String(errorStatusCode),
           error_type: errorType,
         });
 
@@ -107,14 +109,16 @@ export class MetricsInterceptor implements NestInterceptor {
         this.metricsService.timing('http.request.duration', duration, {
           method,
           route,
-          status_code: errorStatusCode.toString(),
+
+          status_code: String(errorStatusCode),
         });
 
         // Record error count
         this.metricsService.increment('http.request.count', 1, {
           method,
           route,
-          status_code: errorStatusCode.toString(),
+
+          status_code: String(errorStatusCode),
         });
 
         throw error;
@@ -127,8 +131,11 @@ export class MetricsInterceptor implements NestInterceptor {
    */
   private getRoute(request: Request): string {
     // Use route path if available, otherwise use URL path
-    const route = request.route?.path || request.path || request.url;
+
+    const route =
+      (request.route as { path?: string })?.path || request.path || request.url;
     // Normalize route (remove query params, normalize IDs)
+
     return this.normalizeRoute(route);
   }
 

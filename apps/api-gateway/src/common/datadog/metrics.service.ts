@@ -27,6 +27,9 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import StatsD from 'hot-shots';
 
+// Type for the StatsD client instance
+type StatsDClient = InstanceType<typeof StatsD>;
+
 export interface MetricTags {
   [key: string]: string | number;
 }
@@ -39,7 +42,7 @@ export interface TimerOptions {
 @Injectable()
 export class MetricsService implements OnModuleDestroy {
   private readonly logger = new Logger(MetricsService.name);
-  private readonly client: InstanceType<typeof StatsD>;
+  private readonly client: StatsDClient;
   private readonly serviceName: string;
   private readonly environment: string;
 
@@ -59,21 +62,39 @@ export class MetricsService implements OnModuleDestroy {
     // Note: DD_DOGSTATSD_SOCKET is a file path string, not a Socket object
     // hot-shots socket option expects a Socket object, so we omit it here
     // If socket-based communication is needed, it should be configured separately
+
     this.client = new StatsD({
       host,
       port,
       prefix: '',
       bufferFlushInterval: 1000,
       telegraf: false,
-      errorHandler: (error) => {
-        this.logger.error(`DogStatsD error: ${error.message}`);
+      errorHandler: (error: Error) => {
+        this.logger.error(
+          `DogStatsD error: ${error.message}. Host: ${host}, Port: ${port}`,
+        );
       },
       mock: false,
     });
 
     this.logger.log(
-      `MetricsService initialized for ${this.serviceName} in ${this.environment}`,
+      `MetricsService initialized for ${this.serviceName} in ${this.environment}. Connecting to DogStatsD at ${host}:${port}`,
     );
+
+    // Send a test metric on initialization to verify connectivity
+    try {
+      this.client.increment('metrics.service.initialized', 1, [
+        `service:${this.serviceName}`,
+        `env:${this.environment}`,
+      ]);
+      this.logger.log(
+        `Test metric sent: metrics.service.initialized for ${this.serviceName}`,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to send test metric: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   /**
@@ -119,6 +140,10 @@ export class MetricsService implements OnModuleDestroy {
       } else {
         this.client.increment(metricName, value, this.getDefaultTags(tags));
       }
+      // Debug logging (can be removed or made conditional in production)
+      this.logger.debug(
+        `Metric sent: ${metricName}=${value} with tags: ${JSON.stringify(this.getDefaultTags(tags))}`,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to increment metric ${metricName}: ${error instanceof Error ? error.message : String(error)}`,

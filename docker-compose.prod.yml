@@ -27,7 +27,7 @@ services:
       # Datadog observability - APM
       DD_SERVICE: decode-api-gateway
       DD_VERSION: 1.0.0
-      DD_AGENT_HOST: host.docker.internal
+      DD_AGENT_HOST: datadog-agent
       DD_APM_ENABLED: true
       DD_TRACE_ENABLED: true
       DD_TRACE_SAMPLE_RATE: 1.0
@@ -88,7 +88,7 @@ services:
       # Datadog observability - APM
       DD_SERVICE: decode-auth
       DD_VERSION: 1.0.0
-      DD_AGENT_HOST: host.docker.internal
+      DD_AGENT_HOST: datadog-agent
       DD_APM_ENABLED: true
       DD_TRACE_ENABLED: true
       DD_TRACE_SAMPLE_RATE: 1.0
@@ -141,7 +141,7 @@ services:
       # Datadog observability - APM
       DD_SERVICE: decode-user
       DD_VERSION: 1.0.0
-      DD_AGENT_HOST: host.docker.internal
+      DD_AGENT_HOST: datadog-agent
       DD_APM_ENABLED: true
       DD_TRACE_ENABLED: true
       DD_TRACE_SAMPLE_RATE: 1.0
@@ -193,7 +193,7 @@ services:
       # Datadog observability - APM
       DD_SERVICE: decode-relationship
       DD_VERSION: 1.0.0
-      DD_AGENT_HOST: host.docker.internal
+      DD_AGENT_HOST: datadog-agent
       DD_APM_ENABLED: true
       DD_TRACE_ENABLED: true
       DD_TRACE_SAMPLE_RATE: 1.0
@@ -245,7 +245,7 @@ services:
       # Datadog observability - APM
       DD_SERVICE: decode-wallet
       DD_VERSION: 1.0.0
-      DD_AGENT_HOST: host.docker.internal
+      DD_AGENT_HOST: datadog-agent
       DD_APM_ENABLED: true
       DD_TRACE_ENABLED: true
       DD_TRACE_SAMPLE_RATE: 1.0
@@ -296,7 +296,7 @@ services:
       # Datadog observability - APM
       DD_SERVICE: decode-notification
       DD_VERSION: 1.0.0
-      DD_AGENT_HOST: host.docker.internal
+      DD_AGENT_HOST: datadog-agent
       DD_APM_ENABLED: true
       DD_TRACE_ENABLED: true
       DD_TRACE_SAMPLE_RATE: 1.0
@@ -349,7 +349,7 @@ services:
       # Datadog observability - APM
       DD_SERVICE: decode-neo4jdb-sync
       DD_VERSION: 1.0.0
-      DD_AGENT_HOST: host.docker.internal
+      DD_AGENT_HOST: datadog-agent
       DD_APM_ENABLED: true
       DD_TRACE_ENABLED: true
       DD_TRACE_SAMPLE_RATE: 1.0
@@ -383,6 +383,51 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # Datadog Agent - Observability and Monitoring
+  datadog-agent:
+    image: datadog/agent:latest
+    container_name: datadog-agent
+    restart: unless-stopped
+    env_file:
+      - .env.decode-observe
+    environment:
+      # Datadog API Configuration
+      DD_API_KEY: ${DD_API_KEY}
+      DD_SITE: ${DD_SITE:-ap1.datadoghq.com}
+      DD_ENV: prod
+      # Enable APM
+      DD_APM_ENABLED: true
+      DD_APM_NON_LOCAL_TRAFFIC: true
+      # Enable Logs
+      DD_LOGS_ENABLED: true
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: true
+      # Enable DogStatsD
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: true
+      DD_DOGSTATSD_PORT: 8125
+      # Container Collection
+      DD_CONTAINER_COLLECTION_ENABLED: true
+      DD_CONTAINER_EXCLUDE_LOGS: "name:datadog-agent"
+      # Process Collection
+      DD_PROCESS_AGENT_ENABLED: true
+      # Network Performance Monitoring (optional)
+      DD_NETWORK_MONITORING_ENABLED: false
+    ports:
+      - "8125:8125/udp" # DogStatsD
+      - "8126:8126" # APM
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
+    networks:
+      - decode-network
+    healthcheck:
+      test: ["CMD", "agent", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 
 # ==================== NETWORKS ====================
