@@ -10,6 +10,7 @@ import { Notification } from '../schema/notification.schema';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { NotificationPaginationResponse } from '../interfaces/notification-pagination-response.interface';
 import { Response } from '../interfaces/response.interface';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 /**
  * Notification Service
@@ -22,6 +23,7 @@ export class NotificationService {
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<Notification>,
+    private readonly metricsService?: MetricsService,
   ) {}
 
   /**
@@ -40,11 +42,21 @@ export class NotificationService {
 
       const savedNotification = await notification.save();
 
+      // Record business metric
+      this.metricsService?.increment('notification.created', 1, {
+        notification_type: createNotificationDto.type,
+        status: 'success',
+      });
+
       this.logger.log(
         `Created notification: ${savedNotification.title} for user ${createNotificationDto.user_id}`,
       );
       return savedNotification;
     } catch (error) {
+      this.metricsService?.increment('notification.created', 1, {
+        notification_type: createNotificationDto.type || 'unknown',
+        status: 'failed',
+      });
       this.logger.error('Failed to create notification:', error);
       throw error;
     }
@@ -134,12 +146,21 @@ export class NotificationService {
         );
       }
 
+      // Record business metric
+      this.metricsService?.increment('notification.read', 1, {
+        notification_type: notification.type,
+        status: 'success',
+      });
+
       this.logger.log(
         `Marked notification ${notificationId} as read for user ${userId}`,
       );
 
       return notification;
     } catch (error) {
+      this.metricsService?.increment('notification.read', 1, {
+        status: 'failed',
+      });
       this.logger.error(
         `Failed to mark notification ${notificationId} as read:`,
         error,

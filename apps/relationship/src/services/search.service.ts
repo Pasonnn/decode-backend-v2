@@ -9,12 +9,15 @@ import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 
 // Service Import
 import { UserService } from './user.service';
+import { MetricsService } from '../common/datadog/metrics.service';
+
 @Injectable()
 export class SearchService {
   private readonly logger = new Logger(SearchService.name);
   constructor(
     private readonly neo4jInfrastructure: Neo4jInfrastructure,
     private readonly userService: UserService,
+    private readonly metricsService?: MetricsService,
   ) {
     this.logger = new Logger(SearchService.name);
     this.neo4jInfrastructure = neo4jInfrastructure;
@@ -48,6 +51,20 @@ export class SearchService {
         users: followers,
         from_user_id: user_id,
       });
+
+      // Record business metrics
+      this.metricsService?.increment('relationship.search.executed', 1, {
+        operation: 'searchFollowers',
+        status: 'success',
+      });
+      this.metricsService?.histogram(
+        'relationship.search.results',
+        full_followers.length,
+        {
+          operation: 'searchFollowers',
+        },
+      );
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -63,6 +80,10 @@ export class SearchService {
         },
       };
     } catch (error) {
+      this.metricsService?.increment('relationship.search.executed', 1, {
+        operation: 'searchFollowers',
+        status: 'failed',
+      });
       this.logger.error(
         `Failed to search followers: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -101,6 +122,20 @@ export class SearchService {
         users: following,
         from_user_id: user_id,
       });
+
+      // Record business metrics
+      this.metricsService?.increment('relationship.search.executed', 1, {
+        operation: 'searchFollowing',
+        status: 'success',
+      });
+      this.metricsService?.histogram(
+        'relationship.search.results',
+        full_following.length,
+        {
+          operation: 'searchFollowing',
+        },
+      );
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
@@ -116,6 +151,10 @@ export class SearchService {
         },
       };
     } catch (error) {
+      this.metricsService?.increment('relationship.search.executed', 1, {
+        operation: 'searchFollowing',
+        status: 'failed',
+      });
       this.logger.error(
         `Failed to search following: ${error instanceof Error ? error.message : String(error)}`,
       );

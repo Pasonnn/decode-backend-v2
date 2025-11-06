@@ -18,6 +18,7 @@ import { UserNeo4jDoc } from '../interfaces/user-neo4j-doc.interface';
 // Service Import
 import { BlockService } from './block.service';
 import { UserService } from './user.service';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class FollowService {
@@ -29,6 +30,7 @@ export class FollowService {
     private readonly userService: UserService,
     @Inject('NOTIFICATION_SERVICE')
     private readonly notificationService: ClientProxy,
+    private readonly metricsService?: MetricsService,
   ) {
     this.logger = new Logger(FollowService.name);
     this.neo4jInfrastructure = neo4jInfrastructure;
@@ -126,12 +128,23 @@ export class FollowService {
       await this.notificationService
         .emit('create_notification', create_notification_notification_payload)
         .toPromise();
+
+      // Record business metric
+      this.metricsService?.increment('relationship.follow', 1, {
+        operation: 'followingUser',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: `User followed successfully`,
       };
     } catch (error) {
+      this.metricsService?.increment('relationship.follow', 1, {
+        operation: 'followingUser',
+        status: 'failed',
+      });
       this.logger.error(
         `Failed to following user: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -163,6 +176,10 @@ export class FollowService {
         user_id_to: user_id_to,
       });
       if (!user_following_response) {
+        this.metricsService?.increment('relationship.unfollow', 1, {
+          operation: 'unfollowingUser',
+          status: 'not_following',
+        });
         return {
           success: false,
           statusCode: HttpStatus.FORBIDDEN,
@@ -194,18 +211,33 @@ export class FollowService {
           unfollowing_payload,
         );
       if (!unfollowing_user_response) {
+        this.metricsService?.increment('relationship.unfollow', 1, {
+          operation: 'unfollowingUser',
+          status: 'failed',
+        });
         return {
           success: false,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: `Failed to unfollowing user`,
         };
       }
+
+      // Record business metric
+      this.metricsService?.increment('relationship.unfollow', 1, {
+        operation: 'unfollowingUser',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: `User unfollowed successfully`,
       };
     } catch (error) {
+      this.metricsService?.increment('relationship.unfollow', 1, {
+        operation: 'unfollowingUser',
+        status: 'failed',
+      });
       this.logger.error(
         `Failed to unfollowing user: ${error instanceof Error ? error.message : String(error)}`,
       );

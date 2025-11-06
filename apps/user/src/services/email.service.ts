@@ -14,6 +14,7 @@ import { User } from '../schemas/user.schema';
 // Constants Import
 import { USER_CONSTANTS } from '../constants/user.constants';
 import { MESSAGES } from '../constants/messages.constants';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class EmailService {
@@ -22,6 +23,7 @@ export class EmailService {
     @InjectModel(User.name) private userModel: Model<User>,
     @Inject('EMAIL_SERVICE') private readonly emailService: ClientProxy,
     private readonly redisInfrastructure: RedisInfrastructure,
+    private readonly metricsService?: MetricsService,
   ) {
     this.logger = new Logger(EmailService.name);
   }
@@ -49,14 +51,29 @@ export class EmailService {
         current_email: user.email,
       });
       if (!sendEmailVerificationResponse.success) {
+        this.metricsService?.increment('user.email.changed', 1, {
+          operation: 'changeEmailInitiate',
+          status: 'failed',
+        });
         return sendEmailVerificationResponse as Response<void>;
       }
+
+      // Record business metric
+      this.metricsService?.increment('user.email.changed', 1, {
+        operation: 'changeEmailInitiate',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
+      this.metricsService?.increment('user.email.changed', 1, {
+        operation: 'changeEmailInitiate',
+        status: 'failed',
+      });
       this.logger.error(`Error changing email initiate: ${error as string}`);
       return {
         success: false,
@@ -236,6 +253,13 @@ export class EmailService {
       user_id,
       new_email: verification_code_value.new_email,
     });
+
+    // Record business metric
+    this.metricsService?.increment('user.email.changed', 1, {
+      operation: 'verifyNewEmailCode',
+      status: 'success',
+    });
+
     return {
       success: true,
       statusCode: HttpStatus.OK,
@@ -270,12 +294,23 @@ export class EmailService {
           otpCode: verification_code,
         },
       });
+
+      // Record business metric
+      this.metricsService?.increment('user.email.changed', 1, {
+        operation: 'sendEmailVerification',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
+      this.metricsService?.increment('user.email.changed', 1, {
+        operation: 'sendEmailVerification',
+        status: 'failed',
+      });
       this.logger.error(`Error sending email verification: ${error as string}`);
       return {
         success: false,
@@ -313,12 +348,23 @@ export class EmailService {
           otpCode: verification_code,
         },
       });
+
+      // Record business metric
+      this.metricsService?.increment('user.email.changed', 1, {
+        operation: 'sendNewEmailVerification',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
+      this.metricsService?.increment('user.email.changed', 1, {
+        operation: 'sendNewEmailVerification',
+        status: 'failed',
+      });
       this.logger.error(
         `Error sending new email verification: ${error as string}`,
       );
@@ -340,12 +386,23 @@ export class EmailService {
         email: new_email,
         last_email_change: new Date(),
       });
+
+      // Record business metric
+      this.metricsService?.increment('user.email.changed', 1, {
+        operation: 'changeEmail',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_CHANGED,
       };
     } catch (error: unknown) {
+      this.metricsService?.increment('user.email.changed', 1, {
+        operation: 'changeEmail',
+        status: 'failed',
+      });
       this.logger.error(`Error changing email: ${error as string}`);
       return {
         success: false,

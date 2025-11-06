@@ -15,6 +15,7 @@ import { User } from '../schemas/user.schema';
 import { USER_CONSTANTS } from '../constants/user.constants';
 import { MESSAGES } from '../constants/messages.constants';
 import { UserDoc } from '../interfaces/user-doc.interface';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class UsernameService {
@@ -25,6 +26,7 @@ export class UsernameService {
     @Inject('NEO4JDB_SYNC_SERVICE')
     private readonly neo4jdbUpdateUserService: ClientProxy,
     private readonly redisInfrastructure: RedisInfrastructure,
+    private readonly metricsService?: MetricsService,
   ) {
     this.logger = new Logger(UsernameService.name);
   }
@@ -62,14 +64,29 @@ export class UsernameService {
         email: user.email,
       });
       if (!sendEmailVerificationResponse.success) {
+        this.metricsService?.increment('user.username.changed', 1, {
+          operation: 'changeUsernameInitiate',
+          status: 'failed',
+        });
         return sendEmailVerificationResponse as Response<void>;
       }
+
+      // Record business metric
+      this.metricsService?.increment('user.username.changed', 1, {
+        operation: 'changeUsernameInitiate',
+        status: 'success',
+      });
+
       return {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.EMAIL_VERIFICATION_SENT,
       };
     } catch (error: unknown) {
+      this.metricsService?.increment('user.username.changed', 1, {
+        operation: 'changeUsernameInitiate',
+        status: 'failed',
+      });
       this.logger.error(`Error changing username initiate: ${error as string}`);
       return {
         success: false,
@@ -157,10 +174,29 @@ export class UsernameService {
     await this.neo4jdbUpdateUserService
       .emit('update_user_request', updated_user as UserDoc)
       .toPromise();
+
+    // Record business metric
+    this.metricsService?.increment('user.username.changed', 1, {
+      operation: 'changeUsername',
+      status: 'success',
+    });
+
     return {
       success: true,
       statusCode: HttpStatus.OK,
       message: MESSAGES.SUCCESS.USERNAME_CHANGED,
+    };
+  }
+  catch(error: unknown) {
+    this.metricsService?.increment('user.username.changed', 1, {
+      operation: 'changeUsername',
+      status: 'failed',
+    });
+    this.logger.error(`Error changing username: ${error as string}`);
+    return {
+      success: false,
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      message: MESSAGES.SEARCH.SEARCH_FAILED,
     };
   }
 

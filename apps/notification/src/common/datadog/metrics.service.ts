@@ -108,7 +108,6 @@ export class MetricsService implements OnModuleDestroy {
   ): void {
     try {
       if (sampleRate !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.client.increment(
           metricName,
           value,
@@ -116,7 +115,6 @@ export class MetricsService implements OnModuleDestroy {
           this.getDefaultTags(tags),
         );
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.client.increment(metricName, value, this.getDefaultTags(tags));
       }
     } catch (error) {
@@ -131,7 +129,6 @@ export class MetricsService implements OnModuleDestroy {
    */
   decrement(metricName: string, value: number = 1, tags?: MetricTags): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.client.decrement(metricName, value, this.getDefaultTags(tags));
     } catch (error) {
       this.logger.error(
@@ -145,7 +142,6 @@ export class MetricsService implements OnModuleDestroy {
    */
   gauge(metricName: string, value: number, tags?: MetricTags): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.client.gauge(metricName, value, this.getDefaultTags(tags));
     } catch (error) {
       this.logger.error(
@@ -165,7 +161,6 @@ export class MetricsService implements OnModuleDestroy {
   ): void {
     try {
       if (sampleRate !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.client.histogram(
           metricName,
           value,
@@ -173,7 +168,6 @@ export class MetricsService implements OnModuleDestroy {
           this.getDefaultTags(tags),
         );
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.client.histogram(metricName, value, this.getDefaultTags(tags));
       }
     } catch (error) {
@@ -194,7 +188,6 @@ export class MetricsService implements OnModuleDestroy {
   ): void {
     try {
       if (sampleRate !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.client.timing(
           metricName,
           durationMs,
@@ -202,7 +195,6 @@ export class MetricsService implements OnModuleDestroy {
           this.getDefaultTags(tags),
         );
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         this.client.timing(metricName, durationMs, this.getDefaultTags(tags));
       }
     } catch (error) {
@@ -255,7 +247,6 @@ export class MetricsService implements OnModuleDestroy {
    */
   distribution(metricName: string, value: number, tags?: MetricTags): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.client.distribution(metricName, value, this.getDefaultTags(tags));
     } catch (error) {
       this.logger.error(
@@ -269,7 +260,6 @@ export class MetricsService implements OnModuleDestroy {
    */
   set(metricName: string, value: string | number, tags?: MetricTags): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.client.set(metricName, value, this.getDefaultTags(tags));
     } catch (error) {
       this.logger.error(
@@ -283,7 +273,6 @@ export class MetricsService implements OnModuleDestroy {
    */
   onModuleDestroy(): void {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.client.close();
       this.logger.log('MetricsService client closed');
     } catch (error) {

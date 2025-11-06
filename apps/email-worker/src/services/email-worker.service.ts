@@ -3,13 +3,17 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { EmailTemplates } from '../templates/email.templates';
 import { EmailRequestDto } from '../dto/email.dto';
+import { MetricsService } from '../common/datadog/metrics.service';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly metricsService?: MetricsService,
+  ) {
     this.initializeTransporter();
   }
 
@@ -29,6 +33,7 @@ export class EmailService {
   }
 
   async sendEmail(request: EmailRequestDto): Promise<boolean> {
+    const startTime = Date.now();
     try {
       const recipientEmail = this.getEmailFromRequest(request);
       this.logger.log(
@@ -38,11 +43,36 @@ export class EmailService {
       const template = this.getEmailTemplate(request);
       await this.sendEmailWithTemplate(request, template);
 
+      const duration = Date.now() - startTime;
+
+      // Record business metrics
+      this.metricsService?.timing('email.processing.duration', duration, {
+        email_type: request.type,
+        status: 'success',
+      });
+      this.metricsService?.increment('email.sent', 1, {
+        email_type: request.type,
+        status: 'success',
+      });
+      this.metricsService?.increment('email.template.used', 1, {
+        email_type: request.type,
+        template: request.type,
+      });
+
       this.logger.log(
         `Email sent successfully: ${request.type} to ${recipientEmail}`,
       );
       return true;
     } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService?.timing('email.processing.duration', duration, {
+        email_type: request.type,
+        status: 'failed',
+      });
+      this.metricsService?.increment('email.failed', 1, {
+        email_type: request.type,
+        status: 'failed',
+      });
       this.logger.error(
         `Failed to send email: ${request.type} to ${this.getEmailFromRequest(request)}`,
         error instanceof Error ? error.stack : String(error),
