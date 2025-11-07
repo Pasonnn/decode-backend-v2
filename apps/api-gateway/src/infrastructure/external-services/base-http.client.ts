@@ -11,6 +11,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import tracer from 'dd-trace';
 import { Response } from '../../interfaces/response.interface';
 import { MetricsService } from '../../common/datadog/metrics.service';
 
@@ -35,6 +36,10 @@ export abstract class BaseHttpClient {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
         ...config,
+        headers: {
+          ...this.injectTraceHeaders(),
+          ...config?.headers,
+        },
       };
 
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
@@ -70,6 +75,10 @@ export abstract class BaseHttpClient {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
         ...config,
+        headers: {
+          ...this.injectTraceHeaders(),
+          ...config?.headers,
+        },
       };
 
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
@@ -106,6 +115,10 @@ export abstract class BaseHttpClient {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
         ...config,
+        headers: {
+          ...this.injectTraceHeaders(),
+          ...config?.headers,
+        },
       };
 
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
@@ -142,6 +155,10 @@ export abstract class BaseHttpClient {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
         ...config,
+        headers: {
+          ...this.injectTraceHeaders(),
+          ...config?.headers,
+        },
       };
 
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
@@ -177,6 +194,10 @@ export abstract class BaseHttpClient {
       const requestConfig: AxiosRequestConfig = {
         timeout: 10000, // 10 second timeout
         ...config,
+        headers: {
+          ...this.injectTraceHeaders(),
+          ...config?.headers,
+        },
       };
 
       const response: AxiosResponse<Response<T>> = await firstValueFrom(
@@ -242,6 +263,28 @@ export abstract class BaseHttpClient {
     }
 
     throw new Error(`Network error: ${errorMessage}`);
+  }
+
+  /**
+   * Inject Datadog trace headers into HTTP request
+   * This propagates the trace context to downstream services
+   */
+  private injectTraceHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {};
+    const span = tracer.scope().active();
+
+    if (span) {
+      try {
+        tracer.inject(span, 'http_headers', headers);
+      } catch (error) {
+        // If trace injection fails, log but don't break the request
+        this.logger.warn(
+          `Failed to inject trace headers: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    return headers;
   }
 
   /**
