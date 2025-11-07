@@ -37,6 +37,10 @@
 
 // Datadog observability
 import 'dd-trace/init';
+import tracer from 'dd-trace';
+
+// Initialize tracer for RabbitMQ microservice (non-HTTP service)
+tracer.init();
 
 // Core NestJS modules for microservice initialization
 import { NestFactory } from '@nestjs/core';

@@ -147,7 +147,7 @@ Decode Backend v2 is a comprehensive microservices architecture designed for mod
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Decode-Labs-Web3/decode-backend-v2.git
+git clone https://github.com/pasonnn/decode-backend-v2.git
 cd decode-backend-v2
 ```
 
