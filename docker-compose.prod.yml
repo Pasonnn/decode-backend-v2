@@ -406,6 +406,8 @@ services:
       # Enable APM
       DD_APM_ENABLED: true
       DD_APM_NON_LOCAL_TRAFFIC: true
+      # Trace metrics are automatically generated from APM traces
+      # Available metrics: trace.http.request.duration, trace.http.request.hits, trace.http.request.errors
       # Enable Logs
       DD_LOGS_ENABLED: true
       DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: true

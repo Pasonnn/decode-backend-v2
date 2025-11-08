@@ -122,6 +122,34 @@ All services follow the pattern: `decode-{service-name}`
 - **Service map generation** showing service dependencies
 - **Error tracking** with stack traces
 
+### Trace Metrics Generation
+
+When APM is enabled, the Datadog Agent automatically generates **trace metrics** from APM traces. These metrics are available alongside custom metrics and provide an alternative source of performance data.
+
+**Available Trace Metrics**:
+
+| Metric | Description | Type |
+|--------|-------------|------|
+| `trace.http.request.duration` | HTTP request duration from traces | Distribution |
+| `trace.http.request.hits` | HTTP request count from traces | Count |
+| `trace.http.request.errors` | HTTP error count from traces | Count |
+| `trace.span.duration` | Span duration metrics | Distribution |
+
+**Trace Metrics vs Custom Metrics**:
+
+- **Trace Metrics**: Automatically generated from APM traces, no code changes required
+- **Custom Metrics**: Explicitly sent via DogStatsD from application code
+- **Recommendation**: Use custom metrics (`http.request.duration`) as primary source, trace metrics (`trace.http.request.duration`) for comparison or when custom metrics are unavailable
+
+**Configuration**:
+
+Trace metrics are automatically enabled when:
+- `DD_APM_ENABLED: true` is set (already configured)
+- APM traces are being collected
+- Datadog Agent is running and receiving traces
+
+No additional configuration is required. Trace metrics will appear in Datadog Metrics Explorer once traces are being generated.
+
 ---
 
 ## Logging Implementation
@@ -463,7 +491,8 @@ Format: `{category}.{subcategory}.{metric_name}`
 
 ### Categories
 
-- **`http.*`** - HTTP request metrics
+- **`http.*`** - HTTP request metrics (custom metrics via DogStatsD)
+- **`trace.*`** - Trace metrics (automatically generated from APM traces)
 - **`db.mongodb.*`** - MongoDB database metrics
 - **`db.neo4j.*`** - Neo4j database metrics
 - **`queue.*`** - RabbitMQ queue metrics
@@ -494,6 +523,17 @@ Format: `{category}.{subcategory}.{metric_name}`
 ---
 
 ## Complete Metrics List
+
+### Trace Metrics (APM - Automatically Generated)
+
+| Metric | Type | Source | Description |
+|--------|------|--------|-------------|
+| `trace.http.request.duration` | Distribution | APM Traces | HTTP request duration from traces |
+| `trace.http.request.hits` | Count | APM Traces | HTTP request count from traces |
+| `trace.http.request.errors` | Count | APM Traces | HTTP error count from traces |
+| `trace.span.duration` | Distribution | APM Traces | Span duration metrics |
+
+**Note**: Trace metrics are automatically generated from APM traces when `DD_APM_ENABLED: true` is set. They complement custom metrics and provide an alternative source of performance data.
 
 ### System Metrics (Infrastructure)
 
