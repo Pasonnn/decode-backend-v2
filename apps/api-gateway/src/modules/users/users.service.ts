@@ -204,6 +204,8 @@ export class UsersService {
         const get_my_wallets_response: Response<WalletDoc[]> =
           await this.walletServiceClient.getWallets(authorization);
 
+        console.log('Get my wallets response', get_my_wallets_response);
+
         if (
           get_my_primary_wallet_response.success &&
           get_my_primary_wallet_response.data
@@ -212,11 +214,9 @@ export class UsersService {
           this.logger.log(
             'Successfully fetched primary wallet for current user',
           );
-          if (get_my_wallets_response.success && get_my_wallets_response.data) {
-            user_wallets_data = get_my_wallets_response.data;
-          } else {
-            this.logger.warn('Wallets not found for current user');
-          }
+        }
+        if (get_my_wallets_response.success && get_my_wallets_response.data) {
+          user_wallets_data = get_my_wallets_response.data;
         } else {
           this.logger.warn('Wallets not found for current user');
         }
