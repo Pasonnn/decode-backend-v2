@@ -127,6 +127,7 @@ export class PrimaryService {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PRIMARY_CHALLENGE_VALIDATED,
+        data: setPrimaryWallet.data as WalletDoc,
       };
     } catch (error) {
       this.metricsService?.increment('wallet.primary.set', 1, {
@@ -180,6 +181,7 @@ export class PrimaryService {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.PRIMARY_WALLET_UNSET,
+        data: unsetPrimaryWallet as WalletDoc,
       };
     } catch (error) {
       return {
@@ -224,7 +226,7 @@ export class PrimaryService {
   private async setPrimaryWallet(input: {
     user_id: string;
     address: string;
-  }): Promise<Response> {
+  }): Promise<Response<WalletDoc>> {
     try {
       const { user_id, address } = input;
       const address_lowercase = address.toLowerCase();

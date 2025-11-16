@@ -145,6 +145,7 @@ export class LinkService {
         success: true,
         statusCode: HttpStatus.OK,
         message: MESSAGES.SUCCESS.LINK_CHALLENGE_VALIDATED,
+        data: linkedWallet.data,
       };
     } catch (error) {
       this.metricsService?.increment('wallet.linked', 1, {
