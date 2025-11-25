@@ -131,73 +131,74 @@ export class UsernameService {
     new_username: string;
     code: string;
   }): Promise<Response<void>> {
-    const { user_id, new_username, code } = input;
-    const user = await this.userModel.findById(user_id, {
-      password_hashed: 0,
-      updatedAt: 0,
-      createdAt: 0,
-    });
-    if (!user) {
+    try {
+      const { user_id, new_username, code } = input;
+      const user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
+      if (!user) {
+        return {
+          success: false,
+          statusCode: HttpStatus.NOT_FOUND,
+          message: MESSAGES.USER_INFO.USER_NOT_FOUND,
+        };
+      }
+      if (user.username === new_username) {
+        return {
+          success: false,
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: MESSAGES.USERNAME.USERNAME_ALREADY_EXISTS,
+        };
+      }
+      const verifyUsernameCodeResponse = await this.verifyUsernameCode({
+        user_id,
+        code,
+      });
+      if (!verifyUsernameCodeResponse.success) {
+        return verifyUsernameCodeResponse;
+      }
+      await this.redisInfrastructure.del(
+        `${USER_CONSTANTS.REDIS.KEYS.USERNAME_CHANGE}:${code}`,
+      );
+      await this.userModel.findByIdAndUpdate(user_id, {
+        username: new_username,
+        last_username_change: new Date(),
+      });
+      const updated_user = await this.userModel.findById(user_id, {
+        password_hashed: 0,
+        email: 0,
+        updatedAt: 0,
+        createdAt: 0,
+      });
+      await this.neo4jdbUpdateUserService
+        .emit('update_user_request', updated_user as UserDoc)
+        .toPromise();
+
+      // Record business metric
+      this.metricsService?.increment('user.username.changed', 1, {
+        operation: 'changeUsername',
+        status: 'success',
+      });
+
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        message: MESSAGES.SUCCESS.USERNAME_CHANGED,
+      };
+    } catch (error: unknown) {
+      this.metricsService?.increment('user.username.changed', 1, {
+        operation: 'changeUsername',
+        status: 'failed',
+      });
+      this.logger.error(`Error changing username: ${error as string}`);
       return {
         success: false,
-        statusCode: HttpStatus.NOT_FOUND,
-        message: MESSAGES.USER_INFO.USER_NOT_FOUND,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.SEARCH.SEARCH_FAILED,
       };
     }
-    if (user.username === new_username) {
-      return {
-        success: false,
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: MESSAGES.USERNAME.USERNAME_ALREADY_EXISTS,
-      };
-    }
-    const verifyUsernameCodeResponse = await this.verifyUsernameCode({
-      user_id,
-      code,
-    });
-    if (!verifyUsernameCodeResponse.success) {
-      return verifyUsernameCodeResponse;
-    }
-    await this.redisInfrastructure.del(
-      `${USER_CONSTANTS.REDIS.KEYS.USERNAME_CHANGE}:${code}`,
-    );
-    await this.userModel.findByIdAndUpdate(user_id, {
-      username: new_username,
-      last_username_change: new Date(),
-    });
-    const updated_user = await this.userModel.findById(user_id, {
-      password_hashed: 0,
-      email: 0,
-      updatedAt: 0,
-      createdAt: 0,
-    });
-    await this.neo4jdbUpdateUserService
-      .emit('update_user_request', updated_user as UserDoc)
-      .toPromise();
-
-    // Record business metric
-    this.metricsService?.increment('user.username.changed', 1, {
-      operation: 'changeUsername',
-      status: 'success',
-    });
-
-    return {
-      success: true,
-      statusCode: HttpStatus.OK,
-      message: MESSAGES.SUCCESS.USERNAME_CHANGED,
-    };
-  }
-  catch(error: unknown) {
-    this.metricsService?.increment('user.username.changed', 1, {
-      operation: 'changeUsername',
-      status: 'failed',
-    });
-    this.logger.error(`Error changing username: ${error as string}`);
-    return {
-      success: false,
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: MESSAGES.SEARCH.SEARCH_FAILED,
-    };
   }
 
   private async sendEmailVerification(input: {
