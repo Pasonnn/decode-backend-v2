@@ -41,6 +41,8 @@
     "start:prod": "node dist/apps/decode-backend-v2/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
+    "test:unit": "jest \"tests/unit\"",
+    "test:e2e:new": "jest \"tests/e2e\"",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -136,7 +138,12 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/"
+      "<rootDir>/apps/",
+      "<rootDir>/tests/"
+    ],
+    "reporters": [
+      "default",
+      "<rootDir>/tests/reporters/console-dashboard.reporter.js"
     ]
   }
 }
