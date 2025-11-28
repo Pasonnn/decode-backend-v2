@@ -1,721 +1,432 @@
-# 🚀 Decode Backend v2
+# Decode Backend v2
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
-[![NestJS](https://img.shields.io/badge/NestJS-11.x-red.svg)](https://nestjs.com/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+A production-ready microservices architecture built with NestJS, providing authentication, user management, social relationships, wallet integration, and real-time notifications for the Decode Network platform.
 
-[![Live Deployment App](https://img.shields.io/badge/Deployment-App-blueviolet?logo=vercel)](https://app.decodenetwork.app/)
-
-A modern, scalable microservices backend built with NestJS, featuring authentication, user management, real-time notifications, social relationships, and Web3 wallet integration.
-
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
-- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
-- [Services](#services)
-- [API Documentation](#api-documentation)
-- [Development](#development)
-- [Docker Deployment](#docker-deployment)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Configuration](#configuration)
-- [Security](#security)
-- [Monitoring](#monitoring)
+- [Development Setup](#development-setup)
+- [Testing](#testing)
+- [Documentation](#documentation)
+- [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [License](#license)
 
-## 🏗️ Overview
+## Overview
 
-Decode Backend v2 is a comprehensive microservices architecture designed for modern Web3 applications. It provides a robust foundation for building scalable social platforms with integrated wallet functionality, real-time notifications, and advanced user management.
+Decode Backend v2 is a comprehensive microservices platform designed to power social networking features with Web3 wallet integration. The system is built using NestJS 11 and follows modern microservices patterns with clear service boundaries, asynchronous messaging, and comprehensive observability.
 
-### Key Highlights
+### Key Features
 
-- **🔐 Advanced Authentication**: JWT-based auth with device fingerprinting and session management
-- **👥 Social Features**: User relationships, following, blocking, and mutual connections
-- **💰 Web3 Integration**: Wallet management with Ethereum support
-- **📱 Real-time Notifications**: WebSocket-based notifications with RabbitMQ queuing
-- **📧 Email System**: Comprehensive email templates and SMTP integration
-- **🔄 Graph Database**: Neo4j integration for complex relationship queries
-- **🐳 Docker Ready**: Complete containerization with production-ready configurations
-- **🚀 CI/CD Pipeline**: Automated deployment with zero-downtime capabilities
+- **Authentication & Authorization**: Multi-factor authentication, device fingerprinting, session management, and JWT-based security
+- **User Management**: Profile management, username/email workflows, privacy controls, and account deactivation
+- **Social Graph**: Follow/unfollow relationships, blocking, mutual connections, and interest-based recommendations using Neo4j
+- **Wallet Integration**: Web3 wallet linking, signature verification, and primary wallet management
+- **Real-time Notifications**: WebSocket-based push notifications with RabbitMQ-backed message queue
+- **Email Processing**: Asynchronous email delivery with template rendering and SMTP integration
+- **Data Synchronization**: Automatic synchronization between MongoDB (document store) and Neo4j (graph database)
+- **Observability**: Comprehensive Datadog APM integration with distributed tracing, custom metrics, and logging
 
-## 🏛️ Architecture
+## Architecture
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   API Gateway   │    │   Auth Service  │    │  User Service   │
-│   Port: 4000    │    │   Port: 4001    │    │   Port: 4002    │
-│   (Entry Point) │    │ (Authentication)│    │ (User Management)│
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Email Worker    │    │ Relationship    │    │ Wallet Service  │
-│ Port: 4003      │    │ Port: 4004      │    │ Port: 4005      │
-│ (Email System)  │    │ (Social Graph)  │    │ (Web3 Wallets)  │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Notification    │    │ Neo4j DB Sync   │    │    MongoDB      │
-│ Port: 4006      │    │ Port: 4007      │    │ Port: 27017     │
-│ (Real-time)     │    │ (Graph Sync)    │    │ (Primary DB)    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│     Redis       │    │     Neo4j       │    │   RabbitMQ      │
-│ Port: 6379      │    │ Port: 7474/7687 │    │ Port: 5672/15672│
-│ (Cache/Sessions)│    │ (Graph Database)│    │ (Message Queue) │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+### Core Microservices
 
-## ✨ Features
+| Service | Port | Description | Key Responsibilities |
+|---------|------|-------------|---------------------|
+| **API Gateway** | 4000 | Single entry point | Request routing, authentication, rate limiting, Swagger docs |
+| **Auth Service** | 4001 | Authentication & authorization | Registration, login, MFA, device fingerprinting, session management |
+| **User Service** | 4002 | User management | Profile CRUD, username/email updates, search, account deactivation |
+| **Email Worker** | 4003 | Email processing | Consumes RabbitMQ email jobs, renders templates, sends SMTP emails |
+| **Relationship Service** | 4004 | Social graph | Follow/unfollow, blocking, mutual connections, recommendations |
+| **Wallet Service** | 4005 | Wallet management | Wallet linking, signature verification, primary wallet selection |
+| **Notification Service** | 4006 | Real-time notifications | Notification storage, WebSocket push, RabbitMQ consumer |
+| **Neo4j DB Sync** | 4007 | Data synchronization | Syncs MongoDB user documents to Neo4j graph nodes |
 
-### 🔐 Authentication & Security
+### Infrastructure Services
 
-- **JWT-based Authentication** with access and session tokens
-- **Device Fingerprinting** for enhanced security
-- **Multi-factor Authentication** via email verification
-- **Session Management** with active session tracking
-- **Password Security** with bcrypt hashing
-- **Rate Limiting** and request validation
+| Service | Port | Description | Used By |
+|---------|------|-------------|---------|
+| **MongoDB** | 27017 | Primary document database | All services (users, wallets, notifications, sessions) |
+| **Redis** | 6379 | Caching & session storage | API Gateway, Auth, User, Wallet, Notification, Relationship |
+| **Neo4j** | 7474/7687 | Graph database | Relationship Service, Neo4j DB Sync |
+| **RabbitMQ** | 5672/15672 | Message broker | Auth, Email Worker, Notification, Relationship, Neo4j Sync |
 
-### 👥 User Management
+For detailed architecture documentation, see [C4 Architecture Documentation](docs/C4.md).
 
-- **User Profiles** with comprehensive profile management
-- **Account Settings** including username and email changes
-- **Account Deactivation** with data retention policies
-- **Profile Privacy** controls and visibility settings
+## Technology Stack
 
-### 🌐 Social Features
+### Backend Framework
+- **NestJS 11** - Progressive Node.js framework
+- **TypeScript 5.7** - Type-safe development
+- **Node.js 18** - Runtime environment
 
-- **User Relationships** with follow/unfollow functionality
-- **Blocking System** for user safety
-- **Mutual Connections** discovery
-- **Follower Snapshots** for analytics
-- **Graph-based Queries** using Neo4j
+### Databases & Storage
+- **MongoDB** - Primary document database
+- **Neo4j** - Graph database for social relationships
+- **Redis** - Caching and session storage
 
-### 💰 Web3 Integration
+### Message Queue
+- **RabbitMQ** - Asynchronous message processing
 
-- **Wallet Management** with Ethereum support
-- **Wallet Linking** to user accounts
-- **Primary Wallet** designation
-- **Crypto Utilities** for address validation
-- **Secure Wallet Operations** with authentication
+### Authentication & Security
+- **JWT** - Token-based authentication
+- **Passport.js** - Authentication middleware
+- **bcrypt** - Password hashing
+- **speakeasy** - Two-factor authentication (TOTP)
 
-### 📱 Real-time Notifications
+### Web3 Integration
+- **ethers.js** - Ethereum wallet integration
 
-- **WebSocket Integration** for real-time delivery
-- **Notification Queuing** via RabbitMQ
-- **Multiple Notification Types** (messages, alerts, updates)
-- **Read/Unread Status** tracking
-- **Pagination** for large notification lists
+### Real-time Communication
+- **Socket.IO** - WebSocket server for real-time notifications
 
-### 📧 Email System
+### Observability
+- **Datadog APM** - Application performance monitoring
+- **dd-trace** - Distributed tracing
+- **hot-shots** - DogStatsD client for custom metrics
 
-- **Comprehensive Email Templates** for all user actions
-- **SMTP Integration** with Gmail support
-- **Email Verification** for account security
-- **Password Reset** via email
-- **Device Verification** notifications
+### Email
+- **Nodemailer** - SMTP email delivery
 
-### 🔄 Data Synchronization
+### Testing
+- **Jest** - Testing framework
+- **Supertest** - HTTP assertion library
+- **ts-jest** - TypeScript preprocessor for Jest
 
-- **MongoDB to Neo4j Sync** for graph relationships
-- **Real-time Data Consistency** across services
-- **Automated Sync Jobs** with error handling
-- **Data Validation** and integrity checks
+### Code Quality
+- **ESLint** - Linting
+- **Prettier** - Code formatting
+- **TypeScript ESLint** - TypeScript-specific linting
 
-## 🚀 Quick Start
+## Prerequisites
 
-### Prerequisites
+Before you begin, ensure you have the following installed:
 
-- **Node.js** 18.0.0 or higher
-- **Docker** 20.10+ and Docker Compose 2.0+
-- **MongoDB** (cloud or local)
-- **Redis** (cloud or local)
-- **Neo4j** (cloud or local)
-- **RabbitMQ** (cloud or local)
+- **Node.js** 18.x or higher
+- **npm** or **yarn** package manager
+- **Docker** 20.10+ and **Docker Compose** 2.0+
+- **Git** for version control
+
+### System Requirements
+
+- **RAM**: 8GB+ recommended
+- **Disk Space**: 20GB+ for Docker images and volumes
+- **OS**: Linux, macOS, or Windows (with WSL2)
+
+## Quick Start
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/pasonnn/decode-backend-v2.git
+git clone <repository-url>
 cd decode-backend-v2
 ```
 
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Environment Configuration
+### 2. Environment Configuration
 
 ```bash
 # Copy the environment template
 cp docker.env.example .env
 
-# Edit with your configuration
+# Edit the .env file with your configuration
 nano .env
 ```
 
-### 4. Start with Docker (Recommended)
+Required environment variables:
+- Database connection strings (MongoDB, Redis, Neo4j, RabbitMQ)
+- JWT secrets (access token, session token, service token)
+- SMTP configuration (host, port, user, password)
+- Datadog API key (for observability)
+
+### 3. Start All Services with Docker
 
 ```bash
-# Start all services
-docker-compose -f docker-compose.prod.yml up -d
+# Start all services in production mode
+docker-compose up -d
 
-# Check status
-docker-compose -f docker-compose.prod.yml ps
+# Or start only infrastructure services for local development
+docker-compose -f docker-compose.dev.yml up -d
 ```
 
-### 5. Verify Installation
+### 4. Verify Deployment
 
 ```bash
-# Test API Gateway
-curl http://localhost:4000/health
-
-# Test Auth Service
-curl http://localhost:4001/health
+# Check service status
+docker-compose ps
 
 # View logs
-docker-compose -f docker-compose.prod.yml logs -f api-gateway
+docker-compose logs -f api-gateway
+
+# Test API Gateway health endpoint
+curl http://localhost:4000/health
+
+# Access Swagger documentation
+open http://localhost:4000/docs
 ```
 
-## 🛠️ Services
+For detailed Docker deployment instructions, see [Docker Deployment Guide](docs/DOCKER.md).
 
-### API Gateway (Port 4000)
+## Development Setup
 
-- **Main entry point** for all client requests
-- **Request routing** to appropriate microservices
-- **Authentication middleware** and request validation
-- **Rate limiting** and security headers
-- **Swagger documentation** at `/docs`
+### Local Development (Without Docker)
 
-### Auth Service (Port 4001)
-
-- **User authentication** and authorization
-- **JWT token management** (access & session tokens)
-- **Device fingerprinting** and security
-- **Password management** and reset functionality
-- **Session tracking** and management
-
-### User Service (Port 4002)
-
-- **User profile management**
-- **Account settings** and preferences
-- **Email and username changes**
-- **Account deactivation**
-- **Profile privacy controls**
-
-### Email Worker (Port 4003)
-
-- **Email template management**
-- **SMTP integration** and sending
-- **Email verification** workflows
-- **Password reset** notifications
-- **Device verification** emails
-
-### Relationship Service (Port 4004)
-
-- **Social relationship management**
-- **Follow/unfollow** functionality
-- **User blocking** system
-- **Mutual connections** discovery
-- **Graph-based queries** with Neo4j
-
-### Wallet Service (Port 4005)
-
-- **Web3 wallet integration**
-- **Ethereum wallet management**
-- **Wallet linking** to user accounts
-- **Primary wallet** designation
-- **Crypto address validation**
-
-### Notification Service (Port 4006)
-
-- **Real-time notifications** via WebSocket
-- **Notification queuing** with RabbitMQ
-- **Read/unread status** tracking
-- **Pagination** and filtering
-- **Multiple notification types**
-
-### Neo4j DB Sync (Port 4007)
-
-- **MongoDB to Neo4j synchronization**
-- **Real-time data consistency**
-- **Graph relationship management**
-- **Automated sync jobs**
-- **Data validation** and integrity
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-
-#### Login
-
-```http
-POST /auth/login
-Content-Type: application/json
-
-{
-  "email_or_username": "user@example.com",
-  "password": "SecurePassword123!",
-  "fingerprint_hashed": "abc123def456..."
-}
-```
-
-#### Register
-
-```http
-POST /auth/register
-Content-Type: application/json
-
-{
-  "username": "newuser",
-  "email": "newuser@example.com",
-  "password": "SecurePassword123!"
-}
-```
-
-#### Get Current User
-
-```http
-GET /auth/me
-Authorization: Bearer <access_token>
-```
-
-### User Management
-
-#### Get User Profile
-
-```http
-GET /users/profile/:user_id
-Authorization: Bearer <access_token>
-```
-
-#### Update Profile
-
-```http
-PATCH /users/profile
-Authorization: Bearer <access_token>
-Content-Type: application/json
-
-{
-  "display_name": "New Display Name",
-  "bio": "Updated bio"
-}
-```
-
-### Social Features
-
-#### Follow User
-
-```http
-POST /relationship/follow
-Authorization: Bearer <access_token>
-Content-Type: application/json
-
-{
-  "user_id": "target_user_id"
-}
-```
-
-#### Get Followers
-
-```http
-GET /relationship/followers/:user_id?page=0&limit=10
-Authorization: Bearer <access_token>
-```
-
-### Wallet Management
-
-#### Link Wallet
-
-```http
-POST /wallet/link
-Authorization: Bearer <access_token>
-Content-Type: application/json
-
-{
-  "wallet_address": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-}
-```
-
-#### Get User Wallets
-
-```http
-GET /wallet/list
-Authorization: Bearer <access_token>
-```
-
-### Notifications
-
-#### Get Notifications
-
-```http
-GET /notifications?page=0&limit=10
-Authorization: Bearer <access_token>
-```
-
-#### Mark as Read
-
-```http
-PATCH /notifications/:id/read
-Authorization: Bearer <access_token>
-```
-
-### WebSocket Events
-
-#### Connect to Notifications
-
-```javascript
-const socket = io('http://localhost:4006/notifications', {
-  auth: {
-    token: 'your-jwt-token',
-  },
-});
-
-// Listen for notifications
-socket.on('notification_received', (data) => {
-  console.log('New notification:', data);
-});
-```
-
-## 🛠️ Development
-
-### Local Development Setup
+1. **Start Infrastructure Services Only**
 
 ```bash
-# Start only infrastructure services
+# Start databases and message queues
 docker-compose -f docker-compose.dev.yml up -d
-
-# Install dependencies
-npm install
-
-# Start services in development mode
-npm run start:dev:api-gateway
-npm run start:dev:auth
-npm run start:dev:user
-# ... etc
 ```
+
+2. **Install Dependencies**
+
+```bash
+npm install
+```
+
+3. **Run Individual Services**
+
+```bash
+# Start API Gateway in watch mode
+npm run start:dev:api-gateway
+
+# Start Auth Service in watch mode
+npm run start:dev:auth
+
+# Start User Service in watch mode
+npm run start:dev:user
+
+# ... and so on for other services
+```
+
+4. **Run All Services (Development)**
+
+```bash
+# Start all services in watch mode (parallel)
+npm run start:dev:all
+```
+
+### Development URLs
+
+- **API Gateway**: http://localhost:4000
+- **Swagger Documentation**: http://localhost:4000/docs
+- **Auth Service**: http://localhost:4001
+- **User Service**: http://localhost:4002
+- **MongoDB**: mongodb://localhost:27017
+- **Redis**: redis://localhost:6379
+- **Neo4j Browser**: http://localhost:7474
+- **RabbitMQ Management**: http://localhost:15672 (admin/password)
 
 ### Available Scripts
 
 ```bash
-# Build all services
-npm run build:all
+# Build
+npm run build                    # Build all services
+npm run build:api-gateway        # Build specific service
 
-# Start individual services
-npm run start:api-gateway
-npm run start:auth
-npm run start:user
+# Development
+npm run start:dev:api-gateway    # Start service in watch mode
+npm run start:dev:all            # Start all services in watch mode
 
-# Development mode with hot reload
-npm run start:dev:api-gateway
-npm run start:dev:auth
+# Production
+npm run start:api-gateway        # Start service in production mode
+npm run start:all                # Start all services
+
+# Code Quality
+npm run lint                     # Run ESLint
+npm run format                   # Format code with Prettier
 
 # Testing
-npm run test
-npm run test:cov
-npm run test:e2e
-
-# Linting and formatting
-npm run lint
-npm run format
+npm run test                     # Run all tests
+npm run test:unit                # Run unit tests
+npm run test:e2e:new             # Run E2E tests
+npm run test:cov                 # Run tests with coverage
+npm run test:watch               # Run tests in watch mode
 ```
 
-### Project Structure
+## Testing
 
-```
-decode-backend-v2/
-├── apps/                          # Microservices
-│   ├── api-gateway/              # Main API gateway
-│   ├── auth/                     # Authentication service
-│   ├── user/                     # User management
-│   ├── email-worker/             # Email processing
-│   ├── relationship/             # Social features
-│   ├── wallet/                   # Web3 wallet management
-│   ├── notification/             # Real-time notifications
-│   └── neo4jdb-sync/            # Graph database sync
-├── scripts/                      # Deployment and utility scripts
-├── .github/workflows/            # CI/CD pipelines
-├── docker-compose.prod.yml       # Production Docker setup
-├── docker-compose.dev.yml        # Development Docker setup
-└── docs/                         # Documentation
-```
+The project includes comprehensive test coverage across all microservices.
 
-## 🐳 Docker Deployment
-
-### Production Deployment
-
-```bash
-# Build and start all services
-docker-compose -f docker-compose.prod.yml up -d
-
-# Check service health
-docker-compose -f docker-compose.prod.yml ps
-
-# View logs
-docker-compose -f docker-compose.prod.yml logs -f
-```
-
-### Development with Docker
-
-```bash
-# Start only databases
-docker-compose -f docker-compose.dev.yml up -d
-
-# Run services locally
-npm run start:dev:all
-```
-
-### Docker Commands
-
-```bash
-# Build specific service
-docker-compose -f docker-compose.prod.yml build api-gateway
-
-# Restart service
-docker-compose -f docker-compose.prod.yml restart auth
-
-# Scale service
-docker-compose -f docker-compose.prod.yml up -d --scale api-gateway=3
-
-# Clean up
-docker-compose -f docker-compose.prod.yml down -v
-```
-
-## 🚀 CI/CD Pipeline
-
-### Automated Deployment
-
-The project includes a comprehensive CI/CD pipeline with:
-
-- **GitHub Actions** workflows for automated testing and deployment
-- **Docker image building** and registry management
-- **Zero-downtime deployments** with blue-green strategy
-- **Health checks** and automated rollback
-- **Security scanning** with Trivy
-- **Multi-environment** support (staging/production)
-
-### Deployment Scripts
-
-```bash
-# Deploy to production
-./scripts/deploy.sh production latest --zero-downtime
-
-# Health check
-./scripts/health-check.sh production
-
-# Rollback if needed
-./scripts/rollback.sh production
-
-# Monitor services
-./scripts/monitor.sh
-```
-
-### GitHub Secrets Configuration
-
-Configure these secrets in your GitHub repository:
-
-```bash
-# Server Access
-STAGING_HOST=staging.yourdomain.com
-STAGING_USER=deploy
-STAGING_SSH_KEY=your-private-key
-
-PRODUCTION_HOST=yourdomain.com
-PRODUCTION_USER=deploy
-PRODUCTION_SSH_KEY=your-private-key
-
-# Notifications
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-Key configuration variables:
-
-```bash
-# Database URLs
-MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/
-REDIS_URI=redis://:password@host:6379/0
-NEO4J_URI=neo4j+s://host:7687
-RABBITMQ_URI=amqp://user:pass@host:5672/
-
-# JWT Secrets
-JWT_ACCESS_TOKEN_SECRET=your-secret
-JWT_SESSION_TOKEN_SECRET=your-secret
-JWT_SERVICE_TOKEN_SECRET=your-secret
-
-# SMTP Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-
-# Service URLs (Docker)
-AUTH_SERVICE_URL=http://auth:4001
-USER_SERVICE_URL=http://user:4002
-EMAIL_SERVICE_URL=http://email-worker:4003
-RELATIONSHIP_SERVICE_URL=http://relationship:4004
-WALLET_SERVICE_URL=http://wallet:4005
-NOTIFICATION_SERVICE_URL=http://notification:4006
-```
-
-### Service Ports
-
-| Service      | Port | Description             |
-| ------------ | ---- | ----------------------- |
-| API Gateway  | 4000 | Main API endpoint       |
-| Auth Service | 4001 | Authentication          |
-| User Service | 4002 | User management         |
-| Email Worker | 4003 | Email processing        |
-| Relationship | 4004 | Social features         |
-| Wallet       | 4005 | Web3 wallets            |
-| Notification | 4006 | Real-time notifications |
-| Neo4j Sync   | 4007 | Graph sync              |
-
-## 🔒 Security
-
-### Authentication & Authorization
-
-- **JWT tokens** with configurable expiration
-- **Device fingerprinting** for enhanced security
-- **Rate limiting** on all endpoints
-- **Input validation** with class-validator
-- **CORS configuration** for cross-origin requests
-
-### Data Protection
-
-- **Password hashing** with bcrypt
-- **Environment variable encryption**
-- **Secure headers** with Helmet
-- **SQL injection protection** via MongoDB ODM
-- **XSS protection** with input sanitization
-
-### Infrastructure Security
-
-- **Container security** with non-root users
-- **Network isolation** with Docker networks
-- **SSL/TLS encryption** for all communications
-- **Firewall configuration** with UFW
-- **Intrusion prevention** with Fail2ban
-
-## 📊 Monitoring
-
-### Health Checks
-
-All services expose health check endpoints:
-
-```bash
-# Check service health
-curl http://localhost:4000/health  # API Gateway
-curl http://localhost:4001/health  # Auth Service
-curl http://localhost:4002/health  # User Service
-# ... etc
-```
-
-### Logging
-
-- **Structured logging** with JSON format
-- **Request tracing** with unique request IDs
-- **Error tracking** with stack traces
-- **Performance metrics** and timing
-- **Security event logging**
-
-### Monitoring Tools
-
-```bash
-# Real-time monitoring
-./scripts/monitor.sh
-
-# Health check report
-./scripts/health-check.sh production --report
-
-# View service logs
-docker-compose -f docker-compose.prod.yml logs -f
-
-# Check resource usage
-docker stats
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these guidelines:
-
-### Development Workflow
-
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Make** your changes with proper tests
-4. **Run** the test suite: `npm run test`
-5. **Commit** your changes: `git commit -m 'Add amazing feature'`
-6. **Push** to your branch: `git push origin feature/amazing-feature`
-7. **Open** a Pull Request
-
-### Code Standards
-
-- **TypeScript** for type safety
-- **ESLint** and **Prettier** for code formatting
-- **Jest** for testing
-- **Conventional Commits** for commit messages
-- **Comprehensive documentation** for new features
-
-### Testing
+### Running Tests
 
 ```bash
 # Run all tests
 npm run test
 
-# Run with coverage
+# Run unit tests only
+npm run test:unit
+
+# Run E2E tests
+npm run test:e2e:new
+
+# Run tests with coverage
 npm run test:cov
 
-# Run e2e tests
-npm run test:e2e
-
-# Run specific service tests
-npm run test -- --testPathPattern=auth
+# Run tests in watch mode
+npm run test:watch
 ```
 
-## 📄 License
+### Test Coverage
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Current test coverage targets:
+- **Auth Service**: ≥ 70% (critical paths)
+- **API Gateway**: ≥ 60% (guards/interceptors)
+- **User & Relationship Services**: ≥ 60% (service logic)
+- **Other Services**: ≥ 50% (growing as features stabilize)
 
-## 🆘 Support
+### Test Results
 
-### Documentation
+- **Total Test Suites**: 32
+- **Total Test Cases**: 487
+- **Pass Rate**: 100%
+- **Overall Coverage**: 69.3% (statements), 64.0% (branches), 72.2% (functions)
 
-- [Docker Deployment Guide](DOCKER.md)
-- [CI/CD Pipeline Documentation](DOCKER_CICD.md)
-- [API Documentation](http://localhost:4000/docs) (when running)
+For detailed testing strategy and guidelines, see [Testing & QA Strategy](docs/TESTING_STRATEGY.md).
 
-### Getting Help
+## Documentation
 
-1. **Check the logs**: `docker-compose logs <service-name>`
-2. **Run health checks**: `./scripts/health-check.sh production`
-3. **Review documentation**: Check the docs folder
-4. **Open an issue**: Use GitHub Issues for bugs and feature requests
+Comprehensive documentation is available in the `docs/` directory:
 
-### Community
+### Architecture & Design
+- [C4 Architecture Documentation](docs/C4.md) - Container and component views
+- [Diagram Reference](docs/diagrams/DECODE_DIAGRAM.md) - Complete list of system diagrams
 
-- **GitHub Issues**: For bug reports and feature requests
-- **Discussions**: For questions and community support
-- **Pull Requests**: For code contributions
+### Deployment & Operations
+- [Docker Deployment Guide](docs/DOCKER.md) - Docker setup and deployment
+- [Docker CI/CD Pipeline](docs/DOCKER_CICD.md) - CI/CD pipeline documentation
+- [GitHub Secrets Configuration](docs/GITHUB_SECRETS.md) - Required GitHub secrets
+
+### Observability
+- [Datadog Implementation](docs/DD_IMPLEMENTATION.md) - APM, metrics, and logging setup
+- [Datadog Dashboard Setup](docs/DD_DASHBOARD.md) - Dashboard configuration guide
+- [Datadog APM Troubleshooting](docs/DD_APM_TROUBLESHOOTING.md) - Common issues and solutions
+
+### Testing
+- [Testing & QA Strategy](docs/TESTING_STRATEGY.md) - Testing approach and guidelines
+- [Test Execution Report](docs/TEST.md) - Latest test results and coverage
+
+### Flow Diagrams
+- [Authentication & Registration Flows](docs/diagrams/AUTH_AND_REGISTRATION.md) - Auth flow documentation
+- [Async Processing Flows](docs/diagrams/ASYNC_PROCESSING_FLOWS.md) - Notification, email, and sync flows
+- [Service & Request Routing](docs/diagrams/SERVICE_AND_REQUEST_ROUTING.md) - Request routing patterns
+- [Session Management](docs/diagrams/SESSION_MANAGEMENT.md) - Session lifecycle
+- [User Profile Aggregation](docs/diagrams/USER_PROFILE_AGGREGATION.md) - Profile data flow
+- [Infrastructure & Operations](docs/diagrams/INFRASTRUCTURE_AND_OPERATIONS.md) - Infrastructure diagrams
+- [Use Cases](docs/diagrams/USECASE.md) - Use case documentation
+- [ERD](docs/diagrams/ERD.md) - Entity relationship diagrams
+
+## Project Structure
+
+```
+decode-backend-v2/
+├── apps/                          # Microservices
+│   ├── api-gateway/               # API Gateway (Port 4000)
+│   ├── auth/                      # Auth Service (Port 4001)
+│   ├── user/                      # User Service (Port 4002)
+│   ├── email-worker/              # Email Worker (Port 4003)
+│   ├── relationship/              # Relationship Service (Port 4004)
+│   ├── wallet/                    # Wallet Service (Port 4005)
+│   ├── notification/              # Notification Service (Port 4006)
+│   └── neo4jdb-sync/              # Neo4j Sync Service (Port 4007)
+├── docs/                          # Documentation
+│   ├── C4.md                      # Architecture documentation
+│   ├── DOCKER.md                   # Docker deployment guide
+│   ├── TESTING_STRATEGY.md         # Testing guidelines
+│   ├── DD_IMPLEMENTATION.md        # Datadog observability
+│   └── diagrams/                   # Flow diagrams and ERDs
+├── tests/                         # Test suites
+│   ├── unit/                       # Unit tests
+│   ├── e2e/                        # End-to-end tests
+│   └── reporters/                 # Custom test reporters
+├── scripts/                       # Deployment and utility scripts
+├── docker-compose.yml              # Production Docker Compose
+├── docker-compose.dev.yml          # Development Docker Compose
+├── docker-compose.prod.yml         # Production Docker Compose
+├── package.json                    # Dependencies and scripts
+├── tsconfig.json                  # TypeScript configuration
+└── README.md                      # This file
+```
+
+### Service Structure
+
+Each microservice follows a consistent structure:
+
+```
+apps/<service-name>/
+├── src/
+│   ├── main.ts                    # Application entry point
+│   ├── <service>.module.ts        # Root module
+│   ├── <service>.controller.ts    # REST/WebSocket controllers
+│   ├── services/                   # Business logic services
+│   ├── dto/                       # Data transfer objects
+│   ├── common/                     # Shared utilities
+│   ├── config/                     # Configuration
+│   ├── infrastructure/             # External service clients
+│   └── interfaces/                 # TypeScript interfaces
+├── Dockerfile                      # Service-specific Dockerfile
+└── tsconfig.app.json              # Service-specific TS config
+```
+
+## Contributing
+
+We welcome contributions! Please follow these guidelines:
+
+### Development Workflow
+
+1. **Create a Feature Branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make Your Changes**
+   - Follow the existing code style
+   - Write tests for new features
+   - Update documentation as needed
+
+3. **Run Tests and Linting**
+   ```bash
+   npm run lint
+   npm run test
+   npm run test:cov
+   ```
+
+4. **Commit Your Changes**
+   - Use conventional commit messages
+   - Example: `feat(auth): add device fingerprinting`
+
+5. **Create a Pull Request**
+   - Link to related issues
+   - Include a description of changes
+   - Ensure all CI checks pass
+
+### Code Standards
+
+- **TypeScript**: Strict mode enabled, no implicit any
+- **ESLint**: Follow project ESLint configuration
+- **Prettier**: Auto-format on save
+- **Testing**: Maintain or improve test coverage
+- **Documentation**: Update relevant docs for new features
+
+### Testing Requirements
+
+- All new features must include unit tests
+- Critical paths require integration tests
+- E2E tests for user-facing flows
+- Maintain minimum coverage thresholds
+
+For more details, see [Testing & QA Strategy](docs/TESTING_STRATEGY.md).
+
+## License
+
+This project is private and proprietary. See `package.json` for license details.
 
 ---
 
-**Built with ❤️ by the Decode Labs Web3 Team**
+**Last Updated**: 2024
+**Maintained By**: Decode Development Team
 
-_Empowering the future of decentralized social platforms_
+For questions or support, please refer to the documentation in the `docs/` directory or contact the development team.
