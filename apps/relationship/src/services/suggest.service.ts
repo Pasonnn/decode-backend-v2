@@ -35,7 +35,16 @@ export class SuggestService {
   }): Promise<PaginationResponse<UserNeo4jDoc[]>> {
     const { user_id, page, limit } = input;
 
+    // Define cache key early for potential reset
+    const cache_key = `suggestions:${user_id}`;
+
     try {
+      // Reset cache when starting fresh (page 0) to allow re-fetching same suggestions
+      // This fixes the issue where refreshing page 0 returns empty results
+      if (page === 0) {
+        await this.redisInfrastructure.del(cache_key);
+      }
+
       // Step 1: Get fresh suggestions from Neo4j with priority ordering
       const suggestions: PaginationResponse<NodeResponse<UserNeo4jDoc>[]> =
         await this.neo4jInfrastructure.getFriendsSuggestions({
@@ -66,7 +75,6 @@ export class SuggestService {
 
       // Step 2: Get previously suggested users from Redis cache for deduplication
       // This prevents showing the same user across different pages
-      const cache_key = `suggestions:${user_id}`;
       const cached_suggestion_user_ids =
         await this.getCachedSuggestionUserIds(cache_key);
 
